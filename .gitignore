@@ -2,3 +2,5 @@
 *.toc
 *.out
 documentation/*.log
+*.pyc
+.venv
