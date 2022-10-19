@@ -1,7 +1,7 @@
 *.aux
 *.toc
 *.out
-documentation/*.log
+documentation/*/*.log
 *.pyc
 .venv
 src/dist
