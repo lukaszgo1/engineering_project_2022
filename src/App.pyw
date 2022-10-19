@@ -224,6 +224,27 @@ class LessonToScheduleDLG(wx.Dialog):
 			conn.row_factory = sqlite3.Row
 			cur = conn.cursor()
 			
+			# Collision detection
+			
+			cur.execute(" SELECT TeacherID, ClassId, ClassRoomId FROM Schedule where InstitutionId = ? and WeekDay = ? and (? between LessonStartingHour and LessonEndingHour or ? between LessonEndingHour and LessonEndingHour)",
+			(self.index, self.controls["weekDay"].GetSelection(), start_hour, end_hour))
+			results = cur.fetchall()
+		message = []
+		for row in results:
+			if row["TeacherId"] == self.teachersInInst[self.controls["teacher"].GetSelection()][0]:
+				t = self.controls["teacher"].GetString(self.controls["teacher"].GetSelection())
+				message.append(f"Nauczyciel {t} prowadzi w tym czasie zajęcia.")
+			if row["ClassId"] == self.classesInInst[self.controls["class"].GetSelection()][0]:
+				g = self.controls["class"].GetString(self.controls["class"].GetSelection())
+				message.append(f"Grupa {g} ma w tym czasie zajęcia.")
+			if row["ClassRoomId"] == self.classRoomsInInst[self.controls["classRoom"].GetSelection()][0]:
+				c = self.controls["classRoom"].GetString(self.controls["classRoom"].GetSelection())
+				message.append(f"Sala {c} jest w tym czasie  zajęta.")
+		if message:
+			dialog = wx.MessageDialog(None, os.linesep.join(message), "Konflikt zajęć", wx.OK | wx.ICON_ERROR)
+			dialog.ShowModal()
+			return
+		else:
 			s = "	 INSERT INTO Schedule (InstitutionId, WeekDay, LessonStartingHour, LessonEndingHour, TeacherId, SubjectId, ClassId, ClassRoomId) VALUES (?, ?, ?, ?, ?, ?, ?, ?)"
 			v = [
 				self.index,
