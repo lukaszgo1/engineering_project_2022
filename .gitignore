@@ -4,3 +4,4 @@
 documentation/*.log
 *.pyc
 .venv
+src/dist
