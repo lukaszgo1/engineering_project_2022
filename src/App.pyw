@@ -1,9 +1,9 @@
 import wx
-import sqlite3
 import os
 import csv
+import backend.mariadb_connector
+import backend.app_constants as app_global_vars
 
-from create_db_structure import DB_FILE_PATH, createDbBStruct
 
 WEEK_DAYS = {
 	0: "Poniedziałek",
@@ -83,23 +83,31 @@ class LessonToScheduleDLG(wx.Dialog):
 		sizer.Add(self.controls["weekDay"])
 		self.helper_sizer.Add(sizer)
 
-		with sqlite3.connect(DB_FILE_PATH) as conn:
-			conn.row_factory = sqlite3.Row
-			cur = conn.cursor()
-			cur.execute(
-				"SELECT StartingHour, EndingHour, HasBreaks, NormalBreakLength, NormalLessonLength FROM Institutions WHERE InstitutionId = ?",
-				(self.index,)
-			)
-			res = cur.fetchone()
+		res = app_global_vars.active_db_con.fetch_one(
+			table_name="Institutions",
+			col_names=(
+				"StartingHour",
+				"EndingHour",
+				"HasBreaks",
+				"NormalBreakLength",
+				"NormalLessonLength"
+			),
+			condition_string="InstitutionId = ?",
+			seq=(self.index,)
+		)
 		if res["HasBreaks"] == 1:
-			cur.execute("SELECT BreakStartingHour, BreakEndingHour FROM Breaks WHERE InstitutionId = ?", (self.index,))
-			extraBreaks = cur.fetchall()
+			extraBreaks = app_global_vars.active_db_con.fetch_all_matching(
+				table_name="Breaks",
+				col_names=("BreakStartingHour", "BreakEndingHour"),
+				condition_str="InstitutionId = ?",
+				seq=(self.index,)
+			)
 			self.lessons_with_breaks = generate_lessons_with_breaks(
 				res["StartingHour"],
 				res["EndingHour"],
 				res["NormalLessonLength"],
 				res["NormalBreakLength"],
-				extraBreaks
+				list(extraBreaks)
 			)
 			sizer = wx.BoxSizer(wx.HORIZONTAL)
 			label = wx.StaticText(self, label="Lekcje:", size=(150, -1))
@@ -133,14 +141,12 @@ class LessonToScheduleDLG(wx.Dialog):
 			self.helper_sizer.Add(sizer)
 
 		self.teachersInInst = dict()
-		with sqlite3.connect(DB_FILE_PATH) as conn:
-			conn.row_factory = sqlite3.Row
-			cur = conn.cursor()
-			cur.execute(
-				"SELECT TeacherId, FirstName, LastName FROM Teachers WHERE EmployedIn= ? and IsAvailable = 1",
-				(self.index,)
-			)
-			res = cur.fetchall()
+		res = app_global_vars.active_db_con.fetch_all_matching(
+			table_name="Teachers",
+			col_names=("TeacherId", "FirstName", "LastName"),
+			condition_str="EmployedIn= ? and IsAvailable = 1",
+			seq=(self.index,)
+		)
 		for indexInCB, record in enumerate(res):
 			self.teachersInInst[indexInCB] = (record["TeacherId"], " ".join((record["FirstName"], record["LastName"])))
 		sizer = wx.BoxSizer(wx.HORIZONTAL)
@@ -151,11 +157,12 @@ class LessonToScheduleDLG(wx.Dialog):
 		sizer.Add(self.controls["teacher"])
 		self.helper_sizer.Add(sizer)
 		self.subjectsInInst = dict()
-		with sqlite3.connect(DB_FILE_PATH) as conn:
-			conn.row_factory = sqlite3.Row
-			cur = conn.cursor()
-			cur.execute("SELECT SubjectId, SubjectName FROM Subjects WHERE TaughtIn = ?", (self.index,))
-			res = cur.fetchall()
+		res = app_global_vars.active_db_con.fetch_all_matching(
+			table_name="Subjects",
+			col_names=("SubjectId", "SubjectName"),
+			condition_str="TaughtIn = ?",
+			seq=(self.index,)
+		)
 		for indexInCB, record in enumerate(res):
 			self.subjectsInInst[indexInCB] = (record["SubjectId"], record["SubjectName"])
 		sizer = wx.BoxSizer(wx.HORIZONTAL)
@@ -167,11 +174,12 @@ class LessonToScheduleDLG(wx.Dialog):
 		self.helper_sizer.Add(sizer)
 
 		self.classesInInst = dict()
-		with sqlite3.connect(DB_FILE_PATH) as conn:
-			conn.row_factory = sqlite3.Row
-			cur = conn.cursor()
-			cur.execute("SELECT ClassId, ClassIdentifier FROM Classes WHERE ClassInInstitution = ?", (self.index,))
-			res = cur.fetchall()
+		res = app_global_vars.active_db_con.fetch_all_matching(
+			table_name="Classes",
+			col_names=("ClassId", "ClassIdentifier"),
+			condition_str="ClassInInstitution = ?",
+			seq=(self.index,)
+		)
 		for indexInCB, record in enumerate(res):
 			self.classesInInst[indexInCB] = (record["ClassId"], record["ClassIdentifier"])
 		sizer = wx.BoxSizer(wx.HORIZONTAL)
@@ -183,11 +191,12 @@ class LessonToScheduleDLG(wx.Dialog):
 		self.helper_sizer.Add(sizer)
 
 		self.classRoomsInInst = dict()
-		with sqlite3.connect(DB_FILE_PATH) as conn:
-			conn.row_factory = sqlite3.Row
-			cur = conn.cursor()
-			cur.execute("SELECT ClassRoomId, ClassRoomIdentifier FROM ClassRooms WHERE IsIn = ?", (self.index,))
-			res = cur.fetchall()
+		res = app_global_vars.active_db_con.fetch_all_matching(
+			table_name="ClassRooms",
+			col_names=("ClassRoomId", "ClassRoomIdentifier"),
+			condition_str="IsIn = ?",
+			seq=(self.index,)
+		)
 		for indexInCB, record in enumerate(res):
 			self.classRoomsInInst[indexInCB] = (record["ClassRoomId"], record["ClassRoomIdentifier"])
 		sizer = wx.BoxSizer(wx.HORIZONTAL)
@@ -220,15 +229,17 @@ class LessonToScheduleDLG(wx.Dialog):
 		elif hasattr(self, 'lessons_without_breaks'):
 			start_hour = self.lessons_without_breaks[self.controls["start_time"].GetSelection()]
 			end_hour = self.lessons_without_breaks[self.controls["end_time"].GetSelection() + self.offset]
-		with sqlite3.connect(DB_FILE_PATH) as conn:
-			conn.row_factory = sqlite3.Row
-			cur = conn.cursor()
-			
-			# Collision detection
-			
-			cur.execute(" SELECT TeacherID, ClassId, ClassRoomId FROM Schedule where InstitutionId = ? and WeekDay = ? and (? between LessonStartingHour and LessonEndingHour or ? between LessonEndingHour and LessonEndingHour)",
-			(self.index, self.controls["weekDay"].GetSelection(), start_hour, end_hour))
-			results = cur.fetchall()
+
+		# Collision detection
+		results = app_global_vars.active_db_con.fetch_all_matching(
+			table_name="Schedule",
+			col_names=("TeacherId", "ClassId", "ClassRoomId"),
+			condition_str=(
+				"InstitutionId = ? and WeekDay = ? "
+				"and (? between LessonStartingHour and LessonEndingHour or ? between LessonEndingHour and LessonEndingHour)"
+			),
+			seq=(self.index, self.controls["weekDay"].GetSelection(), start_hour, end_hour)
+		)
 		message = []
 		for row in results:
 			if row["TeacherId"] == self.teachersInInst[self.controls["teacher"].GetSelection()][0]:
@@ -245,7 +256,6 @@ class LessonToScheduleDLG(wx.Dialog):
 			dialog.ShowModal()
 			return
 		else:
-			s = "	 INSERT INTO Schedule (InstitutionId, WeekDay, LessonStartingHour, LessonEndingHour, TeacherId, SubjectId, ClassId, ClassRoomId) VALUES (?, ?, ?, ?, ?, ?, ?, ?)"
 			v = [
 				self.index,
 				self.controls["weekDay"].GetSelection(),
@@ -255,9 +265,20 @@ class LessonToScheduleDLG(wx.Dialog):
 				self.classesInInst[self.controls["class"].GetSelection()][0],
 				self.classRoomsInInst[self.controls["classRoom"].GetSelection()][0]
 			]
-			with sqlite3.connect(DB_FILE_PATH) as conn:
-				cur = conn.cursor()
-				cur.execute(s, v)
+			app_global_vars.active_db_con.insert(
+				table_name="Schedule",
+				col_names=(
+					"InstitutionId",
+					"WeekDay",
+					"LessonStartingHour",
+					"LessonEndingHour",
+					"TeacherId",
+					"SubjectId",
+					"ClassId",
+					"ClassRoomId"
+				),
+				col_values=v
+			)
 			if self.refreshView:
 				self.Parent.list_ctrl.ClearAll()
 				self.Parent.populateListView()
@@ -302,15 +323,16 @@ class AddBreakDLG(wx.Dialog):
 		self.SetSizer(self.main_sizer)
 
 	def on_save(self, evt):
-		s = " INSERT INTO Breaks (InstitutionId, BreakStartingHour, BreakEndingHour) VALUES (?, ?, ?)"
 		v = [
 			self.index,
 			self.controls["breakStartingHour"].GetValue(),
 			self.controls["breakEndingHour"].GetValue()
 		]
-		with sqlite3.connect(DB_FILE_PATH) as conn:
-			cur = conn.cursor()
-			cur.execute(s, v)
+		app_global_vars.active_db_con.insert(
+			table_name="Breaks",
+			col_names=("InstitutionId", "BreakStartingHour", "BreakEndingHour"),
+			col_values=v
+		)
 		if self.refreshView:
 			self.Parent.list_ctrl.ClearAll()
 			self.Parent.populateListView()
@@ -349,15 +371,17 @@ class EditBreakDLG(wx.Dialog):
 		self.SetSizer(self.main_sizer)
 
 	def on_save(self, evt):
-		s = " UPDATE Breaks SET BreakStartingHour = ?, BreakEndingHour = ? where BreakId = ?"
 		v = [
 			self.controls["breakStartingHour"].GetValue(),
 			self.controls["breakEndingHour"].GetValue(),
-			self.index
 		]
-		with sqlite3.connect(DB_FILE_PATH) as conn:
-			cur = conn.cursor()
-			cur.execute(s, v)
+		app_global_vars.active_db_con.update_record(
+			table_name="Breaks",
+			col_names=("BreakStartingHour", "BreakEndingHour"),
+			col_values=v,
+			condition_str="BreakId = ?",
+			condition_values=(self.index,)
+		)
 		self.Parent.list_ctrl.ClearAll()
 		self.Parent.populateListView()
 		self.Close()
@@ -420,25 +444,27 @@ class BreaksPanel(wx.Panel):
 		"""Sets up the list view columns and fills the list with the data from the database"""
 		self.list_ctrl.InsertColumn(0, 'Początek przerwy', width=400)
 		self.list_ctrl.InsertColumn(1, 'Koniec przerwy', width=400)
-		with sqlite3.connect(DB_FILE_PATH) as conn:
-			conn.row_factory = sqlite3.Row
-			cur = conn.cursor()
-			cur.execute("SELECT BreakId,  BreakStartingHour, BreakEndingHour FROM Breaks WHERE InstitutionId = ?", (self.inst,))
-			res = cur.fetchall()
-			index = 0
-			for row in res:
-				self.list_ctrl.InsertItem(index, row["BreakStartingHour"])
-				self.list_ctrl.SetItem(index, 1, row["BreakEndingHour"])
-				item = self.list_ctrl.GetItem(index)
-				item.SetData(row["BreakId"])
-				self.list_ctrl.SetItem(item)
-				index = index + 1
+		for index, row in enumerate(
+			app_global_vars.active_db_con.fetch_all_matching(
+				table_name="Breaks",
+				col_names=("BreakId", "BreakStartingHour", "BreakEndingHour"),
+				condition_str="InstitutionId = ?",
+				seq=(self.inst,)
+			)
+		):
+			self.list_ctrl.InsertItem(index, row["BreakStartingHour"])
+			self.list_ctrl.SetItem(index, 1, row["BreakEndingHour"])
+			item = self.list_ctrl.GetItem(index)
+			item.SetData(row["BreakId"])
+			self.list_ctrl.SetItem(item)
 
 	def on_remove(self, event):
 		item = self.list_ctrl.GetItem(self.list_ctrl.GetFocusedItem())
-		with sqlite3.connect(DB_FILE_PATH) as conn:
-			cur = conn.cursor()
-			cur.execute("DELETE from Breaks where BreakId = ? ", [item.GetData()])
+		app_global_vars.active_db_con.delete_record(
+			table_name="Breaks",
+			condition_string="BreakId = ? ",
+			seq=[item.GetData()]
+		)
 		self.list_ctrl.DeleteItem(self.list_ctrl.GetFocusedItem())
 
 	def on_NewBreak(self, event):
@@ -470,11 +496,12 @@ class AddClassRoomDLG(wx.Dialog):
 		self.add_widgets('Numer:', "name")
 		self.coursesInInst = dict()
 		self.coursesInInst[0] = (-1, "brak")
-		with sqlite3.connect(DB_FILE_PATH) as conn:
-			conn.row_factory = sqlite3.Row
-			cur = conn.cursor()
-			cur.execute("SELECT SubjectId, SubjectName FROM Subjects WHERE TaughtIn = ?", (self.index,))
-			res = cur.fetchall()
+		res = app_global_vars.active_db_con.fetch_all_matching(
+			table_name="Subjects",
+			col_names=("SubjectId", "SubjectName"),
+			condition_str="TaughtIn = ?",
+			seq=(self.index,)
+		)
 		for indexInCB, record in enumerate(res, 1):
 			self.coursesInInst[indexInCB] = (record["SubjectId"], record["SubjectName"])
 		sizer = wx.BoxSizer(wx.HORIZONTAL)
@@ -496,15 +523,16 @@ class AddClassRoomDLG(wx.Dialog):
 		self.SetSizer(self.main_sizer)
 
 	def on_save(self, evt):
-		s = " INSERT INTO ClassRooms (ClassRoomIdentifier, IsIn, PrimaryCourse) VALUES (?, ?, ?)"
 		v = [
 			self.controls["name"].GetValue(),
 			self.index,
 			self.coursesInInst[self.controls["mainSubject"].GetSelection()][0],
 		]
-		with sqlite3.connect(DB_FILE_PATH) as conn:
-			cur = conn.cursor()
-			cur.execute(s, v)
+		app_global_vars.active_db_con.insert(
+			table_name="ClassRooms",
+			col_names=("ClassRoomIdentifier", "IsIn", "PrimaryCourse"),
+			col_values=v
+		)
 		if self.refreshView:
 			self.Parent.list_ctrl.ClearAll()
 			self.Parent.populateListView()
@@ -572,28 +600,30 @@ class ClassRoomsPanel(wx.Panel):
 	def populateListView(self):
 		self.list_ctrl.InsertColumn(0, 'Numer', width=400)
 		self.list_ctrl.InsertColumn(1, 'Główny kurs', width=400)
-		with sqlite3.connect(DB_FILE_PATH) as conn:
-			conn.row_factory = sqlite3.Row
-			cur = conn.cursor()
-			cur.execute("SELECT ClassRoomId, ClassRoomIdentifier, SubjectName FROM ClassRooms CL LEFT OUTER JOIN Subjects su ON CL.PrimaryCourse = su.SubjectId WHERE IsIn = ?", (self.inst,))
-			res = cur.fetchall()
-			index = 0
-			for row in res:
-				self.list_ctrl.InsertItem(index, row["ClassRoomIdentifier"])
-				if row["SubjectName"] is not None:
-					self.list_ctrl.SetItem(index, 1, row["SubjectName"])
-				else:
-					self.list_ctrl.SetItem(index, 1, "brak")
-				item = self.list_ctrl.GetItem(index)
-				item.SetData(row["ClassRoomId"])
-				self.list_ctrl.SetItem(item)
-				index = index + 1
+		for index, row in enumerate(
+			app_global_vars.active_db_con.fetch_all_matching(
+				table_name="ClassRooms CL LEFT OUTER JOIN Subjects su ON CL.PrimaryCourse = su.SubjectId",
+				col_names=("ClassRoomId", "ClassRoomIdentifier", "SubjectName"),
+				condition_str="IsIn = ?",
+				seq=(self.inst,)
+			)
+		):
+			self.list_ctrl.InsertItem(index, row["ClassRoomIdentifier"])
+			if row["SubjectName"] is not None:
+				self.list_ctrl.SetItem(index, 1, row["SubjectName"])
+			else:
+				self.list_ctrl.SetItem(index, 1, "brak")
+			item = self.list_ctrl.GetItem(index)
+			item.SetData(row["ClassRoomId"])
+			self.list_ctrl.SetItem(item)
 
 	def on_remove(self, event):
 		item = self.list_ctrl.GetItem(self.list_ctrl.GetFocusedItem())
-		with sqlite3.connect(DB_FILE_PATH) as conn:
-			cur = conn.cursor()
-			cur.execute("DELETE from ClassRooms where ClassRoomId = ? ", [item.GetData()])
+		app_global_vars.active_db_con.delete_record(
+			table_name="ClassRooms",
+			condition_string="ClassRoomId = ? ",
+			seq=[item.GetData()]
+		)
 		self.list_ctrl.DeleteItem(self.list_ctrl.GetFocusedItem())
 
 	def on_NewClassRoom(self, event):
@@ -638,16 +668,18 @@ class EditTeacherDLG(wx.Dialog):
 		self.SetSizer(self.main_sizer)
 
 	def on_save(self, evt):
-		s = " UPDATE Teachers SET FirstName = ?, LastName= ?, IsAvailable=? WHERE TeacherId = ?"
 		v = [
 			self.controls["name"].GetValue(),
 			self.controls["surName"].GetValue(),
 			int(self.controls["Availability"].Value),
-			self.index
 		]
-		with sqlite3.connect(DB_FILE_PATH) as conn:
-			cur = conn.cursor()
-			cur.execute(s, v)
+		app_global_vars.active_db_con.update_record(
+			table_name="Teachers",
+			col_names=("FirstName", "LastName", "IsAvailable"),
+			col_values=v,
+			condition_str="TeacherId = ?",
+			condition_values=(self.index,)
+		)
 		self.Parent.list_ctrl.ClearAll()
 		self.Parent.populateListView()
 		self.Close()
@@ -711,16 +743,22 @@ class AddTeacherDLG(wx.Dialog):
 		self.SetSizer(self.main_sizer)
 
 	def on_save(self, evt):
-		s = " INSERT INTO Teachers (FirstName, LastName, IsAvailable, EmployedIn) VALUES (?, ?, ?, ?)"
 		v = [
 			self.controls["name"].GetValue(),
 			self.controls["surName"].GetValue(),
 			int(self.controls["Availability"].Value),
 			self.index
 		]
-		with sqlite3.connect(DB_FILE_PATH) as conn:
-			cur = conn.cursor()
-			cur.execute(s, v)
+		app_global_vars.active_db_con.insert(
+			table_name="Teachers",
+			col_names=(
+				"FirstName",
+				"LastName",
+				"IsAvailable",
+				"EmployedIn"
+			),
+			col_values=v
+		)
 		if self.refreshView:
 			self.Parent.list_ctrl.ClearAll()
 			self.Parent.populateListView()
@@ -767,30 +805,32 @@ class TeachersPanel(wx.Panel):
 		self.list_ctrl.InsertColumn(0, 'Imię', width=400)
 		self.list_ctrl.InsertColumn(1, 'Nazwisko', width=400)
 		self.list_ctrl.InsertColumn(2, 'Status', width=100)
-		with sqlite3.connect(DB_FILE_PATH) as conn:
-			conn.row_factory = sqlite3.Row
-			cur = conn.cursor()
-			cur.execute("SELECT TeacherId, FirstName, LastName , IsAvailable FROM Teachers WHERE EmployedIn = ?", (self.inst,))
-			res = cur.fetchall()
-			index = 0
-			for row in res:
-				self.list_ctrl.InsertItem(index, row["FirstName"])
-				self.list_ctrl.SetItem(index, 1, row["LastName"])
-				self.list_ctrl.SetItem(
-					index,
-					2,
-					"dostępny" if row["IsAvailable"] else "niedostępny"
-				)
-				item = self.list_ctrl.GetItem(index)
-				item.SetData(row["TeacherId"])
-				self.list_ctrl.SetItem(item)
-				index = index + 1
+		for index, row in enumerate(
+			app_global_vars.active_db_con.fetch_all_matching(
+				table_name="Teachers",
+				col_names=("TeacherId", "FirstName", "LastName", "IsAvailable"),
+				condition_str="EmployedIn = ?",
+				seq=(self.inst,)
+			)
+		):
+			self.list_ctrl.InsertItem(index, row["FirstName"])
+			self.list_ctrl.SetItem(index, 1, row["LastName"])
+			self.list_ctrl.SetItem(
+				index,
+				2,
+				"dostępny" if row["IsAvailable"] else "niedostępny"
+			)
+			item = self.list_ctrl.GetItem(index)
+			item.SetData(row["TeacherId"])
+			self.list_ctrl.SetItem(item)
 
 	def on_remove(self, event):
 		item = self.list_ctrl.GetItem(self.list_ctrl.GetFocusedItem())
-		with sqlite3.connect(DB_FILE_PATH) as conn:
-			cur = conn.cursor()
-			cur.execute("DELETE from Teachers where TeacherId = ? ", [item.GetData()])
+		app_global_vars.active_db_con.delete_record(
+			table_name="Teachers",
+			condition_string="TeacherId = ? ",
+			seq=[item.GetData()]
+		)
 		self.list_ctrl.DeleteItem(self.list_ctrl.GetFocusedItem())
 
 	def on_NewTeacher(self, event):
@@ -832,14 +872,16 @@ class EditSubjectDialog(wx.Dialog):
 		self.SetSizer(self.main_sizer)
 
 	def on_save(self, evt):
-		s = " UPDATE Subjects SET SubjectName =? WHERE SubjectId =?"
 		v = [
 			self.controls["name"].GetValue(),
-			self.index
 		]
-		with sqlite3.connect(DB_FILE_PATH) as conn:
-			cur = conn.cursor()
-			cur.execute(s, v)
+		app_global_vars.active_db_con.update_record(
+			table_name="Subjects",
+			col_names=("SubjectName",),
+			col_values=v,
+			condition_str="SubjectId = ?",
+			condition_values=(self.index,)
+		)
 		self.Parent.list_ctrl.ClearAll()
 		self.Parent.populateListView()
 		self.Close()
@@ -897,24 +939,26 @@ class SubjectsPanel(wx.Panel):
 
 	def populateListView(self):
 		self.list_ctrl.InsertColumn(0, 'Nazwa', width=400)
-		with sqlite3.connect(DB_FILE_PATH) as conn:
-			conn.row_factory = sqlite3.Row
-			cur = conn.cursor()
-			cur.execute("SELECT SubjectId, SubjectName FROM Subjects WHERE TaughtIn = ?", (self.inst,))
-			res = cur.fetchall()
-			index = 0
-			for row in res:
-				self.list_ctrl.InsertItem(index, row["SubjectName"])
-				item = self.list_ctrl.GetItem(index)
-				item.SetData(row["SubjectId"])
-				self.list_ctrl.SetItem(item)
-				index = index + 1
+		for index, row in enumerate(
+			app_global_vars.active_db_con.fetch_all_matching(
+				table_name="Subjects",
+				col_names=("SubjectId", "SubjectName"),
+				condition_str="TaughtIn = ?",
+				seq=(self.inst,)
+			)
+		):
+			self.list_ctrl.InsertItem(index, row["SubjectName"])
+			item = self.list_ctrl.GetItem(index)
+			item.SetData(row["SubjectId"])
+			self.list_ctrl.SetItem(item)
 
 	def on_remove(self, event):
 		item = self.list_ctrl.GetItem(self.list_ctrl.GetFocusedItem())
-		with sqlite3.connect(DB_FILE_PATH) as conn:
-			cur = conn.cursor()
-			cur.execute("DELETE from Subjects where SubjectId= ? ", [item.GetData()])
+		app_global_vars.active_db_con.delete_record(
+			table_name="Subjects",
+			condition_string="SubjectId= ? ",
+			seq=[item.GetData()]
+		)
 		self.list_ctrl.DeleteItem(self.list_ctrl.GetFocusedItem())
 
 	def on_NewSubject(self, event):
@@ -955,14 +999,16 @@ class EditClassDialog(wx.Dialog):
 		self.SetSizer(self.main_sizer)
 
 	def on_save(self, evt):
-		s = " UPDATE Classes SET ClassIdentifier=? WHERE ClassId=?"
 		v = [
 			self.controls["name"].GetValue(),
-			self.index
 		]
-		with sqlite3.connect(DB_FILE_PATH) as conn:
-			cur = conn.cursor()
-			cur.execute(s, v)
+		app_global_vars.active_db_con.update_record(
+			table_name="Classes",
+			col_names=("ClassIdentifier",),
+			col_values=v,
+			condition_str="ClassId = ?",
+			condition_values=(self.index,)
+		)
 		self.Parent.list_ctrl.ClearAll()
 		self.Parent.populateListView()
 		self.Close()
@@ -1028,24 +1074,26 @@ class classesPanel(wx.Panel):
 
 	def populateListView(self):
 		self.list_ctrl.InsertColumn(0, 'Nazwa', width=400)
-		with sqlite3.connect(DB_FILE_PATH) as conn:
-			conn.row_factory = sqlite3.Row
-			cur = conn.cursor()
-			cur.execute("SELECT ClassId , ClassIdentifier FROM Classes WHERE ClassInInstitution = ?", (self.inst,))
-			res = cur.fetchall()
-			index = 0
-			for row in res:
-				self.list_ctrl.InsertItem(index, row["ClassIdentifier"])
-				item = self.list_ctrl.GetItem(index)
-				item.SetData(row["ClassId"])
-				self.list_ctrl.SetItem(item)
-				index = index + 1
+		for index, row in enumerate(
+			app_global_vars.active_db_con.fetch_all_matching(
+				table_name="Classes",
+				col_names=("ClassId", "ClassIdentifier"),
+				condition_str="ClassInInstitution = ?",
+				seq=(self.inst,)
+			)
+		):
+			self.list_ctrl.InsertItem(index, row["ClassIdentifier"])
+			item = self.list_ctrl.GetItem(index)
+			item.SetData(row["ClassId"])
+			self.list_ctrl.SetItem(item)
 
 	def on_remove(self, event):
 		item = self.list_ctrl.GetItem(self.list_ctrl.GetFocusedItem())
-		with sqlite3.connect(DB_FILE_PATH) as conn:
-			cur = conn.cursor()
-			cur.execute("DELETE from Classes where ClassId = ? ", [item.GetData()])
+		app_global_vars.active_db_con.delete_record(
+			table_name="Classes",
+			condition_string="ClassId = ? ",
+			seq=[item.GetData()]
+		)
 		self.list_ctrl.DeleteItem(self.list_ctrl.GetFocusedItem())
 
 	def on_NewClass(self, event):
@@ -1087,11 +1135,12 @@ class InstitutionContextMenu(wx.Menu):
 		self.Append(delInst)
 		index = self.parent.list_ctrl.GetFocusedItem()
 		dbIndex = self.parent.list_ctrl.GetItemData(index)
-		with sqlite3.connect(DB_FILE_PATH) as conn:
-			conn.row_factory = sqlite3.Row
-			cur = conn.cursor()
-			cur.execute("SELECT HasBreaks FROM Institutions WHERE InstitutionId = ?", (dbIndex,))
-			res = cur.fetchone()
+		res = app_global_vars.active_db_con.fetch_one(
+			col_names=("HasBreaks",),
+			table_name="Institutions",
+			condition_string="InstitutionId = ?",
+			seq=(dbIndex,)
+		)
 		if res["HasBreaks"] == 1:
 			self.Append(addBreak)
 			self.Append(showBreaks)
@@ -1179,14 +1228,15 @@ class AddClassDLG(wx.Dialog):
 		self.SetSizer(self.main_sizer)
 
 	def on_save(self, evt):
-		s = " INSERT INTO Classes (ClassIdentifier, ClassInInstitution) VALUES (?, ?)"
 		v = [
 			self.controls["name"].GetValue(),
 			self.index
 		]
-		with sqlite3.connect(DB_FILE_PATH) as conn:
-			cur = conn.cursor()
-			cur.execute(s, v)
+		app_global_vars.active_db_con.insert(
+			table_name="Classes",
+			col_names=("ClassIdentifier", "ClassInInstitution"),
+			col_values=v
+		)
 		if self.refreshView:
 			self.Parent.list_ctrl.ClearAll()
 			self.Parent.populateListView()
@@ -1224,14 +1274,15 @@ class AddSubjectDLG(wx.Dialog):
 		self.SetSizer(self.main_sizer)
 
 	def on_save(self, evt):
-		s = " INSERT INTO Subjects(SubjectName, TaughtIn) VALUES (?, ?)"
 		v = [
 			self.controls["name"].GetValue(),
 			self.index
 		]
-		with sqlite3.connect(DB_FILE_PATH) as conn:
-			cur = conn.cursor()
-			cur.execute(s, v)
+		app_global_vars.active_db_con.insert(
+			table_name="Subjects",
+			col_names=("SubjectName", "TaughtIn"),
+			col_values=v
+		)
 		if self.refreshView:
 			self.Parent.list_ctrl.ClearAll()
 			self.Parent.populateListView()
@@ -1292,8 +1343,9 @@ class addInstitutionDialog(wx.Dialog):
 			self.labels["lessonLength"].Disable()
 
 	def on_save(self, evt):
+		tbl_name = "Institutions"
 		if self.controls["Breaks"].GetValue() == True:
-			s = "INSERT INTO Institutions (InstitutionName, StartingHour, EndingHour, HasBreaks, NormalBreakLength, NormalLessonLength) VALUES (?,?,?,?,?,?)"
+			s = ("InstitutionName", "StartingHour", "EndingHour", "HasBreaks", "NormalBreakLength", "NormalLessonLength")
 			v = [
 				self.controls["name"].GetValue(),
 				self.controls["startTime"].GetValue(),
@@ -1303,16 +1355,14 @@ class addInstitutionDialog(wx.Dialog):
 				self.controls["lessonLength"].GetValue()
 			]
 		else:
-			s = "INSERT INTO Institutions (InstitutionName, StartingHour, EndingHour, HasBreaks) VALUES (?,?,?,?)"
+			s = ("InstitutionName", "StartingHour", "EndingHour", "HasBreaks")
 			v = [
 				self.controls["name"].GetValue(),
 				self.controls["startTime"].GetValue(),
 				self.controls["endTime"].GetValue(),
 				self.controls["Breaks"].GetValue(),
 			]
-		with sqlite3.connect(DB_FILE_PATH) as conn:
-			cur = conn.cursor()
-			cur.execute(s, v)
+		app_global_vars.active_db_con.insert(tbl_name, s, v)
 		self.Parent.mainPanel.list_ctrl.ClearAll()
 		self.Parent.mainPanel.populateListView()
 		self.Close()
@@ -1336,14 +1386,19 @@ class EditInstitutionDialog(wx.Dialog):
 	def __init__(self, parent, index):
 		super().__init__(parent=parent, title="Edytuj instytucję")
 		self.index = index
-		with sqlite3.connect(DB_FILE_PATH) as conn:
-			conn.row_factory = sqlite3.Row
-			cur = conn.cursor()
-			cur.execute(
-				"SELECT InstitutionName, StartingHour, EndingHour , HasBreaks, NormalBreakLength, NormalLessonLength FROM Institutions where InstitutionId = ?",
-				[self.index]
-			)
-			self.data = cur.fetchall()[0]
+		self.data = app_global_vars.active_db_con.fetch_one(
+			col_names=(
+				"InstitutionName",
+				"StartingHour",
+				"EndingHour",
+				"HasBreaks",
+				"NormalBreakLength",
+				"NormalLessonLength"
+			),
+			condition_string="InstitutionId = ?",
+			table_name="Institutions",
+			seq=[self.index]
+		)
 		self.main_sizer = wx.BoxSizer(wx.VERTICAL)
 		self.helper_sizer = wx.BoxSizer(wx.VERTICAL)
 		self.add_widgets('Nazwa instytucji:', "name", "InstitutionName")
@@ -1384,7 +1439,14 @@ class EditInstitutionDialog(wx.Dialog):
 
 	def on_save(self, evt):
 		if self.controls["Breaks"].GetValue() == True:
-			s = "update Institutions set InstitutionName = ?, StartingHour = ?, EndingHour = ?, HasBreaks = ?, NormalBreakLength = ?, NormalLessonLength = ? where InstitutionId = ?"
+			s = (
+				"InstitutionName",
+				"StartingHour",
+				"EndingHour",
+				"HasBreaks",
+				"NormalBreakLength",
+				"NormalLessonLength"
+			)
 			v = [
 				self.controls["name"].GetValue(),
 				self.controls["startTime"].GetValue(),
@@ -1392,20 +1454,27 @@ class EditInstitutionDialog(wx.Dialog):
 				self.controls["Breaks"].GetValue(),
 				self.controls["breakLength"].GetValue(),
 				self.controls["lessonLength"].GetValue(),
-				self.index
 			]
 		else:
-			s = "UPDATE Institutions SET InstitutionName = ?, StartingHour = ?, EndingHour = ?, HasBreaks = ? where InstitutionId = ?"
+			s = (
+				"InstitutionName",
+				"StartingHour",
+				"EndingHour",
+				"HasBreaks"
+			)
 			v = [
 				self.controls["name"].GetValue(),
 				self.controls["startTime"].GetValue(),
 				self.controls["endTime"].GetValue(),
 				self.controls["Breaks"].GetValue(),
-				self.index
 			]
-		with sqlite3.connect(DB_FILE_PATH) as conn:
-			cur = conn.cursor()
-			cur.execute(s, v)
+		app_global_vars.active_db_con.update_record(
+			table_name="Institutions",
+			col_names=s,
+			col_values=v,
+			condition_str="InstitutionId = ?",
+			condition_values=(self.index,)
+		)
 		self.Parent.mainPanel.list_ctrl.ClearAll()
 		self.Parent.mainPanel.populateListView()
 		self.Close()
@@ -1476,30 +1545,47 @@ class SchedulesPanel(wx.Panel):
 		self.list_ctrl.InsertColumn(4, 'Grupa', width=200)
 		self.list_ctrl.InsertColumn(5, 'Prowadzący', width=200)
 		self.list_ctrl.InsertColumn(6, 'Sala', width=200)
-		with sqlite3.connect(DB_FILE_PATH) as conn:
-			conn.row_factory = sqlite3.Row
-			cur = conn.cursor()
-			cur.execute(f"SELECT LessonId, WeekDay, LessonStartingHour, LessonEndingHour, SubjectName, ClassIdentifier, FirstName, LastName, ClassRoomIdentifier FROM Schedule sc JOIN  Subjects su ON sc.SubjectId = su.SubjectId JOIN Classes cl ON sc.ClassId = cl.ClassId join Teachers te on sc.TeacherId = te.TeacherId JOIN ClassRooms cr on sc.ClassRoomId = cr.ClassRoomId WHERE {self.what} = ? ORDER BY  WeekDay, LessonStartingHour", (self.id,))
-			res = cur.fetchall()
-			index = 0
-			for row in res:
-				self.list_ctrl.InsertItem(index, WEEK_DAYS[row["WeekDay"]])
-				self.list_ctrl.SetItem(index, 1, row["LessonStartingHour"])
-				self.list_ctrl.SetItem(index, 2, row["LessonEndingHour"])
-				self.list_ctrl.SetItem(index, 3, row["SubjectName"])
-				self.list_ctrl.SetItem(index, 4, row["ClassIdentifier"])
-				self.list_ctrl.SetItem(index, 5, ' '.join((row["FirstName"], row["LastName"])))
-				self.list_ctrl.SetItem(index, 6, row["ClassRoomIdentifier"])
-				item = self.list_ctrl.GetItem(index)
-				item.SetData(row["LessonId"])
-				self.list_ctrl.SetItem(item)
-				index = index + 1
+		for index, row in enumerate(
+			app_global_vars.active_db_con.fetch_all_matching(
+				table_name=(
+					"Schedule sc JOIN  Subjects su ON sc.SubjectId = su.SubjectId "
+					"JOIN Classes cl ON sc.ClassId = cl.ClassId "
+					"join Teachers te on sc.TeacherId = te.TeacherId "
+					"JOIN ClassRooms cr on sc.ClassRoomId = cr.ClassRoomId"
+				),
+				col_names=(
+					"LessonId",
+					"WeekDay",
+					"LessonStartingHour",
+					"LessonEndingHour",
+					"SubjectName",
+					"ClassIdentifier",
+					"FirstName",
+					"LastName",
+					"ClassRoomIdentifier"
+				),
+				condition_str=f"{self.what} = ? ORDER BY  WeekDay, LessonStartingHour",
+				seq=(self.id,)
+			)
+		):
+			self.list_ctrl.InsertItem(index, WEEK_DAYS[row["WeekDay"]])
+			self.list_ctrl.SetItem(index, 1, row["LessonStartingHour"])
+			self.list_ctrl.SetItem(index, 2, row["LessonEndingHour"])
+			self.list_ctrl.SetItem(index, 3, row["SubjectName"])
+			self.list_ctrl.SetItem(index, 4, row["ClassIdentifier"])
+			self.list_ctrl.SetItem(index, 5, ' '.join((row["FirstName"], row["LastName"])))
+			self.list_ctrl.SetItem(index, 6, row["ClassRoomIdentifier"])
+			item = self.list_ctrl.GetItem(index)
+			item.SetData(row["LessonId"])
+			self.list_ctrl.SetItem(item)
 
 	def on_remove(self, event):
 		item = self.list_ctrl.GetItem(self.list_ctrl.GetFocusedItem())
-		with sqlite3.connect(DB_FILE_PATH) as conn:
-			cur = conn.cursor()
-			cur.execute("DELETE FROM Schedule where LessonId = ?", (item.GetData(),))
+		app_global_vars.active_db_con.delete_record(
+			table_name="Schedule",
+			condition_string="LessonId = ? ",
+			seq=(item.GetData(),)
+		)
 		self.list_ctrl.DeleteItem(self.list_ctrl.GetFocusedItem())
 
 	def on_NewSchedule(self, event):
@@ -1578,31 +1664,35 @@ class InstitutionsPanel(wx.Panel):
 		self.list_ctrl.InsertColumn(3, 'Czy przerwy', width=150)
 		self.list_ctrl.InsertColumn(4, 'Długość przerwy', width=150)
 		self.list_ctrl.InsertColumn(5, 'Długość zajęć', width=150)
-		with sqlite3.connect(DB_FILE_PATH) as conn:
-			conn.row_factory = sqlite3.Row
-			cur = conn.cursor()
-			cur.execute(
-				"SELECT InstitutionId, InstitutionName, StartingHour, EndingHour , HasBreaks, NormalBreakLength, NormalLessonLength FROM Institutions"
-			)
-			res = cur.fetchall()
-			index = 0
-			for row in res:
-				self.list_ctrl.InsertItem(index, row["InstitutionName"])
-				self.list_ctrl.SetItem(index, 1, row["StartingHour"])
-				self.list_ctrl.SetItem(index, 2, row["EndingHour"])
-				self.list_ctrl.SetItem(index, 3, "Tak" if row["HasBreaks"] else "Nie")
-				self.list_ctrl.SetItem(index, 4, str(row["NormalBreakLength"]) if row["NormalBreakLength"] else "")
-				self.list_ctrl.SetItem(index, 5, str(row["NormalLessonLength"]) if row["NormalLessonLength"] else "")
-				item = self.list_ctrl.GetItem(index)
-				item.SetData(row["InstitutionId"])
-				self.list_ctrl.SetItem(item)
-				index = index + 1
+		for index, record in enumerate(app_global_vars.active_db_con.fetch_all(
+			col_names=(
+				"InstitutionId",
+				"InstitutionName",
+				"StartingHour",
+				"EndingHour",
+				"HasBreaks",
+				"NormalBreakLength",
+				"NormalLessonLength"
+			),
+			table_name="Institutions"
+		)):
+			self.list_ctrl.InsertItem(index, record["InstitutionName"])
+			self.list_ctrl.SetItem(index, 1, record["StartingHour"])
+			self.list_ctrl.SetItem(index, 2, record["EndingHour"])
+			self.list_ctrl.SetItem(index, 3, "Tak" if record["HasBreaks"] else "Nie")
+			self.list_ctrl.SetItem(index, 4, str(record["NormalBreakLength"]) if record["NormalBreakLength"] else "")
+			self.list_ctrl.SetItem(index, 5, str(record["NormalLessonLength"]) if record["NormalLessonLength"] else "")
+			item = self.list_ctrl.GetItem(index)
+			item.SetData(record["InstitutionId"])
+			self.list_ctrl.SetItem(item)
 
 	def on_remove(self, event):
 		item = self.list_ctrl.GetItem(self.list_ctrl.GetFocusedItem())
-		with sqlite3.connect(DB_FILE_PATH) as conn:
-			cur = conn.cursor()
-			cur.execute("DELETE from Institutions where InstitutionId = ? ", [item.GetData()])
+		app_global_vars.active_db_con.delete_record(
+			table_name="Institutions",
+			condition_string="InstitutionId = ?",
+			seq=[item.GetData()]
+		)
 		self.list_ctrl.DeleteItem(self.list_ctrl.GetFocusedItem())
 
 	def on_NewInst(self, event):
@@ -1700,7 +1790,7 @@ class mainFrame(wx.Frame):
 
 
 if __name__ == '__main__':
-	createDbBStruct()
+	app_global_vars.active_db_con = backend.mariadb_connector.MariadbConnector.from_config()
 	app = wx.App(False)
 	frame = mainFrame()
 	app.MainLoop()
