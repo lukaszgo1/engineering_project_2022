@@ -3,6 +3,8 @@ import os
 import csv
 import backend.mariadb_connector
 import backend.app_constants as app_global_vars
+import frontend.views.institutions.listing
+import frontend.presenters.institutions_presenter
 
 
 WEEK_DAYS = {
@@ -1636,34 +1638,12 @@ class SchedulesPanel(wx.Panel):
 					writer.writerow(row)
 
 
-class InstitutionsPanel(wx.Panel):
-
-	def __init__(self, parent):
-		super().__init__(parent)
-		main_sizer = wx.BoxSizer(wx.VERTICAL)
-		self.list_ctrl = wx.ListCtrl(
-			self,
-			size=(-1, 200),
-			style=wx.LC_REPORT | wx.BORDER_SUNKEN
-		)
-		self.list_ctrl.Bind(wx.EVT_CONTEXT_MENU, self.onContext)
-		self.populateListView()
-		main_sizer.Add(self.list_ctrl, 0, wx.ALL | wx.EXPAND, 5)
-		newInst_button = wx.Button(self, label='Dodaj nową instytucję')
-		newInst_button.Bind(wx.EVT_BUTTON, self.on_NewInst)
-		main_sizer.Add(newInst_button, 0, wx.ALL | wx.CENTER, 5)
-		self.SetSizer(main_sizer)
+class InstitutionsPanel(frontend.views.institutions.listing.InstitutionsListing):
 
 	def onContext(self, event):
 		self.PopupMenu(InstitutionContextMenu(self), event.GetPosition())
 
 	def populateListView(self):
-		self.list_ctrl.InsertColumn(0, 'Nazwa', width=400)
-		self.list_ctrl.InsertColumn(1, 'Godzina rozpoczęcia zajęć', width=200)
-		self.list_ctrl.InsertColumn(2, 'Godzina zakończenia zajęć', width=200)
-		self.list_ctrl.InsertColumn(3, 'Czy przerwy', width=150)
-		self.list_ctrl.InsertColumn(4, 'Długość przerwy', width=150)
-		self.list_ctrl.InsertColumn(5, 'Długość zajęć', width=150)
 		for index, record in enumerate(app_global_vars.active_db_con.fetch_all(
 			col_names=(
 				"InstitutionId",
@@ -1676,12 +1656,6 @@ class InstitutionsPanel(wx.Panel):
 			),
 			table_name="Institutions"
 		)):
-			self.list_ctrl.InsertItem(index, record["InstitutionName"])
-			self.list_ctrl.SetItem(index, 1, record["StartingHour"])
-			self.list_ctrl.SetItem(index, 2, record["EndingHour"])
-			self.list_ctrl.SetItem(index, 3, "Tak" if record["HasBreaks"] else "Nie")
-			self.list_ctrl.SetItem(index, 4, str(record["NormalBreakLength"]) if record["NormalBreakLength"] else "")
-			self.list_ctrl.SetItem(index, 5, str(record["NormalLessonLength"]) if record["NormalLessonLength"] else "")
 			item = self.list_ctrl.GetItem(index)
 			item.SetData(record["InstitutionId"])
 			self.list_ctrl.SetItem(item)
@@ -1764,6 +1738,8 @@ class mainFrame(wx.Frame):
 		self.oldPanel = self.mainPanel
 		self.sizer.Add(self.mainPanel, 1, wx.EXPAND)
 		self.Show()
+		presenter = frontend.presenters.institutions_presenter.InstitutionPresenter(self.mainPanel)
+		presenter.present_all()
 
 	def switchPanels(self):
 		"""Hides current view annd shows the one shown previously if any."""
