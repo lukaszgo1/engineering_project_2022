@@ -1,0 +1,225 @@
+\documentclass[12pt,a4paper,oneside]{article}
+\usepackage[QX]{polski}
+
+\usepackage[utf8]{inputenc}
+\usepackage{latexsym}
+\usepackage{tgpagella}
+\usepackage{lmodern}
+\usepackage{amsmath,amsthm,amsfonts,amssymb,alltt}
+\usepackage{epsfig}
+\usepackage{pdflscape}
+\usepackage{caption}
+\usepackage{indentfirst}
+\usepackage{float}
+%\usepackage{showkeys}
+\bibliographystyle{plabbrv}
+
+
+\usepackage{color}
+\usepackage[polish]{babel}
+\usepackage{datetime2}
+\usepackage[x11names,dvipsnames,table]{xcolor}
+\usepackage{hyperref}
+\hypersetup{
+pdfauthor={Łukasz Golonka},
+unicode,  % So that 'Ł' in 'Łukasz' renders correctly in PDF properties
+colorlinks=True,
+linkcolor=darkgray,  % color of internal links (change box color with linkbordercolor)
+citecolor=BrickRed,  % color of links to bibliography
+filecolor=Magenta,   % color of file links
+urlcolor=BlueViolet}	%%pdfpagemode=FullScreen}
+
+% diagramy, grafy itp.
+\usepackage{tikz}
+\usetikzlibrary{positioning}
+\usetikzlibrary{arrows}
+\usetikzlibrary{arrows.meta}
+\usetikzlibrary{chains,fit,shapes,calc}
+\tikzset{main node/.style={circle,fill=blue!20,draw,minimum size=1cm,inner sep=0pt}}
+
+% algorytmy
+\usepackage[linesnumbered,lined,commentsnumbered]{algorithm2e}
+\SetKwFor{ForEach}{for each}{do}{end for}%
+\SetKwFor{ForAll}{for all}{do}{end for}%
+\newenvironment{myalgorithm}
+{\rule{\textwidth}{0.5mm}\\\SetAlCapSty{}\SetAlgoNoEnd\SetAlgoNoLine\begin{algorithm}}{\end{algorithm}\rule{\textwidth}{0.5mm}}
+
+
+%---------------------
+\overfullrule=2mm
+\pagestyle{plain}
+\textwidth=15cm \textheight=685pt \topmargin=-25pt \linespread{1.3} 
+\setlength{\parskip}{0pt}
+\setlength\arraycolsep{2pt}
+\oddsidemargin =0.9cm
+\evensidemargin =-0.1cm
+
+\captionsetup{width=.95\linewidth, justification=centering}
+%---------------------
+
+
+
+
+\newtheorem{tw}{Twierdzenie}[section]
+\newtheorem{lem}[tw]{Lemat}
+\newtheorem{co}[tw]{Wniosek}
+\newtheorem{prop}[tw]{Stwierdzenie}
+\theoremstyle{definition}
+\newtheorem{ex}{Przykład}
+\newtheorem{re}[tw]{Uwaga}
+\newtheorem{de}{Definicja}[section]
+
+
+
+\newcommand{\bC}{{\mathbb C}}
+\newcommand{\bR}{{\mathbb R}}
+\newcommand{\bZ}{{\mathbb Z}}
+\newcommand{\bQ}{{\mathbb Q}}
+\newcommand{\bN}{{\mathbb N}}
+\newcommand{\captionT}[1]{\caption{\textsc{\footnotesize{#1}}}}
+\renewcommand\figurename{Rys.}
+
+\numberwithin{equation}{section}
+\renewcommand{\thefootnote}{\arabic{footnote})}
+%\renewcommand{\thefootnote}{\alph{footnote})}
+
+
+
+\begin{document}
+
+% --------------------------------------------
+% Strona tytułowa
+% --------------------------------------------
+
+\thispagestyle{empty}
+\begin{titlepage}
+\begin{center}\Large
+Uniwersytet Pedagogiczny im. Komisji Edukacji Narodowej \\
+\large
+Instytut Bezpieczeństwa i Informatyki\\
+\vskip 10pt
+\end{center}
+\begin{center}
+\centering \includegraphics[width=0.4\columnwidth]{../resources/images/logoUP_pl.pdf}
+\end{center}
+
+\begin{center}
+ {\bf \fontsize{14pt}{14pt}\selectfont PROJEKT INŻYNIERSKI \\ RAPORT Z REALIZACJI PROJEKTU\\
+ }
+ {\fontsize{12pt}{12pt} raport z okresu: 10.11.2022 - 16.11.2022}
+\end{center}
+\vskip 5pt
+\begin{center}
+ {\bf \fontsize{22pt}{22pt}\selectfont Aplikacja do układania planu zajęć w architekturze klient-serwer}
+\end{center}
+
+\begin{center}
+ {\fontsize{12pt}{12pt}\selectfont wykonany przez: }
+\end{center}
+\begin{center}
+ {\bf\fontsize{16pt}{16pt}\selectfont Łukasza Golonkę}\\
+ {\fontsize{12pt}{12pt}\selectfont Nr albumu: 142881 \\}
+\end{center}
+\begin{center}
+ {\fontsize{12pt}{12pt}\selectfont pod opieką:}\\
+ {\bf\fontsize{12pt}{12pt}\selectfont Doktora inżyniera Łukasza Bibrzyckiego i Doktora inżyniera Marcina Piekarczyka}
+\end{center}
+
+%\mbox{}
+\vspace*{\fill}
+%\vskip 50pt
+\begin{center}
+\large
+Kraków \the\year\\
+(ostatnia aktualizacja: \DTMcurrenttime,\;\today)
+\end{center}
+\end{titlepage}
+\setcounter{page}{0} 
+\newpage\null\thispagestyle{empty}
+%\setcounter{page}{0} 
+%\newpage
+%\thispagestyle{empty}
+
+\tableofcontents
+
+
+\newpage
+
+\section{Informacja na temat postępów prac nad projektem}
+\subsection{Zespół projektowy}
+Łukasz Golonka - \href{mailto:lukasz.golonka@student.up.krakow.pl}{lukasz.golonka@student.up.krakow.pl}
+\subsection{Zrealizowane zadania}
+\paragraph{Łukasz Golonka}
+\begin{itemize}
+\item Analiza sposobu w jaki oznaczone będą opcje nie mające zastosowania na obecnym etapie układania grafiku (sekcja 1.3.1)
+\item Analiza alternatyw dla modułu dataclass z biblioteki standardowej języka Python (sekcja 1.3.2)
+\item Optymalizacja Interfejsu pozwalającego na wprowadzanie informacji o długich przerwach (sekcja 1.3.3)
+\end{itemize}
+
+\subsection {Opis zrealizowanych prac}
+\subsubsection{Łukasz Golonka: Analiza sposobu w jaki oznaczone będą opcje nie mające zastosowania na obecnym etapie układania grafiku}
+W celu ułatwienia operatorowi procesu układania planu zajęć koniecznym będzie sygnalizowanie, że pewne wartości nie mogą być wybrane na obecnym etapie pracy. 
+Będzie to miało zastosowanie np. w sytuacji, w której wybrana klasa ma już maksymalną możliwą ilość godzin konkretnego przedmiotu, lub gdy żaden nauczyciel z uprawnieniami do jego nauczania nie jest dostępny.
+Zasadniczo istnieją trzy możliwości sygnalizowania, że dana opcja nie może być wybrana:
+\begin{enumerate}
+	\item Opcje niedostępne nie są w ogóle wyświetlane
+	\item Opcje niedostępne są wyszarzane
+	\item Opcje niedostępne są oznaczane w jakiś arbitralnie wybrany (najczęściej konkretnym kolorem) sposób
+\end{enumerate}
+Ze względu na ograniczenia wykorzystywanej biblioteki do tworzenia interfejsu graficznego wyszarzanie opcji nie jest możliwe.
+Bazując na wpisie jednego z jej głównych programistów \cite{no_grayed_out} funkcjonalność taka jest natywnie oferowana wyłącznie na systemie OSX i w związku z tym niedostępna w frameworku.
+Oznaczanie niemożliwych do wybrania opcji innym kolorem wydaje się mieć tylu przeciwników co zwolenników.
+Za \cite{no_disabled} wpisem omawiającym wady niedostępnych lecz widocznych elementów, oraz za \cite {ibm_guide_lines} wskazówkami firmy IBM dla osób projektujących interfejsy graficzne można wymienić kilka wad oznaczania elementów niedostępnych, które nie występują w sytuacji gdy nie są one widoczne:
+\begin{itemize}
+	\item Każdy niedostępny do wybrania element powinien mieć towarzyszącą informację mówiącą o tym co zrobić, aby stał się on dostępny
+	\item Oznaczanie elementów w arbitralnie wybrany sposób jest mylące dla użytkownika, który nie zapoznał się z dokumentacją
+\end{itemize}
+Biorąc pod uwagę argumenty przytoczone powyżej,
+fakt, że stworzenie własnej kontrolki sygnalizującej niedostępne opcje w niestandardowy sposób sprawiłoby, iż nie będzie ona używalna dla osób korzystających z różnego rodzaju technologii asystujących
+(oznacza to również, że niemożliwym byłoby skorzystanie z narzędzi służących do automatycznego testowania interfejsu użytkownika),
+zdecydowano, że opcje niedostępne w danej sytuacji nie będą wyświetlane w interfejsie aplikacji.
+
+\subsubsection{Łukasz Golonka: Analiza alternatyw dla modułu dataclass z biblioteki standardowej języka Python}
+Na obecnym etapie refaktoryzacji aplikacji intensywnie wykorzystuje ona moduł dataclass z biblioteki standardowej Python-a.
+Data klasy są używane do tworzenia modeli oraz jako baza dla metod fabrycznych wytwarzających kontrolki zgodnie z deklaratywnie podaną specyfikacją.
+Niestety w trakcie refaktoryzacji możliwości przez nią oferowane okazały się nie być wystarczające co spowodowało konieczność przeanalizowania istniejących alternatyw oraz wdrożenia najsensowniejszej z nich.
+Przeanalizowane rozwiązania:
+\begin{itemize}
+	\item Możliwość skorzystania z nowszej wersji języka Python i w konsekwencji usprawnień do modułu dataclasses opisanych w \cite{py310dcls}
+	\item Wykorzystanie alternatywnej implementacji data klas z biblioteki dataclassy \cite{dataclassy}
+	\item Skorzystanie z biblioteki attrs \cite{attrs}
+\end{itemize}
+Finalnie zdecydowano się na użycie biblioteki attrs. 
+Pozostałe rozwiązania zostały odrzucone gdyż:
+\begin{itemize}
+	\item Przejście na najnowszą wersję języka Python wymaga tego, aby wszystkie pozostałe zależności wykorzystywane w projekcie były z nią zgodne - na dzień 2022.11.16 tak nie jest
+	\item Biblioteka dataclassy nie pozwala na dołączanie arbitralnych metadanych do pól (funkcjonalność intensywnie wykorzystywana w modelach) oraz na dodawanie adnotacji typów do zmiennych statycznych
+	\item Attrs nie tylko rozwiązuje problemy modułu dataclass z biblioteki standardowej ale dodaje kilka interesujących możliwości pozwalających na bardziej elegancką konwersję instancji na typy wbudowane Python-a
+\end{itemize}
+
+
+\subsubsection{Łukasz Golonka: Optymalizacja Interfejsu pozwalającego na wprowadzanie informacji o długich przerwach}
+Interfejs wprowadzania przerw w prototypowej wersji aplikacji wymagał od operatora ręcznego wpisywania godziny jej rozpoczęcia oraz zakończenia.
+Został on zmodyfikowany tak aby podawana była długość przerwy a następnie bazując na automatycznie wygenerowanej liście wybierany był czas jej rozpoczęcia i zakończenia.
+Przy generowaniu możliwych do wybrania wartości przyjęto następujące założenia:
+\begin{itemize}
+	\item Długa Przerwa po pierwszej oraz przed ostatnią lekcją nie jest możliwa do wprowadzenia
+	\item Minimalna długość przerwy to długość przerwy standardowej plus 5 minut
+	\item Przerwa nie może być dłuższa niż standardowa lekcja
+\end{itemize}
+Implementacja wraz z wykonanym w minionym tygodniu refactoringiem jest dostępna na gałęzi w repozytorium projektu (załącznik nr 1).
+
+
+\subsection{Załączniki}
+\begin{itemize}
+	\item Załącznik nr 1 - \href{https://github.com/lukaszgo1/engineering_project_2022/tree/mvp}{Gałąź w repozytorium na portalu GitHub, na której dokonywana jest refaktoryzacja aplikacji}
+\end{itemize}
+
+
+
+\renewcommand\refname{Literatura (jeżeli wymagana)}
+\bibliography{references}
+\addcontentsline{toc}{section}{Literatura}
+
+\end{document}
+
