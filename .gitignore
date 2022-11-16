@@ -1,6 +1,8 @@
 *.aux
 *.toc
 *.out
+*.bbl
+*.blg
 documentation/*/*.log
 *.pyc
 .venv

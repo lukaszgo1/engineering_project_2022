@@ -1,0 +1,207 @@
+\documentclass[12pt,a4paper,oneside]{article}
+\usepackage[QX]{polski}
+
+\usepackage[utf8]{inputenc}
+\usepackage{latexsym}
+\usepackage{tgpagella}
+\usepackage{lmodern}
+\usepackage{amsmath,amsthm,amsfonts,amssymb,alltt}
+\usepackage{epsfig}
+\usepackage{pdflscape}
+\usepackage{caption}
+\usepackage{indentfirst}
+\usepackage{float}
+%\usepackage{showkeys}
+\bibliographystyle{plabbrv}
+
+
+\usepackage{color}
+\usepackage[polish]{babel}
+\usepackage{datetime2}
+\usepackage[x11names,dvipsnames,table]{xcolor}
+\usepackage{hyperref}
+\hypersetup{
+pdfauthor={Łukasz Golonka},
+unicode,  % So that 'Ł' in 'Łukasz' renders correctly in PDF properties
+colorlinks=True,
+linkcolor=darkgray,  % color of internal links (change box color with linkbordercolor)
+citecolor=BrickRed,  % color of links to bibliography
+filecolor=Magenta,   % color of file links
+urlcolor=BlueViolet}	%%pdfpagemode=FullScreen}
+
+% diagramy, grafy itp.
+\usepackage{tikz}
+\usetikzlibrary{positioning}
+\usetikzlibrary{arrows}
+\usetikzlibrary{arrows.meta}
+\usetikzlibrary{chains,fit,shapes,calc}
+\tikzset{main node/.style={circle,fill=blue!20,draw,minimum size=1cm,inner sep=0pt}}
+
+% algorytmy
+\usepackage[linesnumbered,lined,commentsnumbered]{algorithm2e}
+\SetKwFor{ForEach}{for each}{do}{end for}%
+\SetKwFor{ForAll}{for all}{do}{end for}%
+\newenvironment{myalgorithm}
+{\rule{\textwidth}{0.5mm}\\\SetAlCapSty{}\SetAlgoNoEnd\SetAlgoNoLine\begin{algorithm}}{\end{algorithm}\rule{\textwidth}{0.5mm}}
+
+
+%---------------------
+\overfullrule=2mm
+\pagestyle{plain}
+\textwidth=15cm \textheight=685pt \topmargin=-25pt \linespread{1.3} 
+\setlength{\parskip}{0pt}
+\setlength\arraycolsep{2pt}
+\oddsidemargin =0.9cm
+\evensidemargin =-0.1cm
+
+\captionsetup{width=.95\linewidth, justification=centering}
+%---------------------
+
+
+
+
+\newtheorem{tw}{Twierdzenie}[section]
+\newtheorem{lem}[tw]{Lemat}
+\newtheorem{co}[tw]{Wniosek}
+\newtheorem{prop}[tw]{Stwierdzenie}
+\theoremstyle{definition}
+\newtheorem{ex}{Przykład}
+\newtheorem{re}[tw]{Uwaga}
+\newtheorem{de}{Definicja}[section]
+
+
+
+\newcommand{\bC}{{\mathbb C}}
+\newcommand{\bR}{{\mathbb R}}
+\newcommand{\bZ}{{\mathbb Z}}
+\newcommand{\bQ}{{\mathbb Q}}
+\newcommand{\bN}{{\mathbb N}}
+\newcommand{\captionT}[1]{\caption{\textsc{\footnotesize{#1}}}}
+\renewcommand\figurename{Rys.}
+
+\numberwithin{equation}{section}
+\renewcommand{\thefootnote}{\arabic{footnote})}
+%\renewcommand{\thefootnote}{\alph{footnote})}
+
+
+
+\begin{document}
+
+% --------------------------------------------
+% Strona tytułowa
+% --------------------------------------------
+
+\thispagestyle{empty}
+\begin{titlepage}
+\begin{center}\Large
+Uniwersytet Pedagogiczny im. Komisji Edukacji Narodowej \\
+\large
+Instytut Bezpieczeństwa i Informatyki\\
+\vskip 10pt
+\end{center}
+\begin{center}
+\centering \includegraphics[width=0.4\columnwidth]{../resources/images/logoUP_pl.pdf}
+\end{center}
+
+\begin{center}
+ {\bf \fontsize{14pt}{14pt}\selectfont PROJEKT INŻYNIERSKI \\ RAPORT Z REALIZACJI PROJEKTU\\
+ }
+ {\fontsize{12pt}{12pt} raport z okresu: 03.11.2022 - 09.11.2022}
+\end{center}
+\vskip 5pt
+\begin{center}
+ {\bf \fontsize{22pt}{22pt}\selectfont Aplikacja do układania planu zajęć w architekturze klient-serwer}
+\end{center}
+
+\begin{center}
+ {\fontsize{12pt}{12pt}\selectfont wykonany przez: }
+\end{center}
+\begin{center}
+ {\bf\fontsize{16pt}{16pt}\selectfont Łukasza Golonkę}\\
+ {\fontsize{12pt}{12pt}\selectfont Nr albumu: 142881 \\}
+\end{center}
+\begin{center}
+ {\fontsize{12pt}{12pt}\selectfont pod opieką:}\\
+ {\bf\fontsize{12pt}{12pt}\selectfont Doktora inżyniera Łukasza Bibrzyckiego i Doktora inżyniera Marcina Piekarczyka}
+\end{center}
+
+%\mbox{}
+\vspace*{\fill}
+%\vskip 50pt
+\begin{center}
+\large
+Kraków \the\year\\
+(ostatnia aktualizacja: \DTMcurrenttime,\;\today)
+\end{center}
+\end{titlepage}
+\setcounter{page}{0} 
+\newpage\null\thispagestyle{empty}
+%\setcounter{page}{0} 
+%\newpage
+%\thispagestyle{empty}
+
+\tableofcontents
+
+
+\newpage
+
+\section{Informacja na temat postępów prac nad projektem}
+\subsection{Zespół projektowy}
+Łukasz Golonka - \href{mailto:lukasz.golonka@student.up.krakow.pl}{lukasz.golonka@student.up.krakow.pl}
+\subsection{Zrealizowane zadania}
+\paragraph{Łukasz Golonka}
+\begin{itemize}
+	\item Analiza ulepszeń w interfejsie aplikacji pozwalających operatorowi na łatwiejsze układanie grafiku (sekcja 1.3.1)
+	\item Dalsza refaktoryzacja aplikacji zgodnie z wzorcem architektonicznym MVP (sekcja 1.3.2)
+\end{itemize}
+
+\subsection {Opis zrealizowanych prac}
+\subsubsection{Łukasz Golonka: Analiza ulepszeń w interfejsie aplikacji pozwalających operatorowi na łatwiejsze układanie grafiku} \label{interface_improvements}
+Jak ustalono na ostatnim spotkaniu projektowym ``automatyzacja'' układania grafiku nie będzie działać na zasadzie w pełni zautomatyzowanej generacji wyzwalanej przez operatora, zamiast tego interfejs programu powinien zostać zmodyfikowany tak, aby proponować możliwie optymalne wartości przy dodawaniu nowych zajęć. Możliwe do wprowadzenia ułatwienia zostały roboczo podzielone na dwie części:
+\begin{enumerate}
+	\item Poprawki obecnie napisanych okienek, których wprowadzenie jest możliwe przy bieżącym schemacie bazy danych
+	\item Zmiany, których wprowadzenie wymaga modyfikacji bazy udokumentowanych w sprawozdaniu i ERD-zie przedstawionych na ostatnim spotkaniu projektowym
+\end{enumerate}
+Na chwilę obecną opisane zostaną zmiany możliwe do wprowadzenia bez modyfikacji bazy.
+Będą one obejmować dwa okienka dodawania długich przerw oraz zajęć jako takich.
+Obecnie funkcjonujący interfejs wprowadzania długich przerw bazuje na ręcznym wpisywaniu godziny startu oraz końca przerwy.
+Należy go zmodyfikować tak, aby, bazując na przechowywanych w bazie informacjach o długości lekcji oraz ``domyślnych'' przerw, generował akceptowalne wartości po podaniu długości przerwy przez operatora.
+Przy dodawaniu zajęć do grafiku kolizje (nakładające się sale, nauczyciele prowadzący zajęcia) są wykrywane dopiero po zatwierdzeniu ręcznie wprowadzonych wartości.
+Należy doprowadzić do sytuacji, w której lista widocznych pozycji jest zawężana już na etapie wyboru tak, aby wyeliminować np. nauczycieli, którzy o podanej godzinie prowadzą inne zajęcia.
+
+\subsubsection{Łukasz Golonka: Dalsza refaktoryzacja aplikacji zgodnie z wzorcem architektonicznym MVP}
+Przed całkowitym rozdzieleniem aplikacji na komponent kliencki i serwerowy należy przekształcić ją na formę zgodną z wzorcem MVP.
+Jako że w projekcie nie jest wykorzystywany żaden framework dostarczający gotową implementację, konieczne jest opracowanie sensownego podziału.
+Dla zaczerpnięcia inspiracji skorzystano z \cite{mvp_ref} oraz artykułów z \cite{layers_design} omawiających różnorakie wariacje na temat podziału aplikacji na warstwy.
+W procesie refaktoryzacji zasadniczo kluczowe okazały się trzy kwestie:
+Ustalenie za co właściwie odpowiada prezenter, a co jest funkcjonalnością widoku.
+Przyjęty został wariant, w którym widok nie  ma w zasadzie żadnej funkcji i wszystkie, nawet najprostsze requesty, są przekierowywane do kontrolera.
+Jak dokonywać zmian w aplikacji przy jednoczesnym zachowaniu możliwości jej testowania w możliwie dużym zakresie. Główny problem wynika z tego, że większość widoków odwołuje się bezpośrednio do nadrzędnego okna aplikacji co sprawia, że przenoszenie kodu między pakietami jest mocno uciążliwe.
+Czy są części aplikacji, których nie opłaca się konwertować na wzorzec MVP na obecnym etapie pracy. Bazując na ustaleniach z \ref{interface_improvements} zdecydowano się na wariant, w którym okna dodawania przerw i zajęć do grafiku zostaną skonwertowane na koniec jako, że wymagana będzie również zmiana ich wyglądu.
+Gałąź, na której odbywa się refaktoryzacja kodu jest dostępna w załączniku nr 1.
+
+
+\subsection{Załączniki}
+\begin{itemize}
+	\item Załącznik nr 1 - \href{https://github.com/lukaszgo1/engineering_project_2022/tree/mvp}{Gałąź w repozytorium na portalu GitHub, na której dokonywana jest refaktoryzacja aplikacji}
+\end{itemize}
+
+
+\renewcommand\refname{Literatura (jeżeli wymagana)}
+\bibliography{references}
+\addcontentsline{toc}{section}{Literatura}
+% --------------------------------------------------------------------
+%%%%%%% odkomentować gdy bibliografia ma być wewnątrz dokumentu
+% --------------------------------------------------------------------
+%\begin{thebibliography}{11}
+%
+%\addcontentsline{toc}{section}{Literatura}
+%
+%\bibitem{ZAN}
+%C. Zannoni and P. Pasini, 
+%\emph{Advances in the Computer Simulatons of Liquid Crystals}, Kluwer Academic Publishers, 2000.
+%
+%\end{thebibliography}
+
+\end{document}
+
