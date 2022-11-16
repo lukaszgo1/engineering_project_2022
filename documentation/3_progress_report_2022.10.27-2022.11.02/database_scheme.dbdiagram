@@ -1,0 +1,120 @@
+Table "Institutions" {
+  "InstutionId" int [pk]
+  "InstitutionName" nvarchar(512)
+  "StartingHour" nvarchar(5)
+  "EndingHour" nvarchar(5)
+  "HasBreaks" int
+  "NormalBreakLength" int
+  "NormalLessonLength" int
+}
+
+Table "Breaks" {
+  "BreakId" int [pk]
+  "InstutionId" int
+  "BreakStartingHour" nvarchar(5)
+  "BreakEndingHour" nvarchar(5)
+}
+Table "Teachers" {
+  "TeacherId" int [pk]
+  "FirstName" nvarchar(100)
+  "LastName" nvarchar(100)
+  "IsAvailable" BIT
+  "EmployedIn" int
+}
+
+Table "Subjects" {
+  "SubjectId" int [pk]
+  "SubjectName" nvarchar(512)
+  "TaughtIn" int
+}
+
+Table "New_TeachersToSubjects" {
+  "TeacherToSubjectId" int [pk]
+  "TeacherId" int
+  "SubjectId" int
+}
+
+Table "ClassRooms" {
+  "ClassRoomId" int [pk]
+  "ClassRoomIdentifier" nvarchar(100)
+  "IsIn" int
+  "PrimaryCourse" int [null]
+}
+
+
+Table "New_Terms" {
+  "TermId" int [pk]
+  "StartDate" date
+  "EndDate" date
+  "TermInInst" int
+}
+
+Table "New_TermPlan" {
+  "TermPlanId" int [pk]
+  "TermPlanName" nvarchar(100)
+  "AppliesToTerm" int
+  }
+
+Table "New_TermPlanDetails" {
+  "TermPlanDetailId" int [pk]
+  "TermPlanId" int
+  "SubjectId" int
+  "LessonsAmount" int
+  "MinBlockSize" int
+  "MaxBlockSize" int
+  "PreferredDistanceInDays" int
+  "PreferredDistanceInWeeks" int
+}
+
+
+Table "Classes" {
+  "ClassId" int [pk]
+  "ClassIdentifier" nvarchar(100)
+  "ClassInInstitution" int
+}
+
+Table "New_ClassToTermPlan" {
+  "ClassToTermPlanId" int [pk]
+  "ClassId" int
+  "TermPlanId" int
+}
+
+Table "Schedule" {
+  "LessonId" int [pk]
+  "InstutionId" int
+  "WeekDay" int
+  "LessonStartingHour" nvarchar(5)
+  "LessonEndingHour" nvarchar(5)
+  "TeacherId" int
+  "SubjectId" int
+  "ClassId" int
+  "ClassRoomId" int
+  "New_LessonDate" date
+  "New_InTerm" int
+}
+
+
+Ref:"Institutions"."InstutionId" < "Breaks"."InstutionId"
+Ref:"Institutions"."InstutionId" < "Teachers"."EmployedIn"
+Ref:"Institutions"."InstutionId" < "Subjects"."TaughtIn"
+Ref:"Institutions"."InstutionId" < "ClassRooms"."IsIn"
+Ref:"Institutions"."InstutionId" < "Classes"."ClassInInstitution"
+Ref:"Institutions"."InstutionId" < "Schedule"."InstutionId"
+
+Ref:"Teachers"."TeacherId" < "Schedule"."TeacherId"
+Ref:"Subjects"."SubjectId" < "Schedule"."SubjectId"
+Ref:"Teachers"."TeacherId" < "New_TeachersToSubjects"."TeacherId"
+Ref:"Subjects"."SubjectId" < "New_TeachersToSubjects"."SubjectId"
+Ref:"ClassRooms"."ClassRoomId" < "Schedule"."ClassRoomId"
+Ref:"Classes"."ClassId" < "Schedule"."ClassId"
+
+
+
+Ref:"Institutions"."InstutionId" < "New_Terms"."TermInInst"
+Ref:"New_Terms"."TermId" < "New_TermPlan"."AppliesToTerm"
+Ref:"New_Terms"."TermId" < "Schedule"."New_InTerm"
+Ref:"New_TermPlan"."TermPlanId" < "New_TermPlanDetails"."TermPlanId"
+Ref:"New_TermPlan"."TermPlanId" < "New_ClassToTermPlan"."TermPlanId"
+Ref:"Subjects"."SubjectId" < "New_TermPlanDetails"."SubjectId"
+Ref:"Classes"."ClassId" < "New_ClassToTermPlan"."ClassId"
+
