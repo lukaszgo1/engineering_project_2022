@@ -2,3 +2,6 @@ wxPython==4.1.1
 py2exe==0.10.4.0
 mariadb
 typing_extensions
+dataclassy
+attrs
+flake8

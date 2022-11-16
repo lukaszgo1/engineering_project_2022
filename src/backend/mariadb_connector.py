@@ -58,13 +58,15 @@ class MariadbConnector:
         table_name: str,
         col_names: Sequence[str],
         col_values: Sequence[str]
-    ):
+    ) -> int:
         col_names_str = ', '.join(col_names)
         ph = ', '.join(itertools.repeat('?', len(col_values)))  # placeholders
-        self.execute_and_commit(
-            f"INSERT INTO {table_name} ({col_names_str}) VALUES ({ph})",
-            seq=col_values
-        )
+        with self.auto_committing_cursor() as cursor:
+            cursor.execute(
+                f"INSERT INTO {table_name} ({col_names_str}) VALUES ({ph})",
+                col_values
+            )
+            return cursor.lastrowid
 
     def fetch_one(
         self,

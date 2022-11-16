@@ -3,7 +3,7 @@ import os
 import csv
 import backend.mariadb_connector
 import backend.app_constants as app_global_vars
-import frontend.views.institutions.listing
+import frontend.views.institutions
 import frontend.presenters.institutions_presenter
 
 
@@ -1119,7 +1119,6 @@ class InstitutionContextMenu(wx.Menu):
 	def __init__(self, parent):
 		super().__init__()
 		self.parent = parent
-		delInst = wx.MenuItem(self, id=wx.ID_DELETE, text='Usuń')
 		addBreak = wx.MenuItem(self, id=wx.ID_ANY, text='Dodaj długą przerwę')
 		showBreaks = wx.MenuItem(self, id=wx.ID_ANY, text='Wyświetl długie przerwy')
 		addClass = wx.MenuItem(self, id=wx.ID_ANY, text='Dodaj klasę')
@@ -1132,9 +1131,6 @@ class InstitutionContextMenu(wx.Menu):
 		showSubjects = wx.MenuItem(self, id=wx.ID_ANY, text='Wyświetl przedmioty')
 		showTeachers = wx.MenuItem(self, id=wx.ID_ANY, text='Wyświetl nauczycieli')
 		showSchedule = wx.MenuItem(self, id=wx.ID_ANY, text='Wyświetl grafik')
-		editInst = wx.MenuItem(self, id=wx.ID_EDIT, text='Edytuj')
-		self.Append(editInst)
-		self.Append(delInst)
 		index = self.parent.list_ctrl.GetFocusedItem()
 		dbIndex = self.parent.list_ctrl.GetItemData(index)
 		res = app_global_vars.active_db_con.fetch_one(
@@ -1156,8 +1152,6 @@ class InstitutionContextMenu(wx.Menu):
 		self.Append(showClassRooms)
 		self.Append(lessonToSchedule)
 		self.Append(showSchedule)
-		self.Bind(wx.EVT_MENU, self.parent.on_edit, editInst)
-		self.Bind(wx.EVT_MENU, self.parent.on_remove, delInst)
 		self.Bind(wx.EVT_MENU, self.parent.on_AddBreak, addBreak)
 		self.Bind(wx.EVT_MENU, self.showBreaks, showBreaks)
 		self.Bind(wx.EVT_MENU, self.parent.on_AddSubject, addSubject)
@@ -1296,199 +1290,6 @@ class AddSubjectDLG(wx.Dialog):
 		sizer.Add(label, flag=wx.ALIGN_CENTER_VERTICAL)
 		sizer.AddSpacer(10)
 		self.controls[ctrl_key] = wx.TextCtrl(self)
-		sizer.Add(self.controls[ctrl_key])
-		self.helper_sizer.Add(sizer)
-
-
-class addInstitutionDialog(wx.Dialog):
-
-	controls = dict()
-	labels = dict()
-
-	def __init__(self, parent):
-		super().__init__(parent=parent, title="Dodaj instytucję")
-		self.main_sizer = wx.BoxSizer(wx.VERTICAL)
-		self.helper_sizer = wx.BoxSizer(wx.VERTICAL)
-		self.add_widgets('Nazwa instytucji:', "name")
-		self.add_widgets('Godzina rozpoczęcia zajęć:', "startTime")
-		self.add_widgets('Godzina końca zajęć:', "endTime")
-		self.controls["Breaks"] = wx.CheckBox(self, label="Czy przerwy")
-		self.helper_sizer.Add(self.controls["Breaks"])
-		self.controls["Breaks"].Bind(wx.EVT_CHECKBOX, self.onChangeState)
-		self.add_widgets('Długość przerwy:', "breakLength")
-		self.controls["breakLength"].Disable()
-		self.labels["breakLength"].Disable()
-		self.add_widgets('Długość zajęć:', "lessonLength")
-		self.controls["lessonLength"].Disable()
-		self.labels["lessonLength"].Disable()
-		self.main_sizer.Add(self.helper_sizer, border=20, flag=wx.LEFT | wx.RIGHT | wx.TOP)
-		btn_sizer = wx.BoxSizer()
-		save_btn = wx.Button(self, label='Dodaj')
-		save_btn.Bind(wx.EVT_BUTTON, self.on_save)
-		btn_sizer.Add(save_btn, 0, wx.ALL, 5)
-		btn_sizer.Add(wx.Button(self, id=wx.ID_CANCEL), 0, wx.ALL, 5)
-		self.main_sizer.Add(btn_sizer, 0, wx.CENTER)
-		self.main_sizer.Fit(self)
-		self.SetSizer(self.main_sizer)
-
-	def onChangeState(self, evt):
-		"""Disables or enables controls for specifying default lesson and break length if applicable for a given institution."""
-		if evt.IsChecked():
-			self.controls["breakLength"].Enable()
-			self.labels["breakLength"].Enable()
-			self.controls["lessonLength"].Enable()
-			self.labels["lessonLength"].Enable()
-		else:
-			self.controls["breakLength"].Disable()
-			self.labels["breakLength"].Disable()
-			self.controls["lessonLength"].Disable()
-			self.labels["lessonLength"].Disable()
-
-	def on_save(self, evt):
-		tbl_name = "Institutions"
-		if self.controls["Breaks"].GetValue() == True:
-			s = ("InstitutionName", "StartingHour", "EndingHour", "HasBreaks", "NormalBreakLength", "NormalLessonLength")
-			v = [
-				self.controls["name"].GetValue(),
-				self.controls["startTime"].GetValue(),
-				self.controls["endTime"].GetValue(),
-				self.controls["Breaks"].GetValue(),
-				self.controls["breakLength"].GetValue(),
-				self.controls["lessonLength"].GetValue()
-			]
-		else:
-			s = ("InstitutionName", "StartingHour", "EndingHour", "HasBreaks")
-			v = [
-				self.controls["name"].GetValue(),
-				self.controls["startTime"].GetValue(),
-				self.controls["endTime"].GetValue(),
-				self.controls["Breaks"].GetValue(),
-			]
-		app_global_vars.active_db_con.insert(tbl_name, s, v)
-		self.Parent.mainPanel.list_ctrl.ClearAll()
-		self.Parent.mainPanel.populateListView()
-		self.Close()
-
-	def add_widgets(self, label_text, ctrl_key):
-		sizer = wx.BoxSizer(wx.HORIZONTAL)
-		label = wx.StaticText(self, label=label_text, size=(150, -1))
-		sizer.Add(label, flag=wx.ALIGN_CENTER_VERTICAL)
-		self.labels[ctrl_key] = label
-		sizer.AddSpacer(10)
-		self.controls[ctrl_key] = wx.TextCtrl(self)
-		sizer.Add(self.controls[ctrl_key])
-		self.helper_sizer.Add(sizer)
-
-
-class EditInstitutionDialog(wx.Dialog):
-
-	controls = dict()
-	labels = dict()
-
-	def __init__(self, parent, index):
-		super().__init__(parent=parent, title="Edytuj instytucję")
-		self.index = index
-		self.data = app_global_vars.active_db_con.fetch_one(
-			col_names=(
-				"InstitutionName",
-				"StartingHour",
-				"EndingHour",
-				"HasBreaks",
-				"NormalBreakLength",
-				"NormalLessonLength"
-			),
-			condition_string="InstitutionId = ?",
-			table_name="Institutions",
-			seq=[self.index]
-		)
-		self.main_sizer = wx.BoxSizer(wx.VERTICAL)
-		self.helper_sizer = wx.BoxSizer(wx.VERTICAL)
-		self.add_widgets('Nazwa instytucji:', "name", "InstitutionName")
-		self.add_widgets('Godzina rozpoczęcia zajęć:', "startTime", "StartingHour")
-		self.add_widgets('Godzina końca zajęć:', "endTime", "EndingHour")
-		self.controls["Breaks"] = wx.CheckBox(self, label="Czy przerwy")
-		self.controls["Breaks"].SetValue(int(self.data["HasBreaks"]))
-		self.controls["Breaks"].Bind(wx.EVT_CHECKBOX, self.onChangeState)
-		self.helper_sizer.Add(self.controls["Breaks"])
-		self.add_widgets('Długość przerwy:', "breakLength", "NormalBreakLength")
-		self.add_widgets('Długość zajęć:', "lessonLength", "NormalLessonLength")
-		if self.controls["Breaks"].GetValue() == 0:
-			self.controls["breakLength"].Disable()
-			self.labels["breakLength"].Disable()
-			self.controls["lessonLength"].Disable()
-			self.labels["lessonLength"].Disable()
-		self.main_sizer.Add(self.helper_sizer, border=20, flag=wx.LEFT | wx.RIGHT | wx.TOP)
-		btn_sizer = wx.BoxSizer()
-		save_btn = wx.Button(self, label='Zapisz zmiany')
-		save_btn.Bind(wx.EVT_BUTTON, self.on_save)
-		btn_sizer.Add(save_btn, 0, wx.ALL, 5)
-		btn_sizer.Add(wx.Button(self, id=wx.ID_CANCEL), 0, wx.ALL, 5)
-		self.main_sizer.Add(btn_sizer, 0, wx.CENTER)
-		self.main_sizer.Fit(self)
-		self.SetSizer(self.main_sizer)
-
-	def onChangeState(self, evt):
-		if evt.IsChecked():
-			self.controls["breakLength"].Enable()
-			self.labels["breakLength"].Enable()
-			self.controls["lessonLength"].Enable()
-			self.labels["lessonLength"].Enable()
-		else:
-			self.controls["breakLength"].Disable()
-			self.labels["breakLength"].Disable()
-			self.controls["lessonLength"].Disable()
-			self.labels["lessonLength"].Disable()
-
-	def on_save(self, evt):
-		if self.controls["Breaks"].GetValue() == True:
-			s = (
-				"InstitutionName",
-				"StartingHour",
-				"EndingHour",
-				"HasBreaks",
-				"NormalBreakLength",
-				"NormalLessonLength"
-			)
-			v = [
-				self.controls["name"].GetValue(),
-				self.controls["startTime"].GetValue(),
-				self.controls["endTime"].GetValue(),
-				self.controls["Breaks"].GetValue(),
-				self.controls["breakLength"].GetValue(),
-				self.controls["lessonLength"].GetValue(),
-			]
-		else:
-			s = (
-				"InstitutionName",
-				"StartingHour",
-				"EndingHour",
-				"HasBreaks"
-			)
-			v = [
-				self.controls["name"].GetValue(),
-				self.controls["startTime"].GetValue(),
-				self.controls["endTime"].GetValue(),
-				self.controls["Breaks"].GetValue(),
-			]
-		app_global_vars.active_db_con.update_record(
-			table_name="Institutions",
-			col_names=s,
-			col_values=v,
-			condition_str="InstitutionId = ?",
-			condition_values=(self.index,)
-		)
-		self.Parent.mainPanel.list_ctrl.ClearAll()
-		self.Parent.mainPanel.populateListView()
-		self.Close()
-
-	def add_widgets(self, label_text, ctrl_key, valIndex):
-		sizer = wx.BoxSizer(wx.HORIZONTAL)
-		label = wx.StaticText(self, label=label_text, size=(150, -1))
-		sizer.Add(label, flag=wx.ALIGN_CENTER_VERTICAL)
-		self.labels[ctrl_key] = label
-		sizer.AddSpacer(10)
-		ctrlVal = self.data[valIndex]
-		self.controls[ctrl_key] = wx.TextCtrl(self, value=str(ctrlVal) if ctrlVal else "")
 		sizer.Add(self.controls[ctrl_key])
 		self.helper_sizer.Add(sizer)
 
@@ -1638,48 +1439,7 @@ class SchedulesPanel(wx.Panel):
 					writer.writerow(row)
 
 
-class InstitutionsPanel(frontend.views.institutions.listing.InstitutionsListing):
-
-	def onContext(self, event):
-		self.PopupMenu(InstitutionContextMenu(self), event.GetPosition())
-
-	def populateListView(self):
-		for index, record in enumerate(app_global_vars.active_db_con.fetch_all(
-			col_names=(
-				"InstitutionId",
-				"InstitutionName",
-				"StartingHour",
-				"EndingHour",
-				"HasBreaks",
-				"NormalBreakLength",
-				"NormalLessonLength"
-			),
-			table_name="Institutions"
-		)):
-			item = self.list_ctrl.GetItem(index)
-			item.SetData(record["InstitutionId"])
-			self.list_ctrl.SetItem(item)
-
-	def on_remove(self, event):
-		item = self.list_ctrl.GetItem(self.list_ctrl.GetFocusedItem())
-		app_global_vars.active_db_con.delete_record(
-			table_name="Institutions",
-			condition_string="InstitutionId = ?",
-			seq=[item.GetData()]
-		)
-		self.list_ctrl.DeleteItem(self.list_ctrl.GetFocusedItem())
-
-	def on_NewInst(self, event):
-		dlg = addInstitutionDialog(self.Parent)
-		dlg.ShowModal()
-		dlg.Destroy()
-
-	def on_edit(self, event):
-		index = self.list_ctrl.GetFocusedItem()
-		dbIndex = self.list_ctrl.GetItemData(index)
-		dlg = EditInstitutionDialog(self.Parent, dbIndex)
-		dlg.ShowModal()
-		dlg.Destroy()
+class InstitutionsPanel(frontend.views.institutions.listing):
 
 	def on_AddBreak(self, event):
 		index = self.list_ctrl.GetFocusedItem()

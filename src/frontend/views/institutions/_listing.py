@@ -19,7 +19,7 @@ class InstitutionsListing(base_views.BaseEntityList):
     buttons_in_view: List[ctrl_specs.WXButtonSpec] = [
         ctrl_specs.WXButtonSpec(
             label='Dodaj nową instytucję',
-            on_press=lambda evt: print(evt)
+            on_press=lambda evt: evt.EventObject.Parent.presenter.add_new_entry()
         )
     ]
 
