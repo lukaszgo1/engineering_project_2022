@@ -1119,7 +1119,6 @@ class InstitutionContextMenu(wx.Menu):
 	def __init__(self, parent):
 		super().__init__()
 		self.parent = parent
-		addBreak = wx.MenuItem(self, id=wx.ID_ANY, text='Dodaj długą przerwę')
 		showBreaks = wx.MenuItem(self, id=wx.ID_ANY, text='Wyświetl długie przerwy')
 		addClass = wx.MenuItem(self, id=wx.ID_ANY, text='Dodaj klasę')
 		addTeacher = wx.MenuItem(self, id=wx.ID_ANY, text='Dodaj nauczyciela')
@@ -1140,7 +1139,6 @@ class InstitutionContextMenu(wx.Menu):
 			seq=(dbIndex,)
 		)
 		if res["HasBreaks"] == 1:
-			self.Append(addBreak)
 			self.Append(showBreaks)
 		self.Append(addClass)
 		self.Append(addSubject)
@@ -1152,7 +1150,6 @@ class InstitutionContextMenu(wx.Menu):
 		self.Append(showClassRooms)
 		self.Append(lessonToSchedule)
 		self.Append(showSchedule)
-		self.Bind(wx.EVT_MENU, self.parent.on_AddBreak, addBreak)
 		self.Bind(wx.EVT_MENU, self.showBreaks, showBreaks)
 		self.Bind(wx.EVT_MENU, self.parent.on_AddSubject, addSubject)
 		self.Bind(wx.EVT_MENU, self.parent.on_AddClass, addClass)

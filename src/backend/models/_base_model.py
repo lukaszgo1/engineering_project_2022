@@ -3,13 +3,14 @@ import dataclasses
 
 from typing import (
     Dict,
+    Final,
     List,
     Tuple,
 )
 
 import backend.app_constants
 
-NOT_YET_INSERTED = object()
+NOT_YET_INSERTED: Final = object()
 
 
 class _BaseModel(metaclass=abc.ABCMeta):

@@ -88,10 +88,15 @@ class InstitutionPresenter:
             specs = []
             handlers = []
             for item_spec in self.view_collections.context_menu_spec:
-                specs.append(item_spec)
-                handlers.append(self._on_click_handler_factory(
-                    item_spec.on_activate_listener_name
-                ))
+                if (
+                    item_spec.should_show is None
+                    or not callable(item_spec.should_show)
+                    or item_spec.should_show(self)
+                ):
+                    specs.append(item_spec)
+                    handlers.append(self._on_click_handler_factory(
+                        item_spec.on_activate_listener_name
+                    ))
             menu = frontend.gui_control_factories.wx_context_menu_factory(
                 item_specs=specs,
                 on_click_listeners=handlers
@@ -103,7 +108,9 @@ class InstitutionPresenter:
 
     def on_delete(self) -> None:
         index_to_remove = self._focused_entity_index
-        print(f"Going to remove {index_to_remove}")
         self.all_records[index_to_remove].delete_db_record()
         del self.all_records[index_to_remove]
         self.p.delete_item(index_to_remove)
+
+    def on_add_break(self):
+        print("in ad")

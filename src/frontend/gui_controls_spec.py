@@ -74,6 +74,9 @@ class MenuItemSpec:
     name: str
     id: int = wx.ID_ANY
     on_activate_listener_name: str
+    should_show: Optional[
+        Callable[..., bool]
+    ] = None
 
     def create(self, parent_menu: wx.Menu) -> wx.MenuItem:
         return parent_menu.Append(self.id, item=self.name)
