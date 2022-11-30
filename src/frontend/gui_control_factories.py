@@ -63,14 +63,10 @@ class _base_control (metaclass=abc.ABCMeta):
         to which it should be added.
         """
         self._identifier = control_params.identifier
-        self._listener_names = control_params.listeners_to_register
         self._registered_listeners: List[Callable[..., None]] = []
 
-    def register_to_changes(self, subject: _base_control) -> None:
-        for on_change_trigger_name in self._listener_names:
-            subject._registered_listeners.append(
-                getattr(self, on_change_trigger_name)
-            )
+    def register_to_changes(self, on_change_event) -> None:
+        self._registered_listeners.append(on_change_event)
 
     @abc.abstractmethod
     def add_to_sizer(self, parent_sizer: wx.Sizer) -> None:
@@ -85,6 +81,43 @@ class _base_control (metaclass=abc.ABCMeta):
         """Return a dictionary where the keys are identifiers of the control,
         and value is the value of the underlying vidget.
         """
+
+
+class labeled_combo_box_factory(_base_control):
+
+    def __init__(
+        self,
+        ctrl_parent: wx.Window,
+        control_params: "ctrl_specs.LabeledComboBoxSpec"
+    ) -> None:
+        super().__init__(ctrl_parent, control_params)
+        self._sizer = wx.BoxSizer(wx.HORIZONTAL)
+        self._label = wx.StaticText(
+                ctrl_parent,
+                label=control_params.label,
+                size=(150, -1)
+            )
+        self._sizer.Add(self._label, flag=wx.ALIGN_CENTER_VERTICAL)
+        self._sizer.AddSpacer(10)
+        self._combobox = wx.Choice(ctrl_parent)
+        self._sizer.Add(self._combobox)
+        self._combobox.Bind(wx.EVT_CHOICE, self.on_choice)
+
+    def on_choice(self, event):
+        new_val = list(self.get_value().values())[0]
+        for listener in self._registered_listeners:
+            listener(new_val)
+
+    def add_to_sizer(self, parent_sizer: wx.Sizer) -> None:
+        parent_sizer.Add(self._sizer)
+
+    def set_value(self, new_val: List) -> None:
+        self._indexes_to_vals = {k: v for k, v in enumerate(new_val)}
+        self._combobox.Set([str(_) for _ in self._indexes_to_vals.values()])
+
+    def get_value(self) -> Dict[str, Any]:
+        selected_val = self._indexes_to_vals[self._combobox.Selection]
+        return {self.identifier: selected_val}
 
 
 class labeled_edit_field_factory(_base_control):

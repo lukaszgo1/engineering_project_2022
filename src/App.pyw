@@ -302,54 +302,6 @@ class EditScheduleDLG(wx.Dialog):
 	pass
 
 
-class AddBreakDLG(wx.Dialog):
-
-	controls = dict()
-
-	def __init__(self, parent, index, refreshView):
-		super().__init__(parent=parent, title="Dodaj długą przerwę")
-		self.index = index
-		self.refreshView = refreshView
-		self.main_sizer = wx.BoxSizer(wx.VERTICAL)
-		self.helper_sizer = wx.BoxSizer(wx.VERTICAL)
-		self.add_widgets('Początek przerwy:', "breakStartingHour")
-		self.add_widgets('Koniec przerwy:', "breakEndingHour")
-		self.main_sizer.Add(self.helper_sizer, border=20, flag=wx.LEFT | wx.RIGHT | wx.TOP)
-		btn_sizer = wx.BoxSizer()
-		save_btn = wx.Button(self, label='Dodaj')
-		save_btn.Bind(wx.EVT_BUTTON, self.on_save)
-		btn_sizer.Add(save_btn, 0, wx.ALL, 5)
-		btn_sizer.Add(wx.Button(self, id=wx.ID_CANCEL), 0, wx.ALL, 5)
-		self.main_sizer.Add(btn_sizer, 0, wx.CENTER)
-		self.main_sizer.Fit(self)
-		self.SetSizer(self.main_sizer)
-
-	def on_save(self, evt):
-		v = [
-			self.index,
-			self.controls["breakStartingHour"].GetValue(),
-			self.controls["breakEndingHour"].GetValue()
-		]
-		app_global_vars.active_db_con.insert(
-			table_name="Breaks",
-			col_names=("InstitutionId", "BreakStartingHour", "BreakEndingHour"),
-			col_values=v
-		)
-		if self.refreshView:
-			self.Parent.list_ctrl.ClearAll()
-			self.Parent.populateListView()
-		self.Close()
-
-	def add_widgets(self, label_text, ctrl_key):
-		sizer = wx.BoxSizer(wx.HORIZONTAL)
-		label = wx.StaticText(self, label=label_text, size=(150, -1))
-		sizer.Add(label, flag=wx.ALIGN_CENTER_VERTICAL)
-		sizer.AddSpacer(10)
-		self.controls[ctrl_key] = wx.TextCtrl(self)
-		sizer.Add(self.controls[ctrl_key])
-		self.helper_sizer.Add(sizer)
-
-
 class EditBreakDLG(wx.Dialog):
 
 	controls = dict()
@@ -1438,13 +1390,6 @@ class SchedulesPanel(wx.Panel):
 
 class InstitutionsPanel(frontend.views.institutions.listing):
 
-	def on_AddBreak(self, event):
-		index = self.list_ctrl.GetFocusedItem()
-		dbIndex = self.list_ctrl.GetItemData(index)
-		dlg = AddBreakDLG(self.Parent, dbIndex, False)
-		dlg.ShowModal()
-		dlg.Destroy()
-
 	def on_AddClass(self, event):
 		index = self.list_ctrl.GetFocusedItem()
 		dbIndex = self.list_ctrl.GetItemData(index)
@@ -1484,19 +1429,9 @@ class InstitutionsPanel(frontend.views.institutions.listing):
 class mainFrame(wx.Frame):
 
 	def __init__(self):
-		super().__init__(
-			parent=None,
-			title='Układacz planu zajęć'
-		)
-		self.sizer = wx.BoxSizer(wx.VERTICAL)
-		self.SetSizer(self.sizer)
 		self.mainPanel = InstitutionsPanel(self)
 		self.currPanel = self.mainPanel
 		self.oldPanel = self.mainPanel
-		self.sizer.Add(self.mainPanel, 1, wx.EXPAND)
-		self.Show()
-		presenter = frontend.presenters.institutions_presenter.InstitutionPresenter(self.mainPanel)
-		presenter.present_all()
 
 	def switchPanels(self):
 		"""Hides current view annd shows the one shown previously if any."""
@@ -1524,6 +1459,5 @@ class mainFrame(wx.Frame):
 
 if __name__ == '__main__':
 	app_global_vars.active_db_con = backend.mariadb_connector.MariadbConnector.from_config()
-	app = wx.App(False)
-	frame = mainFrame()
-	app.MainLoop()
+	import frontend.app
+	frontend.app.main()

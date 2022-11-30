@@ -10,6 +10,17 @@ import frontend.gui_controls_spec
 import frontend.views._base_views
 
 
+class RegularLessonsCtrRevealer(frontend.gui_controls_spec.OnChangeListener):
+
+    def __init__(self, presenter, emitting_control) -> None:
+        super().__init__(presenter, emitting_control)
+        self._emitting_control.register_to_changes(self.on_change_state)
+
+    def on_change_state(self, new_state: bool) -> None:
+        for control in self._controls_to_modify:
+            control.set_state(new_state)
+
+
 class AddInst(frontend.views._base_views.BaseEEnterParamsDlg):
 
     title: str = "Dodaj instytucję"
@@ -33,17 +44,17 @@ class AddInst(frontend.views._base_views.BaseEEnterParamsDlg):
         frontend.gui_controls_spec.CheckBoxSpec(
             identifier="HasBreaks",
             label="Czy przerwy",
-            has_dependent_controls=True
+            on_change_notifier=RegularLessonsCtrRevealer
         ),
         frontend.gui_controls_spec.LabeledEditFieldSpec(
             identifier="NormalBreakLength",
             label="Długość przerwy:",
-            listeners_to_register=["set_state"]
+            should_react_to_changes=True
         ),
         frontend.gui_controls_spec.LabeledEditFieldSpec(
             identifier="NormalLessonLength",
             label="Długość zajęć:",
-            listeners_to_register=["set_state"]
+            should_react_to_changes=True
         ),
     )
 

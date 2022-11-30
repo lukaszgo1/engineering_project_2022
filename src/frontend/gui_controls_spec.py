@@ -1,9 +1,10 @@
+from __future__ import annotations
+
 import abc
 from typing import (
     Any,
     Callable,
     ClassVar,
-    List,
     Optional,
     Union,
     Type,
@@ -31,6 +32,17 @@ class WXListColumnSpec:
     ] = None
 
 
+class OnChangeListener:
+
+    def __init__(self, presenter, emitting_control) -> None:
+        self._presenter = presenter
+        self._emitting_control = emitting_control
+        self._controls_to_modify = list()
+
+    def add_dependend_control(self, control: _ControlWrapperBase):
+        self._controls_to_modify.append(control)
+
+
 @attrs.define(kw_only=True)
 class _ControlWrapperBase(metaclass=abc.ABCMeta):
 
@@ -40,8 +52,8 @@ class _ControlWrapperBase(metaclass=abc.ABCMeta):
         """Return the factory which creates the wrapper for the control."""
 
     identifier: str
-    has_dependent_controls: bool = False
-    listeners_to_register: List[str] = attrs.Factory(list)
+    on_change_notifier: Optional[Type[OnChangeListener]] = None
+    should_react_to_changes: bool = False
 
     def create(
         self,
@@ -57,6 +69,15 @@ class LabeledEditFieldSpec(_ControlWrapperBase):
     _factory_cls: ClassVar[
         Type[control_factories.labeled_edit_field_factory]
     ] = control_factories.labeled_edit_field_factory
+
+
+@attrs.define(kw_only=True)
+class LabeledComboBoxSpec(_ControlWrapperBase):
+
+    label: str
+    _factory_cls: ClassVar[
+        Type[control_factories.labeled_combo_box_factory]
+    ] = control_factories.labeled_combo_box_factory
 
 
 @attrs.define(kw_only=True)

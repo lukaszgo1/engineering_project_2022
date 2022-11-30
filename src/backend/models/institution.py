@@ -1,15 +1,15 @@
-import dataclasses
 from typing import (
     ClassVar,
     Literal,
     Optional,
-    Union,
 )
+
+import attrs
 
 import backend.models._base_model as bm
 
 
-@dataclasses.dataclass
+@attrs.define(kw_only=True)
 class Institution(bm._BaseModel):
 
     db_table_name: ClassVar[str] = "Institutions"
@@ -20,4 +20,3 @@ class Institution(bm._BaseModel):
     HasBreaks: Literal[0, 1]
     NormalBreakLength: Optional[int] = None
     NormalLessonLength: Optional[int] = None
-    id: Union[int, Literal[bm.NOT_YET_INSERTED]] = bm.NOT_YET_INSERTED

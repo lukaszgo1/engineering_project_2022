@@ -17,9 +17,10 @@ class BaseEntityList(wx.Panel):
     list_view_columns: List[ctrl_specs.WXListColumnSpec]
     on_item_focused_listeners: List[Callable[[int], None]]
 
-    def __init__(self, parent: wx.Window) -> None:
+    def __init__(self, presenter) -> None:  # TODO: add type hint
         self.on_item_focused_listeners = []
-        super().__init__(parent)
+        self.presenter = presenter
+        super().__init__(wx.GetApp().TopWindow)
         main_sizer = wx.BoxSizer(wx.VERTICAL)
         self.list_ctrl = wx.ListCtrl(
             self,
@@ -102,6 +103,9 @@ class BaseEntityList(wx.Panel):
         self.list_ctrl.DeleteItem(index)
         self.list_ctrl.SetFocus()
 
+    def show(self):
+        wx.GetApp().TopWindow.sizer.Add(self, 1, wx.EXPAND)
+
 
 class BaseEEnterParamsDlg(wx.Dialog):
 
@@ -111,21 +115,26 @@ class BaseEEnterParamsDlg(wx.Dialog):
     affirmative_btn_label: str
     cancel_btn_label: str = "Anuluj"
 
-    def __init__(self, parent: wx.Window) -> None:
+    def __init__(self, parent: wx.Window, presenter=None) -> None:
         self.added_controls = []
+        self.presenter = presenter
         super().__init__(parent=parent, title=self.title)
         self.main_sizer = wx.BoxSizer(wx.VERTICAL)
         self.helper_sizer = wx.BoxSizer(wx.VERTICAL)
-        self._controls_with_listeners = list()
+        self._on_change_listeners = list()
         for control_spec in self.control_specs:
             control = control_spec.create(self)
             control.add_to_sizer(self.helper_sizer)
             self.added_controls.append(control)
-            if control_spec.has_dependent_controls:
-                self._controls_with_listeners.append(control)
-        for listening_control in self._controls_with_listeners:
-            for possible_subscriber in self.added_controls:
-                possible_subscriber.register_to_changes(listening_control)
+            if control_spec.on_change_notifier is not None:
+                listener = control_spec.on_change_notifier(
+                    self.presenter, control
+                )
+                self._on_change_listeners.append(listener)
+        for listening_control in self._on_change_listeners:
+            for ct, ct_spec in zip(self.added_controls, self.control_specs):
+                if ct_spec.should_react_to_changes:
+                    listening_control.add_dependend_control(ct)
         self.main_sizer.Add(
             self.helper_sizer,
             border=20,

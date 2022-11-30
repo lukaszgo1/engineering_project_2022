@@ -66,7 +66,10 @@ class MariadbConnector:
                 f"INSERT INTO {table_name} ({col_names_str}) VALUES ({ph})",
                 col_values
             )
-            return cursor.lastrowid
+            inserted_id = cursor.lastrowid
+            if inserted_id is None:
+                raise RuntimeError("Failed to insert record")
+            return inserted_id
 
     def fetch_one(
         self,
