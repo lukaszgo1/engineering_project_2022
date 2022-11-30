@@ -1,5 +1,5 @@
 """Named differently than the class
-to avoid conflicts with the `break keyword.
+to avoid conflicts with the `break` keyword.
 """
 
 from typing import (

@@ -80,6 +80,14 @@ items_list: Tuple[frontend.gui_controls_spec.MenuItemSpec, ...] = (
         on_activate_listener_name="on_show_long_breaks",
         should_show=lambda presenter: presenter.focused_entity.HasBreaks
     ),
+    frontend.gui_controls_spec.MenuItemSpec(
+        name="Dodaj klasę",
+        on_activate_listener_name="on_new_class"
+    ),
+    frontend.gui_controls_spec.MenuItemSpec(
+        name="Wyświetl klasy",
+        on_activate_listener_name="on_show_classes"
+    ),
 )
 
 

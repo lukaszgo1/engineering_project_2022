@@ -33,3 +33,14 @@ class InstitutionPresenter(frontend.presenters.base_presenter.BasePresenter):
         import frontend.presenters.breaks_presenter
         p = frontend.presenters.breaks_presenter.BreaksPresenter(self)
         frontend.presentation_manager.get_presentation_manager().present(p)
+
+    def on_new_class(self):
+        import frontend.presenters.classes_presenter
+        p = frontend.presenters.classes_presenter.ClassesPresenter(self)
+        p.add_new_entry()
+
+    def on_show_classes(self):
+        import frontend.presentation_manager
+        import frontend.presenters.classes_presenter
+        p = frontend.presenters.classes_presenter.ClassesPresenter(self)
+        frontend.presentation_manager.get_presentation_manager().present(p)

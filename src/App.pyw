@@ -860,52 +860,6 @@ class SubjectsPanel(wx.Panel):
 		dlg.Destroy()
 
 
-class EditClassDialog(wx.Dialog):
-
-	controls = dict()
-
-	def __init__(self, parent, index, data):
-		super().__init__(parent=parent, title="Edytuj klasę")
-		self.index = index
-		self.data = data
-		self.main_sizer = wx.BoxSizer(wx.VERTICAL)
-		self.helper_sizer = wx.BoxSizer(wx.VERTICAL)
-		self.add_widgets('Identyfikator klasy:', "name", 0)
-		self.main_sizer.Add(self.helper_sizer, border=20, flag=wx.LEFT | wx.RIGHT | wx.TOP)
-		btn_sizer = wx.BoxSizer()
-		save_btn = wx.Button(self, label='Zapisz zmiany')
-		save_btn.Bind(wx.EVT_BUTTON, self.on_save)
-		btn_sizer.Add(save_btn, 0, wx.ALL, 5)
-		btn_sizer.Add(wx.Button(self, id=wx.ID_CANCEL), 0, wx.ALL, 5)
-		self.main_sizer.Add(btn_sizer, 0, wx.CENTER)
-		self.main_sizer.Fit(self)
-		self.SetSizer(self.main_sizer)
-
-	def on_save(self, evt):
-		v = [
-			self.controls["name"].GetValue(),
-		]
-		app_global_vars.active_db_con.update_record(
-			table_name="Classes",
-			col_names=("ClassIdentifier",),
-			col_values=v,
-			condition_str="ClassId = ?",
-			condition_values=(self.index,)
-		)
-		self.Parent.list_ctrl.ClearAll()
-		self.Parent.populateListView()
-		self.Close()
-
-	def add_widgets(self, label_text, ctrl_key, valIndex):
-		sizer = wx.BoxSizer(wx.HORIZONTAL)
-		label = wx.StaticText(self, label=label_text, size=(150, -1))
-		sizer.Add(label, flag=wx.ALIGN_CENTER_VERTICAL)
-		sizer.AddSpacer(10)
-		self.controls[ctrl_key] = wx.TextCtrl(self, value=self.data[valIndex])
-		sizer.Add(self.controls[ctrl_key])
-		self.helper_sizer.Add(sizer)
-
-
 class classesContextMenu(wx.Menu):
 
 	def __init__(self, parent):
@@ -928,81 +882,12 @@ class classesContextMenu(wx.Menu):
 		frame.showPanel(p)
 
 
-class classesPanel(wx.Panel):
-
-	def __init__(self, parent, chosenInst):
-		super().__init__(parent)
-		self.inst = chosenInst
-		main_sizer = wx.BoxSizer(wx.VERTICAL)
-		self.list_ctrl = wx.ListCtrl(
-			self,
-			size=(-1, 200),
-			style=wx.LC_REPORT | wx.BORDER_SUNKEN
-		)
-		self.list_ctrl.Bind(wx.EVT_CONTEXT_MENU, self.onContext)
-		self.list_ctrl.Bind(wx.EVT_KEY_UP, self.onKey)
-		self.populateListView()
-		main_sizer.Add(self.list_ctrl, 0, wx.ALL | wx.EXPAND, 5)
-		newClass_BTN = wx.Button(self, label='Dodaj nową klasę')
-		newClass_BTN.Bind(wx.EVT_BUTTON, self.on_NewClass)
-		main_sizer.Add(newClass_BTN, 0, wx.ALL | wx.CENTER, 5)
-		self.SetSizer(main_sizer)
-
-	def onContext(self, event):
-		self.PopupMenu(classesContextMenu(self), event.GetPosition())
-
-	def onKey(self, event):
-		if event.KeyCode == wx.WXK_ESCAPE:
-			frame.switchPanels()
-
-	def populateListView(self):
-		self.list_ctrl.InsertColumn(0, 'Nazwa', width=400)
-		for index, row in enumerate(
-			app_global_vars.active_db_con.fetch_all_matching(
-				table_name="Classes",
-				col_names=("ClassId", "ClassIdentifier"),
-				condition_str="ClassInInstitution = ?",
-				seq=(self.inst,)
-			)
-		):
-			self.list_ctrl.InsertItem(index, row["ClassIdentifier"])
-			item = self.list_ctrl.GetItem(index)
-			item.SetData(row["ClassId"])
-			self.list_ctrl.SetItem(item)
-
-	def on_remove(self, event):
-		item = self.list_ctrl.GetItem(self.list_ctrl.GetFocusedItem())
-		app_global_vars.active_db_con.delete_record(
-			table_name="Classes",
-			condition_string="ClassId = ? ",
-			seq=[item.GetData()]
-		)
-		self.list_ctrl.DeleteItem(self.list_ctrl.GetFocusedItem())
-
-	def on_NewClass(self, event):
-		dlg = AddClassDLG(self, self.inst, True)
-		dlg.ShowModal()
-		dlg.Destroy()
-
-	def on_edit(self, event):
-		index = self.list_ctrl.GetFocusedItem()
-		dbIndex = self.list_ctrl.GetItemData(index)
-		cols = []
-		for colNumber in range(0, self.list_ctrl.GetColumnCount()):
-			cols.append(self.list_ctrl.GetItemText(index, colNumber))
-		dlg = EditClassDialog(self, dbIndex, cols)
-		dlg.ShowModal()
-		dlg.Destroy()
-
-
 class InstitutionContextMenu(wx.Menu):
 
 	def __init__(self, parent):
 		super().__init__()
 		self.parent = parent
-		addClass = wx.MenuItem(self, id=wx.ID_ANY, text='Dodaj klasę')
 		addTeacher = wx.MenuItem(self, id=wx.ID_ANY, text='Dodaj nauczyciela')
-		showClasses = wx.MenuItem(self, id=wx.ID_ANY, text='Wyświetl klasy')
 		addSubject = wx.MenuItem(self, id=wx.ID_ANY, text='Dodaj przedmiot')
 		lessonToSchedule = wx.MenuItem(self, id=wx.ID_ANY, text='Dodaj zajęcia do grafiku')
 		addClasRoom = wx.MenuItem(self, id=wx.ID_ANY, text='Dodaj salę lekcyjną')
@@ -1010,10 +895,8 @@ class InstitutionContextMenu(wx.Menu):
 		showSubjects = wx.MenuItem(self, id=wx.ID_ANY, text='Wyświetl przedmioty')
 		showTeachers = wx.MenuItem(self, id=wx.ID_ANY, text='Wyświetl nauczycieli')
 		showSchedule = wx.MenuItem(self, id=wx.ID_ANY, text='Wyświetl grafik')
-		self.Append(addClass)
 		self.Append(addSubject)
 		self.Append(addTeacher)
-		self.Append(showClasses)
 		self.Append(showSubjects)
 		self.Append(showTeachers)
 		self.Append(addClasRoom)
@@ -1021,10 +904,8 @@ class InstitutionContextMenu(wx.Menu):
 		self.Append(lessonToSchedule)
 		self.Append(showSchedule)
 		self.Bind(wx.EVT_MENU, self.parent.on_AddSubject, addSubject)
-		self.Bind(wx.EVT_MENU, self.parent.on_AddClass, addClass)
 		self.Bind(wx.EVT_MENU, self.parent.on_AddTeacher, addTeacher)
 		self.Bind(wx.EVT_MENU, self.parent.on_NewClassRoom, addClasRoom)
-		self.Bind(wx.EVT_MENU, self.showClasses, showClasses)
 		self.Bind(wx.EVT_MENU, self.ShowClassRooms, showClassRooms)
 		self.Bind(wx.EVT_MENU, self.ShowSubjects, showSubjects)
 		self.Bind(wx.EVT_MENU, self.ShowTeachers, showTeachers)
@@ -1066,52 +947,6 @@ class InstitutionContextMenu(wx.Menu):
 		dbIndex = self.parent.list_ctrl.GetItemData(index)
 		p = SchedulesPanel(self.parent.Parent, "InstitutionId", dbIndex)
 		frame.showPanel(p)
-
-
-class AddClassDLG(wx.Dialog):
-
-	controls = dict()
-
-	def __init__(self, parent, index, refreshView):
-		super().__init__(parent=parent, title="Dodaj Klasę")
-		self.index = index
-		self.refreshView = refreshView
-		self.main_sizer = wx.BoxSizer(wx.VERTICAL)
-		self.helper_sizer = wx.BoxSizer(wx.VERTICAL)
-		self.add_widgets('Identyfikator klasy:', "name")
-		self.main_sizer.Add(self.helper_sizer, border=20, flag=wx.LEFT | wx.RIGHT | wx.TOP)
-		btn_sizer = wx.BoxSizer()
-		save_btn = wx.Button(self, label='Dodaj')
-		save_btn.Bind(wx.EVT_BUTTON, self.on_save)
-		btn_sizer.Add(save_btn, 0, wx.ALL, 5)
-		btn_sizer.Add(wx.Button(self, id=wx.ID_CANCEL), 0, wx.ALL, 5)
-		self.main_sizer.Add(btn_sizer, 0, wx.CENTER)
-		self.main_sizer.Fit(self)
-		self.SetSizer(self.main_sizer)
-
-	def on_save(self, evt):
-		v = [
-			self.controls["name"].GetValue(),
-			self.index
-		]
-		app_global_vars.active_db_con.insert(
-			table_name="Classes",
-			col_names=("ClassIdentifier", "ClassInInstitution"),
-			col_values=v
-		)
-		if self.refreshView:
-			self.Parent.list_ctrl.ClearAll()
-			self.Parent.populateListView()
-		self.Close()
-
-	def add_widgets(self, label_text, ctrl_key):
-		sizer = wx.BoxSizer(wx.HORIZONTAL)
-		label = wx.StaticText(self, label=label_text, size=(150, -1))
-		sizer.Add(label, flag=wx.ALIGN_CENTER_VERTICAL)
-		sizer.AddSpacer(10)
-		self.controls[ctrl_key] = wx.TextCtrl(self)
-		sizer.Add(self.controls[ctrl_key])
-		self.helper_sizer.Add(sizer)
 
 
 class AddSubjectDLG(wx.Dialog):
