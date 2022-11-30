@@ -1,14 +1,17 @@
 from __future__ import annotations
 
 import datetime
+import operator
 from typing import (
     ClassVar,
     List,
+    Type,
 )
 
 import attrs
 
 import frontend.presenters.base_presenter
+import frontend.presenters.institutions_presenter
 import frontend.views.breaks
 import backend.models.break_model
 
@@ -34,9 +37,11 @@ class BreakRepresentation:
 
 class BreaksPresenter(frontend.presenters.base_presenter.BasePresenter):
 
-    MODEL_CLASS = backend.models.break_model.Break
+    MODEL_CLASS: Type[
+        backend.models.break_model.Break
+    ] = backend.models.break_model.Break
     view_collections = frontend.views.breaks
-    all_records: List[MODEL_CLASS]
+    all_records: List[backend.models.break_model.Break]
 
     @property
     def initial_vals_for_add(self):
@@ -44,7 +49,7 @@ class BreaksPresenter(frontend.presenters.base_presenter.BasePresenter):
 
     def __init__(
         self,
-        parent_presenter: frontend.presenters.base_presenter.BasePresenter
+        parent_presenter: frontend.presenters.institutions_presenter.InstitutionPresenter
     ) -> None:
         super().__init__()
         self.parent_presenter = parent_presenter
@@ -57,7 +62,14 @@ class BreaksPresenter(frontend.presenters.base_presenter.BasePresenter):
     def possible_breaks(self, length: int):
         normal_break = self.parent_presenter.focused_entity.NormalBreakLength
         lesson_len = self.parent_presenter.focused_entity.NormalLessonLength
-        starting_hour = self.parent_presenter.focused_entity.StartingHour
+        existing_breaks = list(
+            self.MODEL_CLASS.from_db(self.parent_presenter.focused_entity)
+        )
+        if existing_breaks:
+            existing_breaks.sort(key=operator.attrgetter("BreakStartingHour"))
+            starting_hour = existing_breaks[-1].BreakEndingHour
+        else:
+            starting_hour = self.parent_presenter.focused_entity.StartingHour
         ending_hour = self.parent_presenter.focused_entity.EndingHour
         default_date = "2000-01-02 "
         start_obj = datetime.datetime.fromisoformat(
