@@ -96,6 +96,14 @@ items_list: Tuple[frontend.gui_controls_spec.MenuItemSpec, ...] = (
         name="Wyświetl przedmioty",
         on_activate_listener_name="on_show_subjects"
     ),
+    frontend.gui_controls_spec.MenuItemSpec(
+        name="Dodaj nauczyciela",
+        on_activate_listener_name="on_new_teacher"
+    ),
+    frontend.gui_controls_spec.MenuItemSpec(
+        name="Wyświetl nauczycieli",
+        on_activate_listener_name="on_show_teachers"
+    ),
 )
 
 
