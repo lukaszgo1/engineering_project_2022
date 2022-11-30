@@ -75,6 +75,11 @@ items_list: Tuple[frontend.gui_controls_spec.MenuItemSpec, ...] = (
         on_activate_listener_name="on_add_break",
         should_show=lambda presenter: presenter.focused_entity.HasBreaks
     ),
+    frontend.gui_controls_spec.MenuItemSpec(
+        name="Wyświetl długie przerwy",
+        on_activate_listener_name="on_show_long_breaks",
+        should_show=lambda presenter: presenter.focused_entity.HasBreaks
+    ),
 )
 
 
@@ -97,7 +102,7 @@ class InstitutionsListing(frontend.views._base_views.BaseEntityList):
     ] = [
         frontend.gui_controls_spec.WXButtonSpec(
             label='Dodaj nową instytucję',
-            on_press=lambda evt: evt.EventObject.Parent.presenter.add_new_entry()
+            on_press=lambda e: e.EventObject.Parent.presenter.add_new_entry()
         )
     ]
 

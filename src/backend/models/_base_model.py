@@ -109,3 +109,27 @@ class _Owned_model(_BaseModel):
         res = super().cols_for_insert()
         res[self.owner_col_id_name] = self.owner.id
         return res
+
+    @classmethod
+    def from_db(cls, owner: _BaseModel):
+        fields_to_select = (cls.id_column_name,)
+        fields_to_select += cls.user_presentable_fields()
+        records_in_db = backend.app_constants.active_db_con.fetch_all_matching(
+            col_names=fields_to_select,
+            table_name=cls.db_table_name,
+            condition_str=f"{cls.owner_col_id_name} = ?",
+            seq=(str(owner.id),)
+        )
+        constructor_fields = {"id": cls.id_column_name}
+        constructor_fields.update(
+            {_: _ for _ in fields_to_select if _ != cls.id_column_name}
+        )
+        for record in records_in_db:
+            kwargs_with_vals = dict(
+                zip(
+                    constructor_fields.keys(),
+                    tuple(record[key] for key in constructor_fields.values())
+                )
+            )
+            kwargs_with_vals["owner"] = owner
+            yield cls(**kwargs_with_vals)

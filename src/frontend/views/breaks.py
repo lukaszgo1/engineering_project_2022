@@ -1,7 +1,11 @@
+import operator
 from typing import (
     Dict,
+    List,
     Tuple,
 )
+
+import wx
 
 import frontend.gui_controls_spec
 import frontend.views._base_views
@@ -47,4 +51,43 @@ class AddBreakDlg(frontend.views._base_views.BaseEEnterParamsDlg):
         }
 
 
+class BreaksListing(frontend.views._base_views.BaseEntityList):
+
+    buttons_in_view: List[frontend.gui_controls_spec.WXButtonSpec] = [
+        frontend.gui_controls_spec.WXButtonSpec(
+            label="Dodaj długą przerwę",
+            on_press=lambda e: e.EventObject.Parent.presenter.add_new_entry()
+        )
+    ]
+
+    list_view_columns: List[frontend.gui_controls_spec.WXListColumnSpec] = [
+        frontend.gui_controls_spec.WXListColumnSpec(
+            header_name="Początek przerwy",
+            width=400,
+            value_getter=operator.attrgetter("BreakStartingHour")
+        ),
+        frontend.gui_controls_spec.WXListColumnSpec(
+            header_name="Koniec przerwy",
+            width=400,
+            value_getter=operator.attrgetter("BreakEndingHour")
+        )
+    ]
+
+
+items_list: Tuple[frontend.gui_controls_spec.MenuItemSpec, ...] = (
+    frontend.gui_controls_spec.MenuItemSpec(
+        id=wx.ID_EDIT,
+        name="Edytuj",
+        on_activate_listener_name="on_edit"
+    ),
+    frontend.gui_controls_spec.MenuItemSpec(
+        id=wx.ID_DELETE,
+        name="Usuń",
+        on_activate_listener_name="on_delete"
+    ),
+)
+
+
 add = AddBreakDlg
+listing = BreaksListing
+context_menu_spec = items_list

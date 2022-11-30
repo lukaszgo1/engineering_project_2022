@@ -353,78 +353,7 @@ class EditBreakDLG(wx.Dialog):
 		self.helper_sizer.Add(sizer)
 
 
-class BreaksContextMenu(wx.Menu):
-
-	def __init__(self, parent):
-		super().__init__()
-		self.parent = parent
-		delBreak = wx.MenuItem(self, id=wx.ID_DELETE, text='Usuń')
-		editBreak = wx.MenuItem(self, id=wx.ID_EDIT, text='Edytuj')
-		self.Append(editBreak)
-		self.Append(delBreak)
-		self.Bind(wx.EVT_MENU, self.parent.on_edit, editBreak)
-		self.Bind(wx.EVT_MENU, self.parent.on_remove, delBreak)
-
-
 class BreaksPanel(wx.Panel):
-
-	def __init__(self, parent, chosenInst):
-		super().__init__(parent)
-		self.inst = chosenInst
-		main_sizer = wx.BoxSizer(wx.VERTICAL)
-		self.list_ctrl = wx.ListCtrl(
-			self,
-			size=(-1, 200),
-			style=wx.LC_REPORT | wx.BORDER_SUNKEN
-		)
-		self.list_ctrl.Bind(wx.EVT_CONTEXT_MENU, self.onContext)
-		self.list_ctrl.Bind(wx.EVT_KEY_UP, self.onKey)
-		self.populateListView()
-		main_sizer.Add(self.list_ctrl, 0, wx.ALL | wx.EXPAND, 5)
-		new_breakBTN = wx.Button(self, label='Dodaj długą przerwę')
-		new_breakBTN.Bind(wx.EVT_BUTTON, self.on_NewBreak)
-		main_sizer.Add(new_breakBTN, 0, wx.ALL | wx.CENTER, 5)
-		self.SetSizer(main_sizer)
-
-	def onContext(self, event):
-		self.PopupMenu(BreaksContextMenu(self), event.GetPosition())
-
-	def onKey(self, event):
-		"""Handles switching between panels when user presses ESC."""
-		if event.KeyCode == wx.WXK_ESCAPE:
-			frame.switchPanels()
-
-	def populateListView(self):
-		"""Sets up the list view columns and fills the list with the data from the database"""
-		self.list_ctrl.InsertColumn(0, 'Początek przerwy', width=400)
-		self.list_ctrl.InsertColumn(1, 'Koniec przerwy', width=400)
-		for index, row in enumerate(
-			app_global_vars.active_db_con.fetch_all_matching(
-				table_name="Breaks",
-				col_names=("BreakId", "BreakStartingHour", "BreakEndingHour"),
-				condition_str="InstitutionId = ?",
-				seq=(self.inst,)
-			)
-		):
-			self.list_ctrl.InsertItem(index, row["BreakStartingHour"])
-			self.list_ctrl.SetItem(index, 1, row["BreakEndingHour"])
-			item = self.list_ctrl.GetItem(index)
-			item.SetData(row["BreakId"])
-			self.list_ctrl.SetItem(item)
-
-	def on_remove(self, event):
-		item = self.list_ctrl.GetItem(self.list_ctrl.GetFocusedItem())
-		app_global_vars.active_db_con.delete_record(
-			table_name="Breaks",
-			condition_string="BreakId = ? ",
-			seq=[item.GetData()]
-		)
-		self.list_ctrl.DeleteItem(self.list_ctrl.GetFocusedItem())
-
-	def on_NewBreak(self, event):
-		dlg = AddBreakDLG(self, self.inst, True)
-		dlg.ShowModal()
-		dlg.Destroy()
 
 	def on_edit(self, event):
 		index = self.list_ctrl.GetFocusedItem()
@@ -1071,7 +1000,6 @@ class InstitutionContextMenu(wx.Menu):
 	def __init__(self, parent):
 		super().__init__()
 		self.parent = parent
-		showBreaks = wx.MenuItem(self, id=wx.ID_ANY, text='Wyświetl długie przerwy')
 		addClass = wx.MenuItem(self, id=wx.ID_ANY, text='Dodaj klasę')
 		addTeacher = wx.MenuItem(self, id=wx.ID_ANY, text='Dodaj nauczyciela')
 		showClasses = wx.MenuItem(self, id=wx.ID_ANY, text='Wyświetl klasy')
@@ -1082,16 +1010,6 @@ class InstitutionContextMenu(wx.Menu):
 		showSubjects = wx.MenuItem(self, id=wx.ID_ANY, text='Wyświetl przedmioty')
 		showTeachers = wx.MenuItem(self, id=wx.ID_ANY, text='Wyświetl nauczycieli')
 		showSchedule = wx.MenuItem(self, id=wx.ID_ANY, text='Wyświetl grafik')
-		index = self.parent.list_ctrl.GetFocusedItem()
-		dbIndex = self.parent.list_ctrl.GetItemData(index)
-		res = app_global_vars.active_db_con.fetch_one(
-			col_names=("HasBreaks",),
-			table_name="Institutions",
-			condition_string="InstitutionId = ?",
-			seq=(dbIndex,)
-		)
-		if res["HasBreaks"] == 1:
-			self.Append(showBreaks)
 		self.Append(addClass)
 		self.Append(addSubject)
 		self.Append(addTeacher)
@@ -1102,7 +1020,6 @@ class InstitutionContextMenu(wx.Menu):
 		self.Append(showClassRooms)
 		self.Append(lessonToSchedule)
 		self.Append(showSchedule)
-		self.Bind(wx.EVT_MENU, self.showBreaks, showBreaks)
 		self.Bind(wx.EVT_MENU, self.parent.on_AddSubject, addSubject)
 		self.Bind(wx.EVT_MENU, self.parent.on_AddClass, addClass)
 		self.Bind(wx.EVT_MENU, self.parent.on_AddTeacher, addTeacher)
@@ -1424,37 +1341,6 @@ class InstitutionsPanel(frontend.views.institutions.listing):
 		dlg = LessonToScheduleDLG(self.Parent, dbIndex, False)
 		dlg.ShowModal()
 		dlg.Destroy()
-
-
-class mainFrame(wx.Frame):
-
-	def __init__(self):
-		self.mainPanel = InstitutionsPanel(self)
-		self.currPanel = self.mainPanel
-		self.oldPanel = self.mainPanel
-
-	def switchPanels(self):
-		"""Hides current view annd shows the one shown previously if any."""
-		self.sizer.Remove(0)
-		if self.oldPanel is None:
-			self.oldPanel = self.mainPanel
-		self.oldPanel.Show()
-		self.currPanel.Hide()
-		self.currPanel = self.oldPanel
-		self.oldPanel = None
-		self.Layout()
-		self.currPanel.list_ctrl.SetFocus()
-
-	def showPanel(self, toShow):
-		"""Replaces the current view with the instance of `wx.Panel` provided as an parameter.
-		The  previously shown panel can be accessed as `oldPanel` on the frame object."""
-		self.oldPanel = self.currPanel
-		self.currPanel = toShow
-		self.sizer.Add(self.currPanel, 1, wx.EXPAND)
-		self.currPanel.Show()
-		self.oldPanel.Hide()
-		self.Layout()
-		toShow.list_ctrl.SetFocus()
 
 
 if __name__ == '__main__':

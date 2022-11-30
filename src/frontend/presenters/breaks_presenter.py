@@ -93,3 +93,8 @@ class BreaksPresenter(frontend.presenters.base_presenter.BasePresenter):
             BreakEndingHour=entered_vals["BreakEndingHour"],
             owner=self.parent_presenter.focused_entity
         )
+
+    def get_all_records(self):
+        yield from self.MODEL_CLASS.from_db(
+            self.parent_presenter.focused_entity
+        )

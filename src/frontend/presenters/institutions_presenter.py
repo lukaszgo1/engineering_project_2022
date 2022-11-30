@@ -27,3 +27,9 @@ class InstitutionPresenter(frontend.presenters.base_presenter.BasePresenter):
         import frontend.presenters.breaks_presenter
         p = frontend.presenters.breaks_presenter.BreaksPresenter(self)
         p.add_new_entry()
+
+    def on_show_long_breaks(self):
+        import frontend.presentation_manager
+        import frontend.presenters.breaks_presenter
+        p = frontend.presenters.breaks_presenter.BreaksPresenter(self)
+        frontend.presentation_manager.get_presentation_manager().present(p)

@@ -33,6 +33,7 @@ class BaseEntityList(wx.Panel):
             self.on_new_item_focused
         )
         self._create_list_columns()
+        self.list_ctrl.Bind(wx.EVT_KEY_UP, self.on_key_pressed)
         main_sizer.Add(self.list_ctrl, 0, wx.ALL | wx.EXPAND, 5)
         for btn in self.buttons_in_view:
             main_sizer.Add(
@@ -45,6 +46,13 @@ class BaseEntityList(wx.Panel):
                 5
             )
         self.SetSizer(main_sizer)
+
+    def on_key_pressed(self, event):
+        if event.KeyCode == wx.WXK_ESCAPE:
+            self.presenter.show_previous_view()
+
+    def focus_list(self):
+        self.list_ctrl.SetFocus()
 
     def on_context(self, event: wx.ContextMenuEvent) -> None:
         self.presenter.show_context_menu_for_entity(event.GetPosition())
@@ -105,6 +113,7 @@ class BaseEntityList(wx.Panel):
 
     def show(self):
         wx.GetApp().TopWindow.sizer.Add(self, 1, wx.EXPAND)
+        self.Show()
 
 
 class BaseEEnterParamsDlg(wx.Dialog):

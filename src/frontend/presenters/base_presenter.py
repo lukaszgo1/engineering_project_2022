@@ -46,6 +46,9 @@ class BasePresenter:
         )
         self.all_records.append(to_show)
 
+    def get_all_records(self):
+        yield from self.MODEL_CLASS.from_db()
+
     def present_all(self):
         self.is_presenting = True
         self.p = self.view_collections.listing(presenter=self)
@@ -53,8 +56,13 @@ class BasePresenter:
             self.on_new_item_gained_focus
         )
         self.p.show()
-        for record in self.MODEL_CLASS.from_db():
+        for record in self.get_all_records():
             self._present_single_in_view(record)
+        self.p.focus_list()
+
+    def hide(self):
+        if self.is_presenting:
+            self.p.Hide()
 
     @property
     def initial_vals_for_add(self):
@@ -132,3 +140,7 @@ class BasePresenter:
         self.all_records[index_to_remove].delete_db_record()
         del self.all_records[index_to_remove]
         self.p.delete_item(index_to_remove)
+
+    def show_previous_view(self):
+        import frontend.presentation_manager as pm
+        pm.get_presentation_manager().show_previous_view_if_any()
