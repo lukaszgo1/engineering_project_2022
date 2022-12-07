@@ -14,3 +14,6 @@ class Subject(bm._Owned_model):
     id_column_name: ClassVar[str] = "SubjectId"
     owner_col_id_name: ClassVar[str] = "TaughtIn"
     SubjectName: str
+
+    def __str__(self) -> str:
+        return self.SubjectName

@@ -15,7 +15,7 @@ import frontend.gui_control_factories
 class BasePresenter:
 
     MODEL_CLASS: Type[backend.models._base_model._BaseModel]
-    view_collections = Any
+    view_collections = Any  # Add type hint
     all_records: List[backend.models._base_model._BaseModel]
 
     def __init__(self) -> None:

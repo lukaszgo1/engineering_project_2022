@@ -35,6 +35,20 @@ class _BaseModel:
         )
 
     @classmethod
+    def initializer_params(cls, db_record: Dict) -> Dict:
+        initializer_fields = {"id": cls.id_column_name}
+        initializer_fields.update(
+            {_: _ for _ in cls.user_presentable_fields()}
+        )
+        kwargs_with_vals = dict(
+            zip(
+                initializer_fields.keys(),
+                tuple(db_record[key] for key in initializer_fields.values())
+            )
+        )
+        return kwargs_with_vals
+
+    @classmethod
     def from_db(cls):
         fields_to_select = (cls.id_column_name,)
         fields_to_select += cls.user_presentable_fields()
@@ -42,23 +56,15 @@ class _BaseModel:
             col_names=fields_to_select,
             table_name=cls.db_table_name
         )
-        constructor_fields = {"id": cls.id_column_name}
-        constructor_fields.update(
-            {_: _ for _ in fields_to_select if _ != cls.id_column_name}
-        )
         for record in records_in_db:
-            kwargs_with_vals = dict(
-                zip(
-                    constructor_fields.keys(),
-                    tuple(record[key] for key in constructor_fields.values())
-                )
-            )
+            kwargs_with_vals = cls.initializer_params(record)
             yield cls(**kwargs_with_vals)
 
     def cols_to_attrs(self):
         return attrs.asdict(
             inst=self,
-            filter=lambda attr, val: self.is_user_presentable(attr)
+            filter=lambda attr, val: self.is_user_presentable(attr),
+            recurse=False
         )
 
     def cols_for_insert(self) -> Dict:
@@ -120,16 +126,7 @@ class _Owned_model(_BaseModel):
             condition_str=f"{cls.owner_col_id_name} = ?",
             seq=(str(owner.id),)
         )
-        constructor_fields = {"id": cls.id_column_name}
-        constructor_fields.update(
-            {_: _ for _ in fields_to_select if _ != cls.id_column_name}
-        )
         for record in records_in_db:
-            kwargs_with_vals = dict(
-                zip(
-                    constructor_fields.keys(),
-                    tuple(record[key] for key in constructor_fields.values())
-                )
-            )
+            kwargs_with_vals = cls.initializer_params(record)
             kwargs_with_vals["owner"] = owner
             yield cls(**kwargs_with_vals)

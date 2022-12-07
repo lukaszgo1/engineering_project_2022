@@ -366,71 +366,6 @@ class BreaksPanel(wx.Panel):
 		dlg.Destroy()
 
 
-class AddClassRoomDLG(wx.Dialog):
-
-	controls = dict()
-
-	def __init__(self, parent, index, refreshView):
-		super().__init__(parent=parent, title="Dodaj salę")
-		self.index = index
-		self.refreshView = refreshView
-		self.main_sizer = wx.BoxSizer(wx.VERTICAL)
-		self.helper_sizer = wx.BoxSizer(wx.VERTICAL)
-		self.add_widgets('Numer:', "name")
-		self.coursesInInst = dict()
-		self.coursesInInst[0] = (-1, "brak")
-		res = app_global_vars.active_db_con.fetch_all_matching(
-			table_name="Subjects",
-			col_names=("SubjectId", "SubjectName"),
-			condition_str="TaughtIn = ?",
-			seq=(self.index,)
-		)
-		for indexInCB, record in enumerate(res, 1):
-			self.coursesInInst[indexInCB] = (record["SubjectId"], record["SubjectName"])
-		sizer = wx.BoxSizer(wx.HORIZONTAL)
-		label = wx.StaticText(self, label="Główny przedmiot:", size=(150, -1))
-		sizer.Add(label, flag=wx.ALIGN_CENTER_VERTICAL)
-		sizer.AddSpacer(10)
-		self.controls["mainSubject"] = wx.Choice(self, choices=[v[1] for v in self.coursesInInst.values()])
-		self.controls["mainSubject"].SetSelection(0)
-		sizer.Add(self.controls["mainSubject"])
-		self.helper_sizer.Add(sizer)
-		self.main_sizer.Add(self.helper_sizer, border=20, flag=wx.LEFT | wx.RIGHT | wx.TOP)
-		btn_sizer = wx.BoxSizer()
-		save_btn = wx.Button(self, label='Dodaj')
-		save_btn.Bind(wx.EVT_BUTTON, self.on_save)
-		btn_sizer.Add(save_btn, 0, wx.ALL, 5)
-		btn_sizer.Add(wx.Button(self, id=wx.ID_CANCEL), 0, wx.ALL, 5)
-		self.main_sizer.Add(btn_sizer, 0, wx.CENTER)
-		self.main_sizer.Fit(self)
-		self.SetSizer(self.main_sizer)
-
-	def on_save(self, evt):
-		v = [
-			self.controls["name"].GetValue(),
-			self.index,
-			self.coursesInInst[self.controls["mainSubject"].GetSelection()][0],
-		]
-		app_global_vars.active_db_con.insert(
-			table_name="ClassRooms",
-			col_names=("ClassRoomIdentifier", "IsIn", "PrimaryCourse"),
-			col_values=v
-		)
-		if self.refreshView:
-			self.Parent.list_ctrl.ClearAll()
-			self.Parent.populateListView()
-		self.Close()
-
-	def add_widgets(self, label_text, ctrl_key):
-		sizer = wx.BoxSizer(wx.HORIZONTAL)
-		label = wx.StaticText(self, label=label_text, size=(150, -1))
-		sizer.Add(label, flag=wx.ALIGN_CENTER_VERTICAL)
-		sizer.AddSpacer(10)
-		self.controls[ctrl_key] = wx.TextCtrl(self)
-		sizer.Add(self.controls[ctrl_key])
-		self.helper_sizer.Add(sizer)
-
-
 class ClassRoomsContextMenu(wx.Menu):
 
 	def __init__(self, parent):
@@ -451,78 +386,6 @@ class ClassRoomsContextMenu(wx.Menu):
 		dbIndex = self.parent.list_ctrl.GetItemData(index)
 		p = SchedulesPanel(self.parent.Parent, "cr.ClassRoomId", dbIndex)
 		frame.showPanel(p)
-
-
-class ClassRoomsPanel(wx.Panel):
-
-	def __init__(self, parent, chosenInst):
-		super().__init__(parent)
-		self.inst = chosenInst
-		main_sizer = wx.BoxSizer(wx.VERTICAL)
-		self.list_ctrl = wx.ListCtrl(
-			self,
-			size=(-1, 200),
-			style=wx.LC_REPORT | wx.BORDER_SUNKEN
-		)
-		self.list_ctrl.Bind(wx.EVT_CONTEXT_MENU, self.onContext)
-		self.list_ctrl.Bind(wx.EVT_KEY_UP, self.onKey)
-		self.populateListView()
-		main_sizer.Add(self.list_ctrl, 0, wx.ALL | wx.EXPAND, 5)
-		new_classRoomBTN = wx.Button(self, label='Dodaj salę')
-		new_classRoomBTN.Bind(wx.EVT_BUTTON, self.on_NewClassRoom)
-		main_sizer.Add(new_classRoomBTN, 0, wx.ALL | wx.CENTER, 5)
-		self.SetSizer(main_sizer)
-
-	def onContext(self, event):
-		self.PopupMenu(ClassRoomsContextMenu(self), event.GetPosition())
-
-	def onKey(self, event):
-		if event.KeyCode == wx.WXK_ESCAPE:
-			frame.switchPanels()
-
-	def populateListView(self):
-		self.list_ctrl.InsertColumn(0, 'Numer', width=400)
-		self.list_ctrl.InsertColumn(1, 'Główny kurs', width=400)
-		for index, row in enumerate(
-			app_global_vars.active_db_con.fetch_all_matching(
-				table_name="ClassRooms CL LEFT OUTER JOIN Subjects su ON CL.PrimaryCourse = su.SubjectId",
-				col_names=("ClassRoomId", "ClassRoomIdentifier", "SubjectName"),
-				condition_str="IsIn = ?",
-				seq=(self.inst,)
-			)
-		):
-			self.list_ctrl.InsertItem(index, row["ClassRoomIdentifier"])
-			if row["SubjectName"] is not None:
-				self.list_ctrl.SetItem(index, 1, row["SubjectName"])
-			else:
-				self.list_ctrl.SetItem(index, 1, "brak")
-			item = self.list_ctrl.GetItem(index)
-			item.SetData(row["ClassRoomId"])
-			self.list_ctrl.SetItem(item)
-
-	def on_remove(self, event):
-		item = self.list_ctrl.GetItem(self.list_ctrl.GetFocusedItem())
-		app_global_vars.active_db_con.delete_record(
-			table_name="ClassRooms",
-			condition_string="ClassRoomId = ? ",
-			seq=[item.GetData()]
-		)
-		self.list_ctrl.DeleteItem(self.list_ctrl.GetFocusedItem())
-
-	def on_NewClassRoom(self, event):
-		dlg = AddClassRoomDLG(self, self.inst, True)
-		dlg.ShowModal()
-		dlg.Destroy()
-
-	def on_edit(self, event):
-		index = self.list_ctrl.GetFocusedItem()
-		dbIndex = self.list_ctrl.GetItemData(index)
-		cols = []
-		for colNumber in range(0, self.list_ctrl.GetColumnCount()):
-			cols.append(self.list_ctrl.GetItemText(index, colNumber))
-		dlg = EditTeacherDLG(self, dbIndex, cols)
-		dlg.ShowModal()
-		dlg.Destroy()
 
 
 class TeachersContextMenu(wx.Menu):
@@ -575,15 +438,9 @@ class InstitutionContextMenu(wx.Menu):
 		super().__init__()
 		self.parent = parent
 		lessonToSchedule = wx.MenuItem(self, id=wx.ID_ANY, text='Dodaj zajęcia do grafiku')
-		addClasRoom = wx.MenuItem(self, id=wx.ID_ANY, text='Dodaj salę lekcyjną')
-		showClassRooms = wx.MenuItem(self, id=wx.ID_ANY, text='Wyświetl sale lekcyjne')
 		showSchedule = wx.MenuItem(self, id=wx.ID_ANY, text='Wyświetl grafik')
-		self.Append(addClasRoom)
-		self.Append(showClassRooms)
 		self.Append(lessonToSchedule)
 		self.Append(showSchedule)
-		self.Bind(wx.EVT_MENU, self.parent.on_NewClassRoom, addClasRoom)
-		self.Bind(wx.EVT_MENU, self.ShowClassRooms, showClassRooms)
 		self.Bind(wx.EVT_MENU, self.parent.on_AddLessonToSchedule, lessonToSchedule)
 		self.Bind(wx.EVT_MENU, self.ShowSchedule, showSchedule)
 
@@ -591,12 +448,6 @@ class InstitutionContextMenu(wx.Menu):
 		index = self.parent.list_ctrl.GetFocusedItem()
 		dbIndex = self.parent.list_ctrl.GetItemData(index)
 		p = BreaksPanel(self.parent.Parent, dbIndex)
-		frame.showPanel(p)
-
-	def ShowClassRooms(self, event):
-		index = self.parent.list_ctrl.GetFocusedItem()
-		dbIndex = self.parent.list_ctrl.GetItemData(index)
-		p = ClassRoomsPanel(self.parent.Parent, dbIndex)
 		frame.showPanel(p)
 
 	def ShowSchedule(self, event):
@@ -752,13 +603,6 @@ class SchedulesPanel(wx.Panel):
 
 
 class InstitutionsPanel(frontend.views.institutions.listing):
-
-	def on_NewClassRoom(self, event):
-		index = self.list_ctrl.GetFocusedItem()
-		dbIndex = self.list_ctrl.GetItemData(index)
-		dlg = AddClassRoomDLG(self.Parent, dbIndex, False)
-		dlg.ShowModal()
-		dlg.Destroy()
 
 	def on_AddLessonToSchedule(self, event):
 		index = self.list_ctrl.GetFocusedItem()

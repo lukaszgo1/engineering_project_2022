@@ -66,3 +66,14 @@ class InstitutionPresenter(frontend.presenters.base_presenter.BasePresenter):
         import frontend.presenters.teachers_presenter
         p = frontend.presenters.teachers_presenter.TeachersPresenter(self)
         frontend.presentation_manager.get_presentation_manager().present(p)
+
+    def on_add_class_room(self):
+        import frontend.presenters.class_rooms_presenter
+        p = frontend.presenters.class_rooms_presenter.ClassRoomsPresenter(self)
+        p.add_new_entry()
+
+    def on_show_class_rooms(self):
+        import frontend.presentation_manager
+        import frontend.presenters.class_rooms_presenter
+        p = frontend.presenters.class_rooms_presenter.ClassRoomsPresenter(self)
+        frontend.presentation_manager.get_presentation_manager().present(p)
