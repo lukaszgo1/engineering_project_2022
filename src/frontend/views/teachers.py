@@ -72,6 +72,14 @@ items_list: Tuple[frontend.gui_controls_spec.MenuItemSpec, ...] = (
         name="Usuń",
         on_activate_listener_name="on_delete"
     ),
+    frontend.gui_controls_spec.MenuItemSpec(
+        name="Przypisz do przedmiotu",
+        on_activate_listener_name="on_assign_to_subject"
+    ),
+    frontend.gui_controls_spec.MenuItemSpec(
+        name="Usuń przypisanie do przedmiotu",
+        on_activate_listener_name="on_remove_subject_assignment"
+    ),
 )
 
 

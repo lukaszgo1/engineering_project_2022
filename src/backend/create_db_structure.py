@@ -55,6 +55,14 @@ CREATE_DATABASE_STATEMENTS: List[str] = [
   CONSTRAINT FK_CLASS_COURSE_IN FOREIGN KEY (PrimaryCourse) REFERENCES time_table_app.Classes(ClassId)
 );
 """,
+"""CREATE TABLE IF NOT EXISTS time_table_app.TeachersToSubjects(
+  TeacherToSubjectId integer PRIMARY KEY AUTO_INCREMENT,
+  TeacherId integer,
+  SubjectId integer,
+  CONSTRAINT  FK_TEACHER_IN_SUBJECT_MAPPING FOREIGN KEY (TeacherId) REFERENCES time_table_app.Teachers(TeacherId),
+  CONSTRAINT  FK_SUBJECT_IN_TO_TEACHER_MAPPING FOREIGN KEY (SubjectId) REFERENCES time_table_app.Subjects(SubjectId)
+)
+""",
 """CREATE TABLE IF NOT EXISTS time_table_app.Schedule (
   LessonId integer PRIMARY KEY AUTO_INCREMENT,
   InstitutionId integer,

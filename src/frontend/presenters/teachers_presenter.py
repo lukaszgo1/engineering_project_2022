@@ -41,3 +41,13 @@ class TeachersPresenter(frontend.presenters.base_presenter.BasePresenter):
     @property
     def initial_vals_for_add(self):
         return {"IsAvailable": True}
+
+    def on_assign_to_subject(self):
+        import frontend.presenters.teacher_to_subject_presenter
+        p = frontend.presenters.teacher_to_subject_presenter.TeacherToSubjectsPresenter(self)
+        p.add_new_entry()
+
+    def on_remove_subject_assignment(self):
+        import frontend.presenters.teacher_to_subject_presenter
+        p = frontend.presenters.teacher_to_subject_presenter.TeacherToSubjectsPresenter(self)
+        p.remove_entry()
