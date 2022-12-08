@@ -48,7 +48,6 @@ class ClassRoomsPresenter(frontend.presenters.base_presenter.BasePresenter):
                 self.parent_presenter.focused_entity
             )
         )
-        # TODO: add editing
         combobox_vals = frontend.gui_controls_spec.ComboBoxvaluesSpec(
             values=courses_list,
             initial_selection=0
