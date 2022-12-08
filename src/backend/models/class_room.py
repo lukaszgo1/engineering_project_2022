@@ -51,10 +51,17 @@ class ClassRoom(bm._Owned_model):
         res["PrimaryCourse"] = res["PrimaryCourse"].id
         return res
 
+    def update_db_record(self, new_values: Dict) -> None:
+        chosen_subject_model = new_values["PrimaryCourse"]
+        new_values["PrimaryCourse"] = chosen_subject_model.id
+        del new_values["MainSubjectId"]
+        super().update_db_record(new_values)
+        self.MainSubjectId = chosen_subject_model.id
+        self.PrimaryCourse = chosen_subject_model
+
     @classmethod
     def initializer_params(cls, db_record: Dict) -> Dict:
         res = super().initializer_params(db_record)
         res["MainSubjectId"] = res["PrimaryCourse"]
         del res["PrimaryCourse"]
-        print(res)
         return res

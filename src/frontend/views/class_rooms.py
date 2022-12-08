@@ -74,7 +74,7 @@ items_list: Tuple[frontend.gui_controls_spec.MenuItemSpec, ...] = (
 
 class EditClassDlg(AddClassRoomDlg):
 
-    title: str = "Edytuj klasę"
+    title: str = "Edytuj salę lekcyjną"
     affirmative_btn_label: str = "Zapisz zmiany"
 
 

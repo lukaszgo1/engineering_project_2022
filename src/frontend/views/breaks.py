@@ -20,7 +20,9 @@ class AllowedBreaksProducer(frontend.gui_controls_spec.OnChangeListener):
     def on_new_length_selected(self, length: int):
         new_breaks = self._presenter.possible_breaks(length)
         for control in self._controls_to_modify:
-            control.set_value(new_breaks)
+            control.set_value(
+                frontend.gui_controls_spec.ComboBoxvaluesSpec(new_breaks)
+            )
 
 
 class AddBreakDlg(frontend.views._base_views.BaseEEnterParamsDlg):

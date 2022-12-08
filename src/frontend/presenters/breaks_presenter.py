@@ -13,6 +13,7 @@ import attrs
 import frontend.presenters.base_presenter
 import frontend.presenters.institutions_presenter
 import frontend.views.breaks
+import frontend.gui_controls_spec
 import backend.models.break_model
 
 
@@ -45,7 +46,9 @@ class BreaksPresenter(frontend.presenters.base_presenter.BasePresenter):
 
     @property
     def initial_vals_for_add(self):
-        return {"break_length": self.possible_break_lengths()}
+        possible_lengths = self.possible_break_lengths()
+        possible_lengths = frontend.gui_controls_spec.ComboBoxvaluesSpec(possible_lengths)
+        return {"break_length": possible_lengths}
 
     def __init__(
         self,

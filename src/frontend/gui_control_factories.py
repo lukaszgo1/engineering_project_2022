@@ -111,9 +111,11 @@ class labeled_combo_box_factory(_base_control):
     def add_to_sizer(self, parent_sizer: wx.Sizer) -> None:
         parent_sizer.Add(self._sizer)
 
-    def set_value(self, new_val: List) -> None:
-        self._indexes_to_vals = {k: v for k, v in enumerate(new_val)}
+    def set_value(self, new_val: "ctrl_specs.ComboBoxvaluesSpec") -> None:
+        self._indexes_to_vals = {k: v for k, v in enumerate(new_val.values)}
         self._combobox.Set([str(_) for _ in self._indexes_to_vals.values()])
+        if new_val.initial_selection is not None:
+            self._combobox.SetSelection(new_val.initial_selection)
 
     def get_value(self) -> Dict[str, Any]:
         selected_val = self._indexes_to_vals[self._combobox.Selection]

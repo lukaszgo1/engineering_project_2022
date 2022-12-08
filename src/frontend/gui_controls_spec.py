@@ -5,6 +5,7 @@ from typing import (
     Any,
     Callable,
     ClassVar,
+    List,
     Optional,
     Union,
     Type,
@@ -41,6 +42,19 @@ class OnChangeListener:
 
     def add_dependend_control(self, control: _ControlWrapperBase):
         self._controls_to_modify.append(control)
+
+
+class ComboBoxvaluesSpec:
+
+    """Define interface for values passed to wrapper around `wx.Choice`"""
+
+    def __init__(
+        self,
+        values: List[Any],
+        initial_selection: Optional[int] = None
+    ) -> None:
+        self.values = values
+        self.initial_selection = initial_selection
 
 
 @attrs.define(kw_only=True)

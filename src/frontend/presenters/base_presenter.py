@@ -98,10 +98,12 @@ class BasePresenter:
     def _on_click_handler_factory(self, method_name: str):
         return lambda e: getattr(self, method_name)()
 
+    def vals_for_edit(self):
+        return self.focused_entity.cols_to_attrs()
+
     def on_edit(self):
         edit_dlg = self.view_collections.edit(parent=self.p)
-        current_entity_state = self.focused_entity.cols_to_attrs()
-        edit_dlg.set_values(current_entity_state)
+        edit_dlg.set_values(self.vals_for_edit())
         with edit_dlg as dlg:
             dlg: self.view_collections.edit
             if dlg.ShowModal() == dlg.AffirmativeId:

@@ -7,6 +7,7 @@ from typing import (
 
 import frontend.presenters.base_presenter
 import frontend.views.class_rooms
+import frontend.gui_controls_spec
 import backend.models.class_room
 import backend.models.subject
 
@@ -47,5 +48,20 @@ class ClassRoomsPresenter(frontend.presenters.base_presenter.BasePresenter):
                 self.parent_presenter.focused_entity
             )
         )
-        # TODO: Make first item selected and add editing
-        return {"PrimaryCourse": courses_list}
+        # TODO: add editing
+        combobox_vals = frontend.gui_controls_spec.ComboBoxvaluesSpec(
+            values=courses_list,
+            initial_selection=0
+        )
+        return {"PrimaryCourse": combobox_vals}
+
+    def vals_for_edit(self):
+        res = super().vals_for_edit()
+        possible_course_choices = self.initial_vals_for_add["PrimaryCourse"]
+        chosen_course_id = res["PrimaryCourse"].id 
+        for index, course in enumerate(possible_course_choices.values):
+            if course.id == chosen_course_id:
+                possible_course_choices.initial_selection = index
+                break
+        res["PrimaryCourse"] = possible_course_choices
+        return res
