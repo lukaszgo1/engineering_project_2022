@@ -112,6 +112,14 @@ items_list: Tuple[frontend.gui_controls_spec.MenuItemSpec, ...] = (
         name="Wyświetl sale lekcyjne",
         on_activate_listener_name="on_show_class_rooms"
     ),
+    frontend.gui_controls_spec.MenuItemSpec(
+        name="Dodaj nowy semestr",
+        on_activate_listener_name="on_add_new_term"
+    ),
+    frontend.gui_controls_spec.MenuItemSpec(
+    name="Wyświetl semestry",
+    on_activate_listener_name="on_show_terms"
+    ),
 )
 
 

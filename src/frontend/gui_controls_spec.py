@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import abc
+import datetime
 from typing import (
     Any,
     Callable,
@@ -27,9 +28,9 @@ class WXButtonSpec:
 class WXListColumnSpec:
     header_name: str
     width: int
-    value_getter: Callable[[Any], Optional[Union[str, int]]]
+    value_getter: Callable[[Any], Optional[Union[str, int, datetime.date]]]
     value_converter: Optional[
-        Callable[[Optional[Union[str, int]]], str]
+        Callable[[Optional[Union[str, int, datetime.date]]], str]
     ] = None
 
 
@@ -115,3 +116,12 @@ class MenuItemSpec:
 
     def create(self, parent_menu: wx.Menu) -> wx.MenuItem:
         return parent_menu.Append(self.id, item=self.name)
+
+
+@attrs.define(kw_only=True)
+class DatePickerSpec(_ControlWrapperBase):
+
+    label: str
+    _factory_cls: ClassVar[
+        Type[control_factories.date_picker_factory]
+    ] = control_factories.date_picker_factory

@@ -8,6 +8,7 @@ for all the factories.
 from __future__ import annotations
 
 import abc
+import datetime
 
 from typing import (
     Any,
@@ -19,6 +20,7 @@ from typing import (
 )
 
 import wx
+import wx.adv
 
 if TYPE_CHECKING:
     import frontend.gui_controls_spec as ctrl_specs
@@ -186,6 +188,41 @@ class checkbox_wrapper(_base_control):
 
     def get_value(self) -> Dict[str, bool]:
         return {self.identifier: self._chk.IsChecked()}
+
+
+class date_picker_factory(_base_control):
+
+    def __init__(
+        self,
+        ctrl_parent: wx.Window,
+        control_params: "ctrl_specs.DatePickerSpec"
+    ) -> None:
+        super().__init__(ctrl_parent, control_params)
+        self._sizer = wx.BoxSizer(wx.HORIZONTAL)
+        self._label = wx.StaticText(
+            ctrl_parent,
+            label=control_params.label,
+            size=(150, -1)
+        )
+        self._sizer.Add(self._label, flag=wx.ALIGN_CENTER_VERTICAL)
+        self._sizer.AddSpacer(10)
+        self._picker = wx.adv.DatePickerCtrl(ctrl_parent)
+        self._sizer.Add(self._picker)
+
+
+    def add_to_sizer(self, parent_sizer: wx.Sizer) -> None:
+        parent_sizer.Add(self._sizer)
+
+    def set_value(self, new_val: Any) -> None:
+        self._picker.Value = wx.DateTime(new_val)
+
+    def get_value(self) -> Dict[str, Any]:
+        control_val = self._picker.Value
+        year = control_val.year
+        month = control_val.month + 1  # Month's in  WX are numbered from 0
+        day = control_val.day
+        py_date = datetime.date(year=year, month=month, day=day)
+        return {self.identifier: py_date}
 
 
 def wx_context_menu_factory(

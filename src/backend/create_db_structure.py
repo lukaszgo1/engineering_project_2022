@@ -4,7 +4,8 @@ import app_constants
 import mariadb_connector
 
 CREATE_DATABASE_STATEMENTS: List[str] = [
-  """CREATE DATABASE time_table_app   CHARACTER SET = 'utf8mb4' COLLATE = 'utf8mb4_polish_ci'""",
+  """CREATE DATABASE IF NOT EXISTS time_table_app 
+   CHARACTER SET = 'utf8mb4' COLLATE = 'utf8mb4_polish_ci'""",
   """CREATE TABLE IF NOT EXISTS time_table_app.Institutions (
   InstitutionId integer PRIMARY KEY AUTO_INCREMENT,
   InstitutionName text NOT NULL,
@@ -61,6 +62,15 @@ CREATE_DATABASE_STATEMENTS: List[str] = [
   SubjectId integer,
   CONSTRAINT  FK_TEACHER_IN_SUBJECT_MAPPING FOREIGN KEY (TeacherId) REFERENCES time_table_app.Teachers(TeacherId),
   CONSTRAINT  FK_SUBJECT_IN_TO_TEACHER_MAPPING FOREIGN KEY (SubjectId) REFERENCES time_table_app.Subjects(SubjectId)
+)
+""",
+"""CREATE TABLE IF NOT EXISTS time_table_app.Terms(
+  TermId integer PRIMARY KEY AUTO_INCREMENT,
+  StartDate DATE,
+  EndDate DATE,
+  TermName TEXT,
+  TermInInst integer,
+  CONSTRAINT FK_TERM_IN_INST FOREIGN KEY (TermInInst) REFERENCES time_table_app.Institutions (InstitutionId)
 )
 """,
 """CREATE TABLE IF NOT EXISTS time_table_app.Schedule (
