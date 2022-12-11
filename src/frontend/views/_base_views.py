@@ -20,6 +20,7 @@ class BaseEntityList(wx.Panel):
     def __init__(self, presenter) -> None:  # TODO: add type hint
         self.on_item_focused_listeners = []
         self.presenter = presenter
+        self_context_menu_pos = None
         super().__init__(wx.GetApp().TopWindow)
         main_sizer = wx.BoxSizer(wx.VERTICAL)
         self.list_ctrl = wx.ListCtrl(
@@ -55,7 +56,18 @@ class BaseEntityList(wx.Panel):
         self.list_ctrl.SetFocus()
 
     def on_context(self, event: wx.ContextMenuEvent) -> None:
-        self.presenter.show_context_menu_for_entity(event.GetPosition())
+        if not self.presenter.any_focused:
+            return
+        menu_pos: wx.Point = event.GetPosition()
+        if not menu_pos.IsFullySpecified():
+            # Menu opened from the keyboard 
+            # calculate the suitable position based on the focused list item
+            focused_item_pos = self.list_ctrl.GetItemPosition(
+                self.list_ctrl.FocusedItem
+            )
+            menu_pos = focused_item_pos
+        menu = self.presenter.show_context_menu_for_entity()
+        self.PopupMenu(menu, menu_pos)
 
     def on_new_item_focused(self, event: wx.ListEvent) -> None:
         new_focused_index = event.Index

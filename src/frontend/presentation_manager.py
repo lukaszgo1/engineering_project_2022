@@ -2,10 +2,6 @@ import functools
 
 import wx
 
-import frontend.presenters.institutions_presenter
-
-initial_pres = frontend.presenters.institutions_presenter.InstitutionPresenter
-
 
 class MainFrame(wx.Frame):
 
@@ -18,13 +14,26 @@ class MainFrame(wx.Frame):
 class PresentationManager:
 
     def __init__(self) -> None:
-        self.frame_obj = MainFrame()
         self._active_presenters = []
+
+    def set_initial_presenter(self, presenter):
+        self._initial_presenter = presenter
+
+    def present_initial_view(self):
+        self.frame_obj = MainFrame()
         wx.GetApp().SetTopWindow(self.frame_obj)
-        main_presenter = initial_pres()
-        self._active_presenters.append(main_presenter)
+        main_presenter = self._initial_presenter()
         main_presenter.present_all()
+        self._active_presenters.append(main_presenter)
         self.frame_obj.Show()
+
+
+
+
+
+    @property
+    def main_window(self) -> MainFrame:
+        return self.frame_obj
 
     def present(self, presenter_to_use):
         self._active_presenters.append(presenter_to_use)

@@ -6,10 +6,9 @@ from typing import (
     Type,
 )
 
-import wx
-
 import backend.models._base_model
 import frontend.gui_control_factories
+import frontend.presentation_manager
 
 
 class BasePresenter:
@@ -77,7 +76,7 @@ class BasePresenter:
     def new_windows_parent(self):
         if self.is_presenting:
             return self.p
-        return wx.GetApp().TopWindow
+        return frontend.presentation_manager.get_presentation_manager().main_window
 
     def add_new_entry(self):
         add_dlg = self.view_collections.add(
@@ -114,7 +113,7 @@ class BasePresenter:
                     self._focused_entity_index
                 )
 
-    def show_context_menu_for_entity(self, menu_pos: wx.Point) -> None:
+    def show_context_menu_for_entity(self):
         if self.any_focused:
             specs = []
             handlers = []
@@ -132,6 +131,7 @@ class BasePresenter:
                 item_specs=specs,
                 on_click_listeners=handlers
             )
+            return menu
             self.p.PopupMenu(
                 menu,
                 menu_pos
