@@ -104,6 +104,7 @@ class labeled_combo_box_factory(_base_control):
         self._combobox = wx.Choice(ctrl_parent)
         self._sizer.Add(self._combobox)
         self._combobox.Bind(wx.EVT_CHOICE, self.on_choice)
+        self._parent = ctrl_parent
 
     def on_choice(self, event):
         new_val = list(self.get_value().values())[0]
@@ -118,6 +119,10 @@ class labeled_combo_box_factory(_base_control):
         self._combobox.Set([str(_) for _ in self._indexes_to_vals.values()])
         if new_val.initial_selection is not None:
             self._combobox.SetSelection(new_val.initial_selection)
+        self._combobox.InvalidateBestSize()
+        self._combobox.SetSize(self._combobox.GetBestSize())
+        self._parent.Layout()
+        self._parent.Fit()
 
     def get_value(self) -> Dict[str, Any]:
         selected_val = self._indexes_to_vals[self._combobox.Selection]
@@ -140,7 +145,7 @@ class labeled_edit_field_factory(_base_control):
         )
         self._sizer.Add(self._label, flag=wx.ALIGN_CENTER_VERTICAL)
         self._sizer.AddSpacer(10)
-        self._edit = wx.TextCtrl(ctrl_parent)
+        self._edit = wx.TextCtrl(ctrl_parent, size=(250, 20))
         self._sizer.Add(self._edit)
 
     def add_to_sizer(self, parent_sizer: wx.Sizer) -> None:
