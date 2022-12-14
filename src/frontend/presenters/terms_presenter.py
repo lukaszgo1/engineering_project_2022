@@ -37,3 +37,14 @@ class TermsPresenter(frontend.presenters.base_presenter.BasePresenter):
         yield from self.MODEL_CLASS.from_db(
             self.parent_presenter.focused_entity
         )
+
+    def on_add_new_term_plan(self):
+        import frontend.presenters.term_plans_presenter
+        p = frontend.presenters.term_plans_presenter.TermPlanPresenter(self)
+        p.add_new_entry()
+
+    def on_show_term_plans(self):
+        import frontend.presentation_manager
+        import frontend.presenters.term_plans_presenter
+        p = frontend.presenters.term_plans_presenter.TermPlanPresenter(self)
+        frontend.presentation_manager.get_presentation_manager().present(p)

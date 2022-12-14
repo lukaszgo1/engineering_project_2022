@@ -73,6 +73,14 @@ items_list: Tuple[frontend.gui_controls_spec.MenuItemSpec, ...] = (
         name="Usuń",
         on_activate_listener_name="on_delete"
     ),
+    frontend.gui_controls_spec.MenuItemSpec(
+        name="Dodaj nowy plan semestralny",
+        on_activate_listener_name="on_add_new_term_plan"
+    ),
+    frontend.gui_controls_spec.MenuItemSpec(
+        name="Wyświetl podstawy dla semestru",
+        on_activate_listener_name="on_show_term_plans"
+    ),
 )
 
 

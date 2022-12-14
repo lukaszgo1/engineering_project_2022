@@ -73,6 +73,14 @@ CREATE_DATABASE_STATEMENTS: List[str] = [
   CONSTRAINT FK_TERM_IN_INST FOREIGN KEY (TermInInst) REFERENCES time_table_app.Institutions (InstitutionId)
 )
 """,
+"""CREATE TABLE IF NOT EXISTS time_table_app.TermPlan(
+  TermPlanId integer PRIMARY KEY AUTO_INCREMENT,
+  TermPlanName text,
+  AppliesToTerm integer,
+  CONSTRAINT FK_TERM_PLAN_IN_TERM FOREIGN KEY
+  (AppliesToTerm) REFERENCES time_table_app.Terms(TermId)
+)
+""",
 """CREATE TABLE IF NOT EXISTS time_table_app.Schedule (
   LessonId integer PRIMARY KEY AUTO_INCREMENT,
   InstitutionId integer,
