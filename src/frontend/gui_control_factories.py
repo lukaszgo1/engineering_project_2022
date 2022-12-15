@@ -85,6 +85,83 @@ class _base_control (metaclass=abc.ABCMeta):
         """
 
 
+class spin_control_factory(_base_control):
+
+    def __init__(
+        self,
+        ctrl_parent: wx.Window,
+        control_params: "ctrl_specs.SpinControlSpec"
+    ) -> None:
+        super().__init__(ctrl_parent, control_params)
+        self._sizer = wx.BoxSizer(wx.HORIZONTAL)
+        self._label = wx.StaticText(
+                ctrl_parent,
+                label=control_params.label,
+                size=(150, -1)
+            )
+        self._sizer.Add(self._label, flag=wx.ALIGN_CENTER_VERTICAL)
+        self._sizer.AddSpacer(10)
+        self._spin_control = wx.SpinCtrl(ctrl_parent)
+        self._sizer.Add(self._spin_control)
+        self._spin_control.SetIncrement(control_params.increment)
+        self._spin_control.Min = control_params.min_val
+        if control_params.max_val is not None:
+            self._spin_control.Max = control_params.max_val
+
+    def add_to_sizer(self, parent_sizer: wx.Sizer) -> None:
+        parent_sizer.Add(self._sizer)
+
+    def get_value(self) -> Dict[str, int]:
+        return {self.identifier: self._spin_control.Value}
+
+    def set_value(self, new_val: int) -> None:
+        self._spin_control.Value = new_val
+
+    def set_state(self, new_state: bool) -> None:
+        self._spin_control.Enable(new_state)
+        self._label.Enable(new_state)
+        self.is_enabled = new_state
+
+
+class radio_button_factory(_base_control):
+
+    def __init__(
+        self,
+        ctrl_parent: wx.Window,
+        control_params: "ctrl_specs.RadioButtonspec"
+    ) -> None:
+        super().__init__(ctrl_parent, control_params)
+        self._rb_raw_vals = control_params.choices
+        self.rb_values = [_.label for _ in control_params.choices]
+        self._radio_button = wx.RadioBox(
+            ctrl_parent,
+            label=control_params.label,
+            choices=self.rb_values,
+            style=wx.RA_SPECIFY_ROWS
+        )
+        self._radio_button.Bind(wx.EVT_RADIOBOX, self.on_value_change)
+
+    def notify_listeners(self, new_val):
+        for listener in self._registered_listeners:
+            listener(new_val)
+
+    def on_value_change(self, event):
+        new_val = list(self._rb_raw_vals)[self._radio_button.Selection]
+        self.notify_listeners(new_val)
+        
+    def add_to_sizer(self, parent_sizer: wx.Sizer) -> None:
+        parent_sizer.Add(self._radio_button)
+
+    def get_value(self) -> Dict[str, Any]:
+        val = list(self._rb_raw_vals)[self._radio_button.Selection]
+        return {self.identifier: val}
+
+    def set_value(self, new_val: Any) -> None:
+        entry_index = list(self._rb_raw_vals).index(new_val)
+        self._radio_button.Selection = entry_index
+        self.notify_listeners(new_val)
+
+
 class labeled_combo_box_factory(_base_control):
 
     def __init__(

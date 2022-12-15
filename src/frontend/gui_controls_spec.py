@@ -78,6 +78,28 @@ class _ControlWrapperBase(metaclass=abc.ABCMeta):
 
 
 @attrs.define(kw_only=True)
+class SpinControlSpec(_ControlWrapperBase):
+
+    label: str
+    min_val: int = 1
+    max_val: Optional[int] = None
+    increment: int = 1
+    _factory_cls: ClassVar[
+        Type[control_factories.spin_control_factory]
+    ] = control_factories.spin_control_factory
+
+
+@attrs.define(kw_only=True)
+class RadioButtonspec(_ControlWrapperBase):
+
+    label: str
+    choices: Any
+    _factory_cls: ClassVar[
+        type[control_factories.radio_button_factory]
+    ] = control_factories.radio_button_factory
+
+
+@attrs.define(kw_only=True)
 class LabeledEditFieldSpec(_ControlWrapperBase):
 
     label: str

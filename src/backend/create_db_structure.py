@@ -81,6 +81,31 @@ CREATE_DATABASE_STATEMENTS: List[str] = [
   (AppliesToTerm) REFERENCES time_table_app.Terms(TermId)
 )
 """,
+"""CREATE TABLE IF NOT EXISTS time_table_app.ClassToTermPlan(
+  ClassToTermPlanId integer PRIMARY KEY AUTO_INCREMENT,
+  ClassId integer,
+  TermPlanId integer,
+  CONSTRAINT FK_TERM_PLAN_FOR_CLASS FOREIGN KEY
+  (ClassId) REFERENCES time_table_app.Classes(ClassId),
+  CONSTRAINT FK_TERM_PLAN_ident FOREIGN KEY
+  (TermPlanId) REFERENCES time_table_app.Terms(TermId)
+)
+""",
+"""CREATE TABLE IF NOT EXISTS time_table_app.TermPlanDetails(
+  TermPlanDetailId integer PRIMARY KEY AUTO_INCREMENT,
+  TermPlanId integer,
+  SubjectId integer,
+  LessonsAmount integer,
+  MinBlockSize integer,
+  MaxBlockSize integer,
+  PreferredDistanceInDays integer,
+  PreferredDistanceInWeeks integer,
+  CONSTRAINT FK_ENTRY_FOR_SUBJECT FOREIGN KEY
+  (SubjectId) REFERENCES time_table_app.Subjects(SubjectId),
+  CONSTRAINT FK_ENTRY_IN_TERM_PLAN FOREIGN KEY
+  (TermPlanId) REFERENCES time_table_app.TermPlan(TermPlanId)
+)
+""",
 """CREATE TABLE IF NOT EXISTS time_table_app.Schedule (
   LessonId integer PRIMARY KEY AUTO_INCREMENT,
   InstitutionId integer,

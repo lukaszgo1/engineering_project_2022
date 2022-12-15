@@ -53,6 +53,14 @@ items_list: Tuple[frontend.gui_controls_spec.MenuItemSpec, ...] = (
         name="Usuń",
         on_activate_listener_name="on_delete"
     ),
+    frontend.gui_controls_spec.MenuItemSpec(
+        name="Dodaj nowy wpis do podstawy",
+        on_activate_listener_name="on_add_new_plan_entry"
+    ),
+    frontend.gui_controls_spec.MenuItemSpec(
+        name="Wyświetl wpisy w podstawie",
+        on_activate_listener_name="on_show_plan_entries",
+    )
 )
 
 
