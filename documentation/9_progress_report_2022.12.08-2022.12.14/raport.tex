@@ -1,0 +1,209 @@
+\documentclass[12pt,a4paper,oneside]{article}
+\usepackage[QX]{polski}
+
+\usepackage[utf8]{inputenc}
+\usepackage{latexsym}
+\usepackage{tgpagella}
+\usepackage{lmodern}
+\usepackage{amsmath,amsthm,amsfonts,amssymb,alltt}
+\usepackage{epsfig}
+\usepackage{pdflscape}
+\usepackage{caption}
+\usepackage{indentfirst}
+\usepackage{float}
+%\usepackage{showkeys}
+\bibliographystyle{plabbrv}
+
+
+\usepackage{color}
+\usepackage[polish]{babel}
+\usepackage{datetime2}
+\usepackage[x11names,dvipsnames,table]{xcolor}
+\usepackage{hyperref}
+\hypersetup{
+pdfauthor={Łukasz Golonka},
+unicode,  % So that 'Ł' in 'Łukasz' renders correctly in PDF properties
+colorlinks=True,
+linkcolor=darkgray,  % color of internal links (change box color with linkbordercolor)
+citecolor=BrickRed,  % color of links to bibliography
+filecolor=Magenta,   % color of file links
+urlcolor=BlueViolet}	%%pdfpagemode=FullScreen}
+
+% diagramy, grafy itp.
+\usepackage{tikz}
+\usetikzlibrary{positioning}
+\usetikzlibrary{arrows}
+\usetikzlibrary{arrows.meta}
+\usetikzlibrary{chains,fit,shapes,calc}
+\tikzset{main node/.style={circle,fill=blue!20,draw,minimum size=1cm,inner sep=0pt}}
+
+% algorytmy
+\usepackage[linesnumbered,lined,commentsnumbered]{algorithm2e}
+\SetKwFor{ForEach}{for each}{do}{end for}%
+\SetKwFor{ForAll}{for all}{do}{end for}%
+\newenvironment{myalgorithm}
+{\rule{\textwidth}{0.5mm}\\\SetAlCapSty{}\SetAlgoNoEnd\SetAlgoNoLine\begin{algorithm}}{\end{algorithm}\rule{\textwidth}{0.5mm}}
+
+
+%---------------------
+\overfullrule=2mm
+\pagestyle{plain}
+\textwidth=15cm \textheight=685pt \topmargin=-25pt \linespread{1.3} 
+\setlength{\parskip}{0pt}
+\setlength\arraycolsep{2pt}
+\oddsidemargin =0.9cm
+\evensidemargin =-0.1cm
+
+\captionsetup{width=.95\linewidth, justification=centering}
+%---------------------
+
+
+
+
+\newtheorem{tw}{Twierdzenie}[section]
+\newtheorem{lem}[tw]{Lemat}
+\newtheorem{co}[tw]{Wniosek}
+\newtheorem{prop}[tw]{Stwierdzenie}
+\theoremstyle{definition}
+\newtheorem{ex}{Przykład}
+\newtheorem{re}[tw]{Uwaga}
+\newtheorem{de}{Definicja}[section]
+
+
+
+\newcommand{\bC}{{\mathbb C}}
+\newcommand{\bR}{{\mathbb R}}
+\newcommand{\bZ}{{\mathbb Z}}
+\newcommand{\bQ}{{\mathbb Q}}
+\newcommand{\bN}{{\mathbb N}}
+\newcommand{\captionT}[1]{\caption{\textsc{\footnotesize{#1}}}}
+\renewcommand\figurename{Rys.}
+
+\numberwithin{equation}{section}
+\renewcommand{\thefootnote}{\arabic{footnote})}
+%\renewcommand{\thefootnote}{\alph{footnote})}
+
+
+
+\begin{document}
+
+% --------------------------------------------
+% Strona tytułowa
+% --------------------------------------------
+
+\thispagestyle{empty}
+\begin{titlepage}
+\begin{center}\Large
+Uniwersytet Pedagogiczny im. Komisji Edukacji Narodowej \\
+\large
+Instytut Bezpieczeństwa i Informatyki\\
+\vskip 10pt
+\end{center}
+\begin{center}
+\centering \includegraphics[width=0.4\columnwidth]{../resources/images/logoUP_pl.pdf}
+\end{center}
+
+\begin{center}
+ {\bf \fontsize{14pt}{14pt}\selectfont PROJEKT INŻYNIERSKI \\ RAPORT Z REALIZACJI PROJEKTU\\
+ }
+ {\fontsize{12pt}{12pt} raport z okresu: 08.12.2022 - 14.12.2022}
+\end{center}
+\vskip 5pt
+\begin{center}
+ {\bf \fontsize{22pt}{22pt}\selectfont Aplikacja do układania planu zajęć w architekturze klient-serwer}
+\end{center}
+
+\begin{center}
+ {\fontsize{12pt}{12pt}\selectfont wykonany przez: }
+\end{center}
+\begin{center}
+ {\bf\fontsize{16pt}{16pt}\selectfont Łukasza Golonkę}\\
+ {\fontsize{12pt}{12pt}\selectfont Nr albumu: 142881 \\}
+\end{center}
+\begin{center}
+ {\fontsize{12pt}{12pt}\selectfont pod opieką:}\\
+ {\bf\fontsize{12pt}{12pt}\selectfont Doktora inżyniera Łukasza Bibrzyckiego i Doktora inżyniera Marcina Piekarczyka}
+\end{center}
+
+%\mbox{}
+\vspace*{\fill}
+%\vskip 50pt
+\begin{center}
+\large
+Kraków \the\year\\
+(ostatnia aktualizacja: \DTMcurrenttime,\;\today)
+\end{center}
+\end{titlepage}
+\setcounter{page}{0} 
+\newpage\null\thispagestyle{empty}
+%\setcounter{page}{0} 
+%\newpage
+%\thispagestyle{empty}
+
+\tableofcontents
+
+
+\newpage
+
+\section{Informacja na temat postępów prac nad projektem}
+\subsection{Zespół projektowy}
+Łukasz Golonka - \href{mailto:lukasz.golonka@student.up.krakow.pl}{lukasz.golonka@student.up.krakow.pl}
+\subsection{Zrealizowane zadania}
+\paragraph{Łukasz Golonka}
+\begin{itemize}
+	\item Dodanie możliwości powiązania nauczyciela z nauczanymi przez niego przedmiotami (sekcja 1.3.1)
+	\item Dodanie obsługi semestrów (sekcja 1.3.2)
+	\item Implementacja funkcjonalności pozwalającej na dodanie podstawy programowej do semestru (sekcja 1.3.3)
+	\item Implementacja funkcjonalności pozwalającej na zarządzanie wpisami w podstawie programowej (sekcja 1.3.4)
+	\item Poprawki wizualne interfejsu użytkownika (sekcja 1.3.5)
+\end{itemize}
+
+\subsection {Opis zrealizowanych prac}
+\subsubsection{Łukasz Golonka: Dodanie możliwości powiązania nauczyciela z nauczanymi przez niego przedmiotami}
+Aby aplikacja mogła automatycznie proponować nauczycieli przy układaniu  grafiku koniecznym jest dodanie informacji o przedmiotach, których może uczyć konkretna osoba.
+W ramach zadania zaimplementowano interfejs pozwalający na dodanie i usunięcie powiązania między nauczycielem a przedmiotem.
+Przyjęte założenia:
+\begin{itemize}
+	\item Jeden nauczyciel może być powiązany z dowolną ilością kursów
+	\item Interfejs nie powinien pozwalać na powiązanie nauczyciela z tym samym kursem więcej niż raz
+	\item Sam proces dodawania i usuwania przypisania nauczyciela do przedmiotu odbywa się z poziomu menu kontekstowego na danym nauczycielu
+\end{itemize}
+Implementacja dostępna w załączniku nr 1.
+\subsubsection{Łukasz Golonka: Dodanie obsługi semestrów}
+Aby możliwe było bazowanie na historycznych wersjach planu zajęć aplikacja została wzbogacona o obsługę semestrów.
+Konkretny semestr jest powiązany z jedną instytucją, ma daty rozpoczęcia i końca, oraz nazwę pomagającą operatorowi w jego łatwiejszej identyfikacji.
+Implementacja dostępna w załączniku nr 2.
+\subsubsection{Łukasz Golonka: Implementacja funkcjonalności pozwalającej na dodanie podstawy programowej do semestru}
+Aby możliwe było przechowywanie informacji o przedmiotach oraz ich wymiarze godzin dla konkretnej klasy w danym semestrze, należało wzbogacić aplikacje o koncept podstaw programowych.
+Podstawa programowa jest powiązana z semestrem (tworzy to też pośrednie powiązanie z instytucją).
+Opis danych przechowywanych w konkretnym wpisie do podstawy znajduje się w \ref{plan_entry_desc}
+Implementacja widoków pozwalających na wyświetlenie, dodanie, edycje i usunięcie podstaw programowych jest dostępna w załączniku nr 3.
+\subsubsection{Łukasz Golonka: Implementacja funkcjonalności pozwalającej na zarządzanie wpisami w podstawie programowej} \label{plan_entry_desc}
+W ramach zadania dodano funkcjonalność pozwalającą na przechowywanie informacji o konkretnym wpisie w podstawie programowej.
+Pojedyńczy wpis przechowuje następujące dane:
+\begin{itemize}
+	\item Przedmiot, dla którego definiujemy wymagania
+	\item Ilość godzin konkretnego przedmiotu w danym semestrze
+	\item Minimalną i maksymalną ilość godzin w jednym bloku lekcyjnym
+	\item Ilość dni lub tygodni, które powinny upłynąć między pojedynczymi zajęciami
+\end{itemize}
+Założono, że sytuacja, w której zajęcia  z konkretnego przedmiotu powinny się odbywać więcej niż raz w tygodniu, lecz nie co tydzień jest mało prawdopodobna, i nie będzie obsługiwana.
+Innymi słowy jeśli operator ustala, że  zajęcia odbywają się co dwa dni będą one miały miejsce co tydzień i vice versa - zajęcia odbywające się co dwa tygodnie będą tylko raz w konkretnym tygodniu.
+Docelowo podstawa programowa będzie powiązana z jedną lub więcej klasą.
+\subsubsection{Łukasz Golonka: Poprawki wizualne interfejsu użytkownika}
+W ramach zadania wprowadzono następujące poprawki w interfejsie aplikacji:
+\begin{itemize}
+	\item Menu kontekstowe dla konkretnego wpisu pojawia się w przewidywalnej pozycji niezależnie od tego czy wywołane zostało z klawiatury czy poprzez kliknięcie prawym przyciskiem myszy (załącznik nr 4)
+	\item Pola edycji oraz listy rozwijane dostosowują swój rozmiar do przechowywanych w nich danych (załącznik nr 5)
+\end{itemize}
+
+\subsection{Załączniki}
+\begin{itemize}
+	\item Załącznik nr 1 - \href{https://github.com/lukaszgo1/engineering_project_2022/commit/4c754ff6c08ed0f98e2afc651e4a0fb9a90e8ebb}{Commit w repozytorium projektu na portalu GitHub implementujący powiązanie nauczyciela z przedmiotem}
+	\item Załącznik nr 2 - \href{https://github.com/lukaszgo1/engineering_project_2022/commit/262f814cbd75357a4826d24ac012a3700cf0ac42}{Commit w repozytorium projektu na portalu GitHub z implementacją obsługi semestrów}
+	\item Załącznik nr 3 - \href{https://github.com/lukaszgo1/engineering_project_2022/commit/20885c7968ac63397e992440f603a95d663774bc}{Commit w repozytorium projektu na portalu GitHub z implementacją CRUD dla podstaw programowych}
+	\item Załącznik nr 4 - \href{https://github.com/lukaszgo1/engineering_project_2022/commit/d96936ff05b24bcf432032242fa521ec3b7bdddf}{Commit w repozytorium projektu na portalu GitHub poprawiający pozycje menu kontekstowego dla  wpisów na listach}
+	Załącznik nr 5 - \href{https://github.com/lukaszgo1/engineering_project_2022/commit/f0e40f20c2f7e1a087646536adce1b653b1e70ff}{Commit w repozytorium projektu na portalu GitHub poprawiający skalowanie pól edycji i list rozwijanych}
+\end{itemize}
+
+\end{document}
