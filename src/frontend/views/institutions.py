@@ -46,15 +46,18 @@ class AddInst(frontend.views._base_views.BaseEEnterParamsDlg):
             label="Czy przerwy",
             on_change_notifier=RegularLessonsCtrRevealer
         ),
-        frontend.gui_controls_spec.LabeledEditFieldSpec(
+        frontend.gui_controls_spec.SpinControlSpec(
             identifier="NormalBreakLength",
             label="Długość przerwy:",
-            should_react_to_changes=True
+            should_react_to_changes=True,
+            increment=5,
+            min_val=5,
         ),
-        frontend.gui_controls_spec.LabeledEditFieldSpec(
+        frontend.gui_controls_spec.SpinControlSpec(
             identifier="NormalLessonLength",
             label="Długość zajęć:",
-            should_react_to_changes=True
+            should_react_to_changes=True,
+            increment=5
         ),
     )
 
