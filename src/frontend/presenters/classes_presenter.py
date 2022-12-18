@@ -32,3 +32,13 @@ class ClassesPresenter(frontend.presenters.base_presenter.BasePresenter):
         yield from self.MODEL_CLASS.from_db(
             self.parent_presenter.focused_entity
         )
+
+    def associate_with_term_plan(self):
+        import frontend.presenters.class_to_term_plan_presenter
+        p = frontend.presenters.class_to_term_plan_presenter.ClassToTermPlanPresenter(self)
+        p.add_new_entry()
+
+    def remove_association_with_term_plan(self):
+        import frontend.presenters.class_to_term_plan_presenter
+        p = frontend.presenters.class_to_term_plan_presenter.ClassToTermPlanPresenter(self)
+        p.remove_entry()

@@ -14,3 +14,6 @@ class TermPlan(bm._Owned_model):
     id_column_name: ClassVar[str] = "TermPlanId"
     owner_col_id_name: ClassVar[str] = "AppliesToTerm"
     TermPlanName: str
+
+    def __str__(self) -> str:
+        return self.TermPlanName

@@ -1,3 +1,4 @@
+import itertools
 from typing import (
     ClassVar,
     Iterator,
@@ -9,6 +10,7 @@ import attrs
 
 import backend.models._base_model as bm
 import backend.models.subject
+import backend.models.Term
 
 
 @attrs.define(kw_only=True)
@@ -25,3 +27,9 @@ class Institution(bm._BaseModel):
 
     def subjects_taught_in_inst(self) -> Iterator[backend.models.subject.Subject]:
         yield from backend.models.subject.Subject.from_db(self)
+
+    def terms_in_inst(self) -> Iterator[backend.models.Term.Term]:
+        yield from backend.models.Term.Term.from_db(self)
+
+    def term_plans_in_inst(self):
+        yield from itertools.chain(*[t.plans_in_term() for t in self.terms_in_inst()])

@@ -1,11 +1,13 @@
 import datetime
 from typing import (
     ClassVar,
+    Iterator,
 )
 
 import attrs
 
 import backend.models._base_model as bm
+import backend.models.TermPlan
 
 
 @attrs.define(kw_only=True)
@@ -17,3 +19,6 @@ class Term(bm._Owned_model):
     StartDate: datetime.date
     EndDate: datetime.date
     TermName: str
+
+    def plans_in_term(self) -> Iterator[backend.models.TermPlan.TermPlan]:
+        yield from backend.models.TermPlan.TermPlan.from_db(self)

@@ -53,6 +53,16 @@ items_list: Tuple[frontend.gui_controls_spec.MenuItemSpec, ...] = (
         name="Usuń",
         on_activate_listener_name="on_delete"
     ),
+    frontend.gui_controls_spec.MenuItemSpec(
+        name="Powiąż z podstawą programową",
+        on_activate_listener_name="associate_with_term_plan",
+        should_show=lambda p: not bool(p.focused_entity.assigned_term_plan)
+    ),
+    frontend.gui_controls_spec.MenuItemSpec(
+        name="Usuń powiązanie z podstawą programową",
+        on_activate_listener_name="remove_association_with_term_plan",
+        should_show=lambda p: bool(p.focused_entity.assigned_term_plan)
+    ),
 )
 
 
