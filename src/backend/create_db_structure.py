@@ -53,7 +53,7 @@ CREATE_DATABASE_STATEMENTS: List[str] = [
   IsIn integer,
   PrimaryCourse integer,
   CONSTRAINT FK_CLASS_IN FOREIGN KEY (IsIn) REFERENCES time_table_app.Institutions (InstitutionId),
-  CONSTRAINT FK_CLASS_COURSE_IN FOREIGN KEY (PrimaryCourse) REFERENCES time_table_app.Classes(ClassId)
+  CONSTRAINT FK_CLASS_COURSE_IN FOREIGN KEY (PrimaryCourse) REFERENCES time_table_app.Subjects(SubjectId)
 );
 """,
 """CREATE TABLE IF NOT EXISTS time_table_app.TeachersToSubjects(

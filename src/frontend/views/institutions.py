@@ -74,53 +74,28 @@ items_list: Tuple[frontend.gui_controls_spec.MenuItemSpec, ...] = (
         on_activate_listener_name="on_delete"
     ),
     frontend.gui_controls_spec.MenuItemSpec(
-        name="Dodaj długą przerwę",
-        on_activate_listener_name="on_add_break",
-        should_show=lambda presenter: presenter.focused_entity.HasBreaks
-    ),
-    frontend.gui_controls_spec.MenuItemSpec(
-        name="Wyświetl długie przerwy",
+        name="Długie przerwy",
         on_activate_listener_name="on_show_long_breaks",
         should_show=lambda presenter: presenter.focused_entity.HasBreaks
     ),
     frontend.gui_controls_spec.MenuItemSpec(
-        name="Dodaj klasę",
-        on_activate_listener_name="on_new_class"
-    ),
-    frontend.gui_controls_spec.MenuItemSpec(
-        name="Wyświetl klasy",
+        name="Klasy",
         on_activate_listener_name="on_show_classes"
     ),
     frontend.gui_controls_spec.MenuItemSpec(
-        name="Dodaj przedmiot",
-        on_activate_listener_name="on_new_subject"
-    ),
-    frontend.gui_controls_spec.MenuItemSpec(
-        name="Wyświetl przedmioty",
+        name="Przedmioty",
         on_activate_listener_name="on_show_subjects"
     ),
     frontend.gui_controls_spec.MenuItemSpec(
-        name="Dodaj nauczyciela",
-        on_activate_listener_name="on_new_teacher"
-    ),
-    frontend.gui_controls_spec.MenuItemSpec(
-        name="Wyświetl nauczycieli",
+        name="Nauczyciele",
         on_activate_listener_name="on_show_teachers"
     ),
     frontend.gui_controls_spec.MenuItemSpec(
-        name="Dodaj salę lekcyjną",
-        on_activate_listener_name="on_add_class_room"
-    ),
-    frontend.gui_controls_spec.MenuItemSpec(
-        name="Wyświetl sale lekcyjne",
+        name="Sale lekcyjne",
         on_activate_listener_name="on_show_class_rooms"
     ),
     frontend.gui_controls_spec.MenuItemSpec(
-        name="Dodaj nowy semestr",
-        on_activate_listener_name="on_add_new_term"
-    ),
-    frontend.gui_controls_spec.MenuItemSpec(
-    name="Wyświetl semestry",
+    name="Semestry",
     on_activate_listener_name="on_show_terms"
     ),
 )

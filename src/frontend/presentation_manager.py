@@ -9,6 +9,7 @@ class MainFrame(wx.Frame):
         super().__init__(parent=None, title="Układacz planu zajęć")
         self.sizer = wx.BoxSizer(wx.VERTICAL)
         self.SetSizer(self.sizer)
+        # self.toolbar_obj = self.CreateToolBar(style=wx.TB_TEXT | wx.TB_HORIZONTAL)
 
 
 class PresentationManager:
