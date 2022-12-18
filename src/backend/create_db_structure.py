@@ -96,6 +96,7 @@ CREATE_DATABASE_STATEMENTS: List[str] = [
   TermPlanId integer,
   SubjectId integer,
   LessonsAmount integer,
+  LessonsWeekly integer,
   MinBlockSize integer,
   MaxBlockSize integer,
   PreferredDistanceInDays integer,

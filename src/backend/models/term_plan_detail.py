@@ -17,6 +17,7 @@ class TermPlanDetail(bm._Owned_model):
     id_column_name: ClassVar[str] = "TermPlanDetailId"
     owner_col_id_name: ClassVar[str] = "TermPlanId"
     LessonsAmount: int
+    LessonsWeekly: int
     MinBlockSize: int
     MaxBlockSize: int
     PreferredDistanceInDays: Optional[int] = None

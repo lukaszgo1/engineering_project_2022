@@ -19,8 +19,8 @@ class PossibleDistance(enum.IntEnum):
     @property
     def label(self) -> str:
         if self == PossibleDistance.DAYS:
-            return "dni"
-        return "tygodni"
+            return "dniach"
+        return "tygodniach"
 
 
 class NonApplicableDistanceCtsDisabler(frontend.gui_controls_spec.OnChangeListener):
@@ -51,31 +51,35 @@ class AddTermPlanDetailDlg(frontend.views._base_views.BaseEEnterParamsDlg):
             identifier="SubjectId"
         ),
         frontend.gui_controls_spec.SpinControlSpec(
-            label="Ilość godzin lekcyjnych:",
+            label="Liczba godzin lekcyjnych:",
             identifier="LessonsAmount"
         ),
         frontend.gui_controls_spec.SpinControlSpec(
-            identifier="MinBlockSize",
-            label="Minimalna ilość w bloku:"
+            label="Liczba godzin w tygodniu:",
+            identifier="LessonsWeekly"
         ),
         frontend.gui_controls_spec.SpinControlSpec(
-            label="Maks ilość w bloku:",
+            identifier="MinBlockSize",
+            label="Minimalna liczba godzin w bloku:"
+        ),
+        frontend.gui_controls_spec.SpinControlSpec(
+            label="Maksymalna liczba godzin w bloku:",
             identifier="MaxBlockSize"
         ),
         frontend.gui_controls_spec.RadioButtonspec(
-            label="Co:",
+            label="Odstęp w:",
             choices=list(PossibleDistance),
             identifier="DistanceIn",
             on_change_notifier=NonApplicableDistanceCtsDisabler
         ),
         frontend.gui_controls_spec.SpinControlSpec(
-            label="Co ile dni:",
+            label="Odstęp w dniach:",
             identifier="PreferredDistanceInDays",
             max_val=4,
             should_react_to_changes=True
         ),
         frontend.gui_controls_spec.SpinControlSpec(
-            label="Co ile tygodni:",
+            label="Odstęp w tygodniach:",
             identifier="PreferredDistanceInWeeks",
             should_react_to_changes=True
         ),
@@ -118,31 +122,37 @@ class TermPlanDetailsListing(frontend.views._base_views.BaseEntityList):
             value_converter=str
         ),
         frontend.gui_controls_spec.WXListColumnSpec(
-            header_name="Ilość lekcji",
+            header_name="Godziny w semestrze",
             width=100,
             value_getter=operator.attrgetter("LessonsAmount"),
             value_converter=str
         ),  
+        frontend.gui_controls_spec.WXListColumnSpec(
+            header_name="Godziny w tygodniu",
+            width=100,
+            value_getter=operator.attrgetter("LessonsWeekly"),
+            value_converter=str
+        ),  
         frontend                .gui_controls_spec.WXListColumnSpec(
-            header_name="Min ilość w bloku",
+            header_name="Minimalna liczba godzin w bloku",
             width=100,
             value_getter    =operator.attrgetter("MinBlockSize"),
             value_converter=str
         ),
         frontend                .gui_controls_spec.WXListColumnSpec(
-            header_name="Maks ilość w bloku",
+            header_name="Maksymalna  liczba godzin w bloku",
             width=100,
             value_getter    =operator.attrgetter("MaxBlockSize"),
             value_converter=str
         ),
         frontend                .gui_controls_spec.WXListColumnSpec(
-            header_name="Co ile dni",
+            header_name="Odstęp w dniach",
             width=100,  
             value_getter    =operator.attrgetter("PreferredDistanceInDays"),
             value_converter=_to_string_if_not_none
         ),
         frontend                .gui_controls_spec.WXListColumnSpec(
-            header_name="Co ile tygodni",
+            header_name="Odstęp w tygodniach",
             width=100,  
             value_getter    =operator.attrgetter("PreferredDistanceInWeeks"),
             value_converter=_to_string_if_not_none

@@ -29,6 +29,7 @@ class TermPlanDetailsPresenter(frontend.presenters.base_presenter.BasePresenter)
     def create_new_entity_from_user_input(self, entered_vals):
         return self.MODEL_CLASS(
             LessonsAmount=entered_vals["LessonsAmount"],
+            LessonsWeekly=entered_vals["LessonsWeekly"],
             MaxBlockSize=entered_vals["MaxBlockSize"],
             MinBlockSize=entered_vals["MinBlockSize"],
             PreferredDistanceInDays=entered_vals["PreferredDistanceInDays"],
