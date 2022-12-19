@@ -26,7 +26,7 @@ class BaseEntityList(wx.Panel):
         self.list_ctrl = wx.ListCtrl(
             self,
             size=(-1, 200),
-            style=wx.LC_REPORT | wx.BORDER_SUNKEN
+            style=wx.LC_REPORT | wx.BORDER_SUNKEN | wx.LC_SINGLE_SEL
         )
         self.list_ctrl.Bind(wx.EVT_CONTEXT_MENU, self.on_context)
         self.list_ctrl.Bind(

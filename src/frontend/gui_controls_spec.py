@@ -140,6 +140,46 @@ class MenuItemSpec:
         return parent_menu.Append(self.id, item=self.name)
 
 
+class ToolBarItemSpec:
+
+    _IDS_TO_ICONS: ClassVar[dict[int, str]] = {
+        wx.ID_DELETE: wx.ART_DELETE,
+        wx.ID_EDIT: wx.ART_EDIT,
+    }
+    last_used_id: ClassVar[int] = 0
+    DEFAULT_BITMAP_TYPE = wx.ART_LIST_VIEW
+
+    def __init__(self, obj_spec: MenuItemSpec, on_click) -> None:
+        self._obj_spec = obj_spec
+        self._on_click = on_click
+        self._item_id = None
+
+    def _create_toolbar_item_bitmap(self):
+        bitmap_to_use = self._IDS_TO_ICONS.get(
+            self._obj_spec.id,
+            self.DEFAULT_BITMAP_TYPE
+        )
+        return wx.ArtProvider().GetBitmap(bitmap_to_use, wx.ART_TOOLBAR)
+
+    @property
+    def  label(self) -> str:
+        return self._obj_spec.name
+
+    @property
+    def bitmap(self):
+        return self._create_toolbar_item_bitmap()
+
+    @property
+    def item_id(self) -> int:
+        if self._item_id is None:
+            self.__class__.last_used_id += 1
+            self._item_id = self.__class__.last_used_id
+        return self._item_id
+
+    def click(self):
+        self._on_click(None)  # TODO: This is ugly
+
+
 @attrs.define(kw_only=True)
 class DatePickerSpec(_ControlWrapperBase):
 

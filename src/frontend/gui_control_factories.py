@@ -115,7 +115,8 @@ class spin_control_factory(_base_control):
         return {self.identifier: self._spin_control.Value}
 
     def set_value(self, new_val: int) -> None:
-        self._spin_control.Value = new_val
+        if new_val is not None:
+            self._spin_control.Value = new_val
 
     def set_state(self, new_state: bool) -> None:
         self._spin_control.Enable(new_state)

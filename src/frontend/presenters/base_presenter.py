@@ -8,6 +8,7 @@ from typing import (
 
 import backend.models._base_model
 import frontend.gui_control_factories
+import frontend.gui_controls_spec
 import frontend.presentation_manager
 
 
@@ -23,6 +24,7 @@ class BasePresenter:
         self.all_records = list()
 
     def on_new_item_gained_focus(self, item_index: int) -> None:
+        print(item_index)
         self._focused_entity_index = item_index
 
     @property
@@ -146,3 +148,10 @@ class BasePresenter:
     def show_previous_view(self):
         import frontend.presentation_manager as pm
         pm.get_presentation_manager().show_previous_view_if_any()
+
+    def toolbar_items(self):
+        for spec in self.view_collections.context_menu_spec:
+            yield frontend.gui_controls_spec.ToolBarItemSpec(
+                obj_spec=spec,
+                on_click=self._on_click_handler_factory(spec.on_activate_listener_name)
+            )
