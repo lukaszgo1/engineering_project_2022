@@ -22,11 +22,21 @@ class BasePresenter:
         self.is_presenting = False
         self._focused_entity_index = -1
         self.all_records = list()
+        self.toolbar_items_in_view = list()
+        for spec in self.view_collections.context_menu_spec:
+            self.toolbar_items_in_view.append(frontend.gui_controls_spec.ToolBarItemSpec(
+                obj_spec=spec,
+                on_click=self._on_click_handler_factory(spec.on_activate_listener_name)
+            ))
+
+    def set_toolbar_icons_state(self):
+        for item in self.toolbar_items_in_view:
+            item.on_reevaluate_state(self)
 
     def on_new_item_gained_focus(self, item_index: int) -> None:
-        print(item_index)
         self._focused_entity_index = item_index
-
+        self.set_toolbar_icons_state()
+        
     @property
     def focused_entity(self) -> backend.models._base_model._BaseModel:
         if not self.any_focused:
@@ -60,6 +70,7 @@ class BasePresenter:
         for record in self.get_all_records():
             self._present_single_in_view(record)
         self.p.focus_list()
+        self.set_toolbar_icons_state()
 
     def hide(self):
         if self.is_presenting:
@@ -114,6 +125,7 @@ class BasePresenter:
                     self.focused_entity,
                     self._focused_entity_index
                 )
+                self.set_toolbar_icons_state()
 
     def show_context_menu_for_entity(self):
         if self.any_focused:
@@ -148,10 +160,3 @@ class BasePresenter:
     def show_previous_view(self):
         import frontend.presentation_manager as pm
         pm.get_presentation_manager().show_previous_view_if_any()
-
-    def toolbar_items(self):
-        for spec in self.view_collections.context_menu_spec:
-            yield frontend.gui_controls_spec.ToolBarItemSpec(
-                obj_spec=spec,
-                on_click=self._on_click_handler_factory(spec.on_activate_listener_name)
-            )

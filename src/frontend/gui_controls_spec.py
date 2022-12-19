@@ -148,11 +148,13 @@ class ToolBarItemSpec:
     }
     last_used_id: ClassVar[int] = 0
     DEFAULT_BITMAP_TYPE = wx.ART_LIST_VIEW
+    _state: bool = True
 
     def __init__(self, obj_spec: MenuItemSpec, on_click) -> None:
         self._obj_spec = obj_spec
         self._on_click = on_click
         self._item_id = None
+        self._parent_tooolbar: Optional[wx.ToolBar] = None
 
     def _create_toolbar_item_bitmap(self):
         bitmap_to_use = self._IDS_TO_ICONS.get(
@@ -160,6 +162,28 @@ class ToolBarItemSpec:
             self.DEFAULT_BITMAP_TYPE
         )
         return wx.ArtProvider().GetBitmap(bitmap_to_use, wx.ART_TOOLBAR)
+
+    @property
+    def state(self) -> bool:
+        return self._state
+
+    @state.setter
+    def state(self, new_state: bool) -> None:
+        if new_state != self.state:
+            self._parent_tooolbar.EnableTool(self.item_id, new_state)
+            self._state = new_state
+
+    def on_reevaluate_state(self, presenter):
+        if not presenter.any_focused:
+            self.state = False
+        else:
+            if(
+                self._obj_spec.should_show is not None
+                and callable(self._obj_spec.should_show)
+            ):
+                self.state = self._obj_spec.should_show(presenter)
+            else:
+                self.state = True
 
     @property
     def  label(self) -> str:
@@ -178,6 +202,9 @@ class ToolBarItemSpec:
 
     def click(self):
         self._on_click(None)  # TODO: This is ugly
+
+    def set_parent(self, parent_toolbar: wx.ToolBar) -> None:
+        self._parent_tooolbar = parent_toolbar
 
 
 @attrs.define(kw_only=True)

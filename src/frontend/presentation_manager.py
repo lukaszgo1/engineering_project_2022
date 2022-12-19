@@ -39,6 +39,7 @@ class PresentationManager:
                 item.bitmap
             )
             self.toolbar_ids_to_items[item.item_id] = item
+            item.set_parent(self.frame_obj.toolbar_obj)
         self.frame_obj.toolbar_obj.Realize()
 
     def present_initial_view(self):
@@ -46,7 +47,7 @@ class PresentationManager:
         self.frame_obj.toolbar_obj.Bind(wx.EVT_TOOL, self.on_toolbar_item_clicked)
         wx.GetApp().SetTopWindow(self.frame_obj)
         main_presenter = self._initial_presenter()
-        self.populate_toolbar(list(main_presenter.toolbar_items()))
+        self.populate_toolbar(main_presenter.toolbar_items_in_view)
         main_presenter.present_all()
         self._active_presenters.append(main_presenter)
         self.frame_obj.Show()
@@ -57,8 +58,8 @@ class PresentationManager:
 
     def present(self, presenter_to_use):
         self._active_presenters.append(presenter_to_use)
+        self.populate_toolbar(self._active_presenters[-1].toolbar_items_in_view)
         self._active_presenters[-1].present_all()
-        self.populate_toolbar(list(self._active_presenters[-1].toolbar_items()))
         self._active_presenters[-2].hide()
         self.frame_obj.Layout()
 
@@ -66,7 +67,7 @@ class PresentationManager:
         if len(self._active_presenters) > 1:
             currently_presenting = self._active_presenters[-1]
             should_present = self._active_presenters[-2]
-            self.populate_toolbar(list(should_present.toolbar_items()))
+            self.populate_toolbar(should_present.toolbar_items_in_view)
             del self._active_presenters[-2]
             del self._active_presenters[-1]
             self.frame_obj.sizer.Remove(0)
