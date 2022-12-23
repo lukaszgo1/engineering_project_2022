@@ -14,7 +14,9 @@ import frontend.presenters.base_presenter
 import frontend.presenters.institutions_presenter
 import frontend.views.breaks
 import frontend.gui_controls_spec
+import frontend.presentation_manager
 import backend.models.break_model
+import backend.models.institution
 
 
 @attrs.define(kw_only=True, str=False)
@@ -50,30 +52,29 @@ class BreaksPresenter(frontend.presenters.base_presenter.BasePresenter):
         possible_lengths = frontend.gui_controls_spec.ComboBoxvaluesSpec(possible_lengths)
         return {"break_length": possible_lengths}
 
-    def __init__(
-        self,
-        parent_presenter: frontend.presenters.institutions_presenter.InstitutionPresenter
-    ) -> None:
-        super().__init__()
-        self.parent_presenter = parent_presenter
+    @property
+    def break_for_inst(self) -> backend.models.institution.Institution:
+        return frontend.presentation_manager.get_presentation_manager()._active_presenters[-2].focused_entity
 
     def possible_break_lengths(self) -> List[int]:
-        normal_break = self.parent_presenter.focused_entity.NormalBreakLength
-        lesson_len = self.parent_presenter.focused_entity.NormalLessonLength
-        return [_ for _ in range(normal_break + 5, lesson_len, 5)]
+        normal_break = self.break_for_inst.NormalBreakLength
+        lesson_len = self.break_for_inst.NormalLessonLength
+        if normal_break is not None and lesson_len is not None:
+            return [_ for _ in range(normal_break + 5, lesson_len, 5)]
+        raise RuntimeError("Attempted to create break lengths for inst without breaks")
 
     def possible_breaks(self, length: int):
-        normal_break = self.parent_presenter.focused_entity.NormalBreakLength
-        lesson_len = self.parent_presenter.focused_entity.NormalLessonLength
+        normal_break = self.break_for_inst.NormalBreakLength
+        lesson_len = self.break_for_inst.NormalLessonLength
         existing_breaks = list(
-            self.MODEL_CLASS.from_db(self.parent_presenter.focused_entity)
+            self.MODEL_CLASS.from_db(self.break_for_inst)
         )
         if existing_breaks:
             existing_breaks.sort(key=operator.attrgetter("BreakStartingHour"))
             starting_hour = existing_breaks[-1].BreakEndingHour
         else:
-            starting_hour = self.parent_presenter.focused_entity.StartingHour
-        ending_hour = self.parent_presenter.focused_entity.EndingHour
+            starting_hour = self.break_for_inst.StartingHour
+        ending_hour = self.break_for_inst.EndingHour
         default_date = "2000-01-02 "
         start_obj = datetime.datetime.fromisoformat(
             f"{default_date}{starting_hour}"
@@ -106,10 +107,10 @@ class BreaksPresenter(frontend.presenters.base_presenter.BasePresenter):
         return self.MODEL_CLASS(
             BreakStartingHour=entered_vals["BreakStartingHour"],
             BreakEndingHour=entered_vals["BreakEndingHour"],
-            owner=self.parent_presenter.focused_entity
+            owner=self.break_for_inst
         )
 
     def get_all_records(self):
         yield from self.MODEL_CLASS.from_db(
-            self.parent_presenter.focused_entity
+            self.break_for_inst
         )

@@ -88,7 +88,7 @@ CREATE_DATABASE_STATEMENTS: List[str] = [
   CONSTRAINT FK_TERM_PLAN_FOR_CLASS FOREIGN KEY
   (ClassId) REFERENCES time_table_app.Classes(ClassId),
   CONSTRAINT FK_TERM_PLAN_ident FOREIGN KEY
-  (TermPlanId) REFERENCES time_table_app.Terms(TermId)
+  (TermPlanId) REFERENCES time_table_app.TermPlan(TermPlanId)
 )
 """,
 """CREATE TABLE IF NOT EXISTS time_table_app.TermPlanDetails(
@@ -117,11 +117,15 @@ CREATE_DATABASE_STATEMENTS: List[str] = [
   SubjectId integer,
   ClassId integer,
   ClassRoomId integer,
+  LessonDate Date,
+  InTerm integer,
   CONSTRAINT FK_INST_IN_SCHED FOREIGN KEY (InstitutionId) REFERENCES time_table_app.Institutions (InstitutionId),
   CONSTRAINT  FK_TEACHER_IN_SCHED FOREIGN KEY (TeacherId) REFERENCES time_table_app.Teachers(TeacherId),
   CONSTRAINT  FK_SUBJECT_IN_SCHED FOREIGN KEY (SubjectId) REFERENCES time_table_app.Subjects(SubjectId),
   CONSTRAINT  FK_CLASS_ROOM_IN_SCHED FOREIGN KEY (ClassRoomId) REFERENCES time_table_app.ClassRooms(ClassRoomId),
-  CONSTRAINT  FK_CLASS_IN_SCHED FOREIGN KEY (ClassId) REFERENCES time_table_app.Classes(ClassId)
+  CONSTRAINT  FK_CLASS_IN_SCHED FOREIGN KEY (ClassId) REFERENCES time_table_app.Classes(ClassId),
+  CONSTRAINT FK_SCHEDULE_ENTRY_IN_TERM FOREIGN KEY
+  (InTerm) REFERENCES time_table_app.Terms(TermId)
 );
 """,
 ]

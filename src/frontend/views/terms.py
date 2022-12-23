@@ -77,6 +77,10 @@ items_list: Tuple[frontend.gui_controls_spec.MenuItemSpec, ...] = (
         name="Podstawy programowe w semestrze",
         on_activate_listener_name="on_show_term_plans"
     ),
+    frontend.gui_controls_spec.MenuItemSpec(
+        name="Dodaj zajęcia do grafiku",
+        on_activate_listener_name="on_add_new_schedule_entry"
+    ),
 )
 
 

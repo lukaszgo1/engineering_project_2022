@@ -16,3 +16,6 @@ class Teacher(bm._Owned_model):
     FirstName: str
     LastName: str
     IsAvailable: bool
+
+    def __str__(self) -> str:
+        return f"{self.FirstName} {self.LastName}"

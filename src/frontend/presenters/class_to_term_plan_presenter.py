@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import frontend.presenters.base_presenter
+import frontend.presentation_manager
 import frontend.views.class_to_term_plan
 import frontend.gui_controls_spec
 import backend.models.class_to_term_plan
@@ -20,6 +21,10 @@ class ClassToTermPlanPresenter(frontend.presenters.base_presenter.BasePresenter)
     ) -> None:
         super().__init__()
         self.parent_presenter = parent_presenter
+
+    def add_new_entry(self):
+        super().add_new_entry()
+        frontend.presentation_manager.get_presentation_manager()._active_presenters[-1].set_toolbar_icons_state()
 
     def create_new_entity_from_user_input(self, entered_vals):
         return self.MODEL_CLASS(
@@ -50,4 +55,4 @@ class ClassToTermPlanPresenter(frontend.presenters.base_presenter.BasePresenter)
     def remove_entry(self):
         associated_term_plan = self.parent_presenter.focused_entity.assigned_term_plan
         associated_term_plan.delete_db_record()
-
+        self.set_toolbar_icons_state()

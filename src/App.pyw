@@ -71,20 +71,8 @@ class LessonToScheduleDLG(wx.Dialog):
 	controls = dict()
 
 	def __init__(self, parent, index, refreshView):
-		super().__init__(parent=parent, title="Dodaj zajęcia do grafiku")
-		self.index = index
-		self.refreshView = refreshView
 		self.main_sizer = wx.BoxSizer(wx.VERTICAL)
 		self.helper_sizer = wx.BoxSizer(wx.VERTICAL)
-		sizer = wx.BoxSizer(wx.HORIZONTAL)
-		label = wx.StaticText(self, label="Dzień tygodnia:", size=(150, -1))
-		sizer.Add(label, flag=wx.ALIGN_CENTER_VERTICAL)
-		sizer.AddSpacer(10)
-		self.controls["weekDay"] = wx.Choice(self, choices=list(WEEK_DAYS.values()))
-		self.controls["weekDay"].SetSelection(0)
-		sizer.Add(self.controls["weekDay"])
-		self.helper_sizer.Add(sizer)
-
 		res = app_global_vars.active_db_con.fetch_one(
 			table_name="Institutions",
 			col_names=(
@@ -125,8 +113,6 @@ class LessonToScheduleDLG(wx.Dialog):
 				res["StartingHour"], res["EndingHour"]
 			)
 			sizer = wx.BoxSizer(wx.HORIZONTAL)
-			label = wx.StaticText(self, label="Godzina rozpoczęcia:", size=(150, -1))
-			sizer.Add(label, flag=wx.ALIGN_CENTER_VERTICAL)
 			sizer.AddSpacer(10)
 			self.controls["start_time"] = wx.Choice(
 				self, choices=[lesson for lesson in self.lessons_without_breaks[:-3]]
@@ -141,83 +127,6 @@ class LessonToScheduleDLG(wx.Dialog):
 			self.controls["end_time"] = wx.Choice(self, choices=[lesson for lesson in self.lessons_without_breaks[1:]])
 			sizer.Add(self.controls["end_time"])
 			self.helper_sizer.Add(sizer)
-
-		self.teachersInInst = dict()
-		res = app_global_vars.active_db_con.fetch_all_matching(
-			table_name="Teachers",
-			col_names=("TeacherId", "FirstName", "LastName"),
-			condition_str="EmployedIn= ? and IsAvailable = 1",
-			seq=(self.index,)
-		)
-		for indexInCB, record in enumerate(res):
-			self.teachersInInst[indexInCB] = (record["TeacherId"], " ".join((record["FirstName"], record["LastName"])))
-		sizer = wx.BoxSizer(wx.HORIZONTAL)
-		label = wx.StaticText(self, label="Prowadzący:", size=(150, -1))
-		sizer.Add(label, flag=wx.ALIGN_CENTER_VERTICAL)
-		sizer.AddSpacer(10)
-		self.controls["teacher"] = wx.Choice(self, choices=[v[1] for v in self.teachersInInst.values()])
-		sizer.Add(self.controls["teacher"])
-		self.helper_sizer.Add(sizer)
-		self.subjectsInInst = dict()
-		res = app_global_vars.active_db_con.fetch_all_matching(
-			table_name="Subjects",
-			col_names=("SubjectId", "SubjectName"),
-			condition_str="TaughtIn = ?",
-			seq=(self.index,)
-		)
-		for indexInCB, record in enumerate(res):
-			self.subjectsInInst[indexInCB] = (record["SubjectId"], record["SubjectName"])
-		sizer = wx.BoxSizer(wx.HORIZONTAL)
-		label = wx.StaticText(self, label="Przedmiot:", size=(150, -1))
-		sizer.Add(label, flag=wx.ALIGN_CENTER_VERTICAL)
-		sizer.AddSpacer(10)
-		self.controls["subject"] = wx.Choice(self, choices=[v[1] for v in self.subjectsInInst.values()])
-		sizer.Add(self.controls["subject"])
-		self.helper_sizer.Add(sizer)
-
-		self.classesInInst = dict()
-		res = app_global_vars.active_db_con.fetch_all_matching(
-			table_name="Classes",
-			col_names=("ClassId", "ClassIdentifier"),
-			condition_str="ClassInInstitution = ?",
-			seq=(self.index,)
-		)
-		for indexInCB, record in enumerate(res):
-			self.classesInInst[indexInCB] = (record["ClassId"], record["ClassIdentifier"])
-		sizer = wx.BoxSizer(wx.HORIZONTAL)
-		label = wx.StaticText(self, label="Grupa:", size=(150, -1))
-		sizer.Add(label, flag=wx.ALIGN_CENTER_VERTICAL)
-		sizer.AddSpacer(10)
-		self.controls["class"] = wx.Choice(self, choices=[v[1] for v in self.classesInInst.values()])
-		sizer.Add(self.controls["class"])
-		self.helper_sizer.Add(sizer)
-
-		self.classRoomsInInst = dict()
-		res = app_global_vars.active_db_con.fetch_all_matching(
-			table_name="ClassRooms",
-			col_names=("ClassRoomId", "ClassRoomIdentifier"),
-			condition_str="IsIn = ?",
-			seq=(self.index,)
-		)
-		for indexInCB, record in enumerate(res):
-			self.classRoomsInInst[indexInCB] = (record["ClassRoomId"], record["ClassRoomIdentifier"])
-		sizer = wx.BoxSizer(wx.HORIZONTAL)
-		label = wx.StaticText(self, label="Sala:", size=(150, -1))
-		sizer.Add(label, flag=wx.ALIGN_CENTER_VERTICAL)
-		sizer.AddSpacer(10)
-		self.controls["classRoom"] = wx.Choice(self, choices=[v[1] for v in self.classRoomsInInst.values()])
-		sizer.Add(self.controls["classRoom"])
-		self.helper_sizer.Add(sizer)
-
-		self.main_sizer.Add(self.helper_sizer, border=20, flag=wx.LEFT | wx.RIGHT | wx.TOP)
-		btn_sizer = wx.BoxSizer()
-		save_btn = wx.Button(self, label='Dodaj')
-		save_btn.Bind(wx.EVT_BUTTON, self.on_save)
-		btn_sizer.Add(save_btn, 0, wx.ALL, 5)
-		btn_sizer.Add(wx.Button(self, id=wx.ID_CANCEL), 0, wx.ALL, 5)
-		self.main_sizer.Add(btn_sizer, 0, wx.CENTER)
-		self.main_sizer.Fit(self)
-		self.SetSizer(self.main_sizer)
 
 	def on_choice(self, evt):
 		"""Hides  lessons which makes no sense in the currennt context when user changes starting hour."""
@@ -285,17 +194,6 @@ class LessonToScheduleDLG(wx.Dialog):
 				self.Parent.list_ctrl.ClearAll()
 				self.Parent.populateListView()
 			self.Close()
-
-	def add_widgets(self, label_text, ctrl_key):
-		"""Adds a `wx.TextCtrl` with a given label to the dialog.
-		the newly added control can be accessed using `ctrl_key` as the index to self.controls."""
-		sizer = wx.BoxSizer(wx.HORIZONTAL)
-		label = wx.StaticText(self, label=label_text, size=(150, -1))
-		sizer.Add(label, flag=wx.ALIGN_CENTER_VERTICAL)
-		sizer.AddSpacer(10)
-		self.controls[ctrl_key] = wx.TextCtrl(self)
-		sizer.Add(self.controls[ctrl_key])
-		self.helper_sizer.Add(sizer)
 
 
 class EditScheduleDLG(wx.Dialog):

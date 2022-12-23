@@ -28,3 +28,6 @@ class Class(bm._Owned_model):
             return list(backend.models.class_to_term_plan.ClassToTermPlan.from_db(self))[0]
         except IndexError:
             return None
+
+    def __str__(self) -> str:
+        return self.ClassIdentifier

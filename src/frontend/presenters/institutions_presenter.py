@@ -25,13 +25,13 @@ class InstitutionPresenter(frontend.presenters.base_presenter.BasePresenter):
 
     def on_add_break(self):
         import frontend.presenters.breaks_presenter
-        p = frontend.presenters.breaks_presenter.BreaksPresenter(self)
+        p = frontend.presenters.breaks_presenter.BreaksPresenter()
         p.add_new_entry()
 
     def on_show_long_breaks(self):
         import frontend.presentation_manager
         import frontend.presenters.breaks_presenter
-        p = frontend.presenters.breaks_presenter.BreaksPresenter(self)
+        p = frontend.presenters.breaks_presenter.BreaksPresenter()
         frontend.presentation_manager.get_presentation_manager().present(p)
 
     def on_new_class(self):
@@ -69,13 +69,13 @@ class InstitutionPresenter(frontend.presenters.base_presenter.BasePresenter):
 
     def on_add_class_room(self):
         import frontend.presenters.class_rooms_presenter
-        p = frontend.presenters.class_rooms_presenter.ClassRoomsPresenter(self)
+        p = frontend.presenters.class_rooms_presenter.ClassRoomsPresenter()
         p.add_new_entry()
 
     def on_show_class_rooms(self):
         import frontend.presentation_manager
         import frontend.presenters.class_rooms_presenter
-        p = frontend.presenters.class_rooms_presenter.ClassRoomsPresenter(self)
+        p = frontend.presenters.class_rooms_presenter.ClassRoomsPresenter()
         frontend.presentation_manager.get_presentation_manager().present(p)
 
     def on_add_new_term(self):

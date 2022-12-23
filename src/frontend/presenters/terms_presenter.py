@@ -48,3 +48,8 @@ class TermsPresenter(frontend.presenters.base_presenter.BasePresenter):
         import frontend.presenters.term_plans_presenter
         p = frontend.presenters.term_plans_presenter.TermPlanPresenter(self)
         frontend.presentation_manager.get_presentation_manager().present(p)
+
+    def on_add_new_schedule_entry(self):
+        import frontend.presenters.schedule_presenter
+        p = frontend.presenters.schedule_presenter.SchedulePresenter(self)
+        p.add_new_entry()

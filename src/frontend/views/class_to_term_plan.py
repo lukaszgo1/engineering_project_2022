@@ -24,3 +24,6 @@ class RemoveAssignmentDlg(AssignClassToTermPlanDlg):
 
 add = AssignClassToTermPlanDlg
 remove = RemoveAssignmentDlg
+
+
+context_menu_spec = ()

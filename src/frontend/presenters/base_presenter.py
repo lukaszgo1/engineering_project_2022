@@ -52,11 +52,11 @@ class BasePresenter:
         to_show: backend.models._base_model._BaseModel,
         should_focus: bool = False,
     ) -> None:
+        self.all_records.append(to_show)
         self.p.add_new_item(
             to_show, should_focus=should_focus
         )
-        self.all_records.append(to_show)
-
+        
     def get_all_records(self):
         yield from self.MODEL_CLASS.from_db()
 
@@ -106,6 +106,7 @@ class BasePresenter:
                 new_entity.insert_into_db()
                 if self.is_presenting:
                     self._present_single_in_view(new_entity, should_focus=True)
+                self.set_toolbar_icons_state()
 
     def _on_click_handler_factory(self, method_name: str):
         return lambda e: getattr(self, method_name)()

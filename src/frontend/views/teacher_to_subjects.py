@@ -28,3 +28,4 @@ class RemoveAssignmentDlg(AssignTeacherToSubjectDlg):
 
 add = AssignTeacherToSubjectDlg
 remove = RemoveAssignmentDlg
+context_menu_spec = ()

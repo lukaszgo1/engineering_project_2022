@@ -6,9 +6,11 @@ from typing import (
 )
 
 import frontend.presenters.base_presenter
+import frontend.presentation_manager
 import frontend.views.class_rooms
 import frontend.gui_controls_spec
 import backend.models.class_room
+import backend.models.institution
 import backend.models.subject
 
 
@@ -20,24 +22,21 @@ class ClassRoomsPresenter(frontend.presenters.base_presenter.BasePresenter):
     view_collections = frontend.views.class_rooms
     all_records: List[backend.models.class_room.ClassRoom]
 
-    def __init__(
-        self,
-        parent_presenter: frontend.presenters.base_presenter.BasePresenter
-    ) -> None:
-        super().__init__()
-        self.parent_presenter = parent_presenter
+    @property
+    def owning_inst(self) -> backend.models.institution.Institution:
+        return frontend.presentation_manager.get_presentation_manager()._active_presenters[-2].focused_entity
 
     def create_new_entity_from_user_input(self, entered_vals):
         return self.MODEL_CLASS(
             ClassRoomIdentifier=entered_vals["ClassRoomIdentifier"],
             MainSubjectId=entered_vals["PrimaryCourse"].id,
             PrimaryCourse=entered_vals["PrimaryCourse"],
-            owner=self.parent_presenter.focused_entity
+            owner=self.owning_inst
         )
 
     def get_all_records(self):
         yield from self.MODEL_CLASS.from_db(
-            self.parent_presenter.focused_entity
+            self.owning_inst
         )
 
     @property
@@ -45,7 +44,7 @@ class ClassRoomsPresenter(frontend.presenters.base_presenter.BasePresenter):
         courses_list = [backend.models.class_room.NoMainCourse()]
         courses_list += list(
             backend.models.subject.Subject.from_db(
-                self.parent_presenter.focused_entity
+                self.owning_inst
             )
         )
         combobox_vals = frontend.gui_controls_spec.ComboBoxvaluesSpec(

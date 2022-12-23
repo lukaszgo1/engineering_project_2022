@@ -65,3 +65,6 @@ class ClassRoom(bm._Owned_model):
         res["MainSubjectId"] = res["PrimaryCourse"]
         del res["PrimaryCourse"]
         return res
+
+    def __str__(self) -> str:
+        return self.ClassRoomIdentifier
