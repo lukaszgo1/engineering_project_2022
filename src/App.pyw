@@ -120,13 +120,6 @@ class LessonToScheduleDLG(wx.Dialog):
 			sizer.Add(self.controls["start_time"])
 			self.helper_sizer.Add(sizer)
 			self.controls["start_time"].Bind(wx.EVT_CHOICE, self.on_choice)
-			sizer = wx.BoxSizer(wx.HORIZONTAL)
-			label = wx.StaticText(self, label="Godzina zakończenia:", size=(150, -1))
-			sizer.Add(label, flag=wx.ALIGN_CENTER_VERTICAL)
-			sizer.AddSpacer(10)
-			self.controls["end_time"] = wx.Choice(self, choices=[lesson for lesson in self.lessons_without_breaks[1:]])
-			sizer.Add(self.controls["end_time"])
-			self.helper_sizer.Add(sizer)
 
 	def on_choice(self, evt):
 		"""Hides  lessons which makes no sense in the currennt context when user changes starting hour."""

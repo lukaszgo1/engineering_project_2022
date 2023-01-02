@@ -47,6 +47,34 @@ class TeachersAssignedToSubject(frontend.gui_controls_spec.OnChangeListener):
                 )
 
 
+class EndLessonTimeFilterer(frontend.gui_controls_spec.OnChangeListener):
+
+    def __init__(self, presenter, emitting_control) -> None:
+        super().__init__(presenter, emitting_control)
+        self._emitting_control.register_to_changes(self.on_new_lesson_beginning_selected)
+
+    def on_new_lesson_beginning_selected(self, lesson_start):
+        to_modify = None
+        for control in self._controls_to_modify:
+            if control.identifier == "LessonEndingHour":
+                to_modify = control
+            if control.identifier == "SubjectId":
+                subject = control.get_value()
+            if control.identifier == "ClassId":
+                selected_class = control.get_value()
+        if to_modify is None:
+            raise RuntimeError("Failed to find combo box with end times")
+        to_modify.set_value(
+            frontend.gui_controls_spec.ComboBoxvaluesSpec(
+                self._presenter.get_possible_ends_for_lesson(
+                    selected_class,
+                    subject,
+                    lesson_start
+                )
+            )
+        )
+
+
 class AddScheduleEntryDlg(frontend.views._base_views.BaseEEnterParamsDlg):
 
     title: str = "Dodaj zajęcia do grafiku"
@@ -57,7 +85,8 @@ class AddScheduleEntryDlg(frontend.views._base_views.BaseEEnterParamsDlg):
         frontend.gui_controls_spec.LabeledComboBoxSpec(
             label="Grupa:",
             identifier="ClassId",
-            on_change_notifier=SubjectsInClassFilterer
+            on_change_notifier=SubjectsInClassFilterer,
+            should_react_to_changes=True
         ),
         frontend.gui_controls_spec.LabeledComboBoxSpec(
             label="Przedmiot:",
@@ -82,7 +111,13 @@ class AddScheduleEntryDlg(frontend.views._base_views.BaseEEnterParamsDlg):
         frontend.gui_controls_spec.LabeledComboBoxSpec(
             label="Godzina rozpoczęcia:",
             identifier="LessonStartingHour",
-        )
+            on_change_notifier=EndLessonTimeFilterer
+        ),
+        frontend.gui_controls_spec.LabeledComboBoxSpec(
+            identifier="LessonEndingHour",
+            label="Godzina zakończenia:",
+            should_react_to_changes=True
+        ),
     )
 
     def get_values(self) -> Dict:

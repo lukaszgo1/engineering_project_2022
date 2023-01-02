@@ -1,3 +1,4 @@
+wheel
 wxPython==4.2.0
 py2exe==0.10.4.0
 mariadb

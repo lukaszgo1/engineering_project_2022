@@ -1,4 +1,5 @@
 import datetime
+import email.utils
 import itertools
 import operator
 from typing import (
@@ -9,6 +10,7 @@ from typing import (
 )
 
 import attrs
+import requests
 
 import backend.models._base_model as bm
 import backend.models.break_model
@@ -39,48 +41,16 @@ class Institution(bm._BaseModel):
     def term_plans_in_inst(self):
         yield from itertools.chain(*[t.plans_in_term() for t in self.terms_in_inst()])
 
-    def lessons(self):
+    def lessons(self) -> list[datetime.time]:
         if self.NormalBreakLength is None or self.NormalLessonLength is None:
             raise RuntimeError
-        default_date = "2000-01-02 "
-        normal_break = self.NormalBreakLength
-        lesson_len = self.NormalLessonLength
-        existing_breaks = list(
-            backend.models.break_model.Break.from_db(self)
+        query = requests.get(
+            f"http://127.0.0.1:5000/get_institutions_lessons/{str(self.id)}"
         )
-        existing_breaks.sort(key=operator.attrgetter("BreakStartingHour"))
-        break_starts = [
-            datetime.datetime.fromisoformat(
-                f"{default_date}{b.BreakStartingHour}"
-            ) for b in existing_breaks
-        ]
-        break_ends = [
-            datetime.datetime.fromisoformat(
-                f"{default_date}{b.BreakEndingHour}"
-            ) for b in existing_breaks
-        ]
-        starting_hour = self.StartingHour
-        ending_hour = self.EndingHour
-        start_obj = datetime.datetime.fromisoformat(
-            f"{default_date}{starting_hour}"
-        )
-        end_obj = datetime.datetime.fromisoformat(
-            f"{default_date}{ending_hour}"
-        )
-        normal_break_td = datetime.timedelta(minutes=normal_break)
-        lesson_td = datetime.timedelta(minutes=lesson_len)
+        records = query.json()["lessons"]
+        lessons_starts = [email.utils.parsedate(_) for _ in records]
         res = []
-        lesson_start = start_obj 
-        while lesson_start < end_obj:
-            res.append(lesson_start)
-            lesson_start = lesson_start + lesson_td
-            possible_break_start = lesson_start
-            if possible_break_start in break_starts:
-                curr_break_index = break_starts.index(possible_break_start)
-                long_break_duration = break_ends[curr_break_index] - break_starts[curr_break_index]
-                lesson_start = lesson_start + long_break_duration
-            else:
-                lesson_start = lesson_start + normal_break_td
-            if lesson_start >= end_obj:
-                break
+        for date_info in lessons_starts:
+            hour, minute = date_info[3:5]
+            res.append(datetime.time(hour, minute))
         return res

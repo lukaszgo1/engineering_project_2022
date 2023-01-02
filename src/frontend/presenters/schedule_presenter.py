@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import requests
+
 import frontend.presenters.base_presenter
 import frontend.views.schedule
 import frontend.gui_controls_spec
@@ -54,6 +56,24 @@ class SchedulePresenter(frontend.presenters.base_presenter.BasePresenter):
             PrimaryCourse=entered_vals["PrimaryCourse"],
             owner=self.parent_presenter.focused_entity
         )
+
+    def get_possible_ends_for_lesson(
+        self,
+        class_obj,
+        subject_obj,
+        start_time
+    ):
+        print(class_obj)
+        query = requests.get(
+            "http://127.0.0.1:5000/get_lessons_end_hours",
+            params={
+                "class_id": class_obj["ClassId"].id,
+                "term_id": self.parent_presenter.focused_entity.id,
+                "subject_id": subject_obj["SubjectId"].id,
+                "chosen_lesson_start": start_time
+            }
+        )
+        return query.json()["lesson_ends"]
 
     def get_all_records(self):
         yield from self.MODEL_CLASS.from_db(

@@ -1,6 +1,10 @@
+import datetime
+
 from flask import jsonify
 from app import app, db
 from .models import *
+import flask
+
 
 @app.route('/get_institutions')
 def get_institutions():
@@ -67,3 +71,90 @@ def get_ClassRoomsForSubject(subject_id):
         preferedClassRooms = ClassRooms.query.filter(ClassRooms.PrimaryCourse==subject_id).all()
         possibleClassRooms = ClassRooms.query.filter(ClassRooms.PrimaryCourse==None).all()
         return jsonify(ClassRooms.classRooms_to_dict(preferedClassRooms+possibleClassRooms))
+
+
+def _lessons_in_inst(inst_id: int):
+        inst =Institutions.query.filter_by(InstitutionId=inst_id).first()
+        if inst is None:
+            return {}
+        default_date = "2000-01-02 "
+        normal_break = inst.NormalBreakLength
+        lesson_len = inst.NormalLessonLength
+        existing_breaks = Breaks.query.filter_by(InstitutionId=inst.InstitutionId).order_by("BreakStartingHour").all()
+        break_starts = [
+            datetime.datetime.fromisoformat(
+                f"{default_date}{b.BreakStartingHour}"
+            ) for b in existing_breaks
+        ]
+        break_ends = [
+            datetime.datetime.fromisoformat(
+                f"{default_date}{b.BreakEndingHour}"
+            ) for b in existing_breaks
+        ]
+        starting_hour = inst.StartingHour
+        ending_hour = inst.EndingHour
+        start_obj = datetime.datetime.fromisoformat(
+            f"{default_date}{starting_hour}"
+        )
+        end_obj = datetime.datetime.fromisoformat(
+            f"{default_date}{ending_hour}"
+        )
+        normal_break_td = datetime.timedelta(minutes=normal_break)
+        lesson_td = datetime.timedelta(minutes=lesson_len)
+        res = []
+        lesson_start = start_obj 
+        while lesson_start < end_obj:
+            res.append(lesson_start)
+            lesson_start = lesson_start + lesson_td
+            possible_break_start = lesson_start
+            if possible_break_start in break_starts:
+                curr_break_index = break_starts.index(possible_break_start)
+                long_break_duration = break_ends[curr_break_index] - break_starts[curr_break_index]
+                lesson_start = lesson_start + long_break_duration
+            else:
+                lesson_start = lesson_start + normal_break_td
+            if lesson_start >= end_obj:
+                break
+        return res
+
+
+@app.route('/get_institutions_lessons/<id>')
+def get_institutions_lessons(id):
+        return jsonify({"lessons": _lessons_in_inst(id)})
+
+
+@app.route("/get_lessons_end_hours")
+def end_hour_for_lesson():
+        class_id = flask.request.args["class_id"]
+        term_id = flask.request.args["term_id"]
+        subject_id = flask.request.args["subject_id"]
+        chosen_lesson_start = flask.request.args["chosen_lesson_start"]
+        inst = (
+            Institutions.query.join(Terms)
+            .filter(Terms.TermId == term_id)
+            .first()
+            )
+        lessons_starts = [
+            datetime.time(_.hour, _.minute)
+            for _ in _lessons_in_inst(inst.InstitutionId)
+        ]
+        chosen_lesson_index = lessons_starts.index(
+            datetime.time.fromisoformat(chosen_lesson_start)
+        )
+        tpd = (
+            TermPlanDetails.query.join(TermPlan)
+            .join(ClassToTermPlan)
+            .join(Terms)
+            .filter(Terms.TermId == term_id)
+            .filter(TermPlan.AppliesToTerm == term_id)
+            .filter(ClassToTermPlan.ClassId == class_id)
+            .filter(TermPlanDetails.SubjectId == subject_id)
+            .first()
+        )
+        res = []
+        for possible_ends in range(
+            (chosen_lesson_index + tpd.MinBlockSize),
+            (chosen_lesson_index + tpd.MaxBlockSize + 1)
+        ):
+            res.append(lessons_starts[possible_ends].strftime("%H:%M"))
+        return jsonify({"lesson_ends": res})
