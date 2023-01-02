@@ -11,6 +11,7 @@ import backend.models.term_plan_detail
 @attrs.define(kw_only=True)
 class TermPlan(bm._Owned_model):
 
+    get_endpoint: ClassVar[str] = "/get_termPlans"
     db_table_name: ClassVar[str] = "TermPlan"
     id_column_name: ClassVar[str] = "TermPlanId"
     owner_col_id_name: ClassVar[str] = "AppliesToTerm"

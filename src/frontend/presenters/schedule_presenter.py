@@ -9,6 +9,7 @@ import backend.models.class_to_term_plan
 import backend.models.teacher
 import backend.models.teacher_to_subject
 import backend.models.schedule
+import backend.models.class_model
 
 
 class SchedulePresenter(frontend.presenters.base_presenter.BasePresenter):
@@ -27,39 +28,24 @@ class SchedulePresenter(frontend.presenters.base_presenter.BasePresenter):
         self.parent_presenter = parent_presenter
 
     def subjects_in_plan_for_class(self, class_model):
-        assigned_term_plan = list(
-            backend.models.class_to_term_plan.ClassToTermPlan.from_db(class_model)
-        )[0]
-        subjects = []
-        for entry in assigned_term_plan.TermPlanId.entries_in_plan():
-            subjects.append(entry.SubjectId)
+        subjects = list(backend.models.subject.Subject.from_subjects_for_class_endpoint(
+            class_model
+        ))
         return subjects
 
-    def teachers_allowed_to_teach(self, subject, only_available=True):
-        teachers = []
-        for t in backend.models.teacher.Teacher.from_db(
-            self.parent_presenter.focused_entity.owner
-        ):
-            if only_available and t.IsAvailable:
-                associated_subjs = list(
-                    backend.models.teacher_to_subject.TeacherToSubject.from_db(t)
-                )
-                for assoc_subj in associated_subjs:
-                    if assoc_subj.SubjectId.id == subject.id:
-                        teachers.append(t)
-        return teachers
+    def teachers_allowed_to_teach(self, subject):
+        return list(
+            backend.models.teacher.Teacher.from_teachers_for_subjs_end_point(
+                subject
+            )
+        )
 
     def class_rooms_for_subject(self, subject):
-        preferred = []
-        possible = []
-        for class_room in backend.models.class_room.ClassRoom.from_db(
-            self.parent_presenter.focused_entity.owner
-        ):
-            if class_room.PrimaryCourse.id is None:
-                possible.append(class_room)
-            elif class_room.PrimaryCourse.id == subject.id:
-                preferred.append(class_room)
-        return preferred + possible
+        return list(
+            backend.models.class_room.ClassRoom.from_class_room_for_subj_end_point(
+                subject
+            )
+        )
 
     def create_new_entity_from_user_input(self, entered_vals):
         return self.MODEL_CLASS(
@@ -79,13 +65,11 @@ class SchedulePresenter(frontend.presenters.base_presenter.BasePresenter):
 
     @property
     def initial_vals_for_add(self):
-        classes_in_inst = list(
-            self.parent_presenter.focused_entity.owner.classes_in_inst()
+        classes_with_plans = list(
+            backend.models.class_model.Class.from_classesToTermPlan_endpoint(
+                self.parent_presenter.focused_entity
+            )
         )
-        classes_with_plans = []
-        for c in classes_in_inst:
-            for _ in backend.models.class_to_term_plan.ClassToTermPlan.from_db(c):
-                classes_with_plans.append(_.owner)
         combobox_vals = frontend.gui_controls_spec.ComboBoxvaluesSpec(
             values=classes_with_plans,
             initial_selection=0

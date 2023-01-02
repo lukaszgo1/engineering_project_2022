@@ -29,9 +29,7 @@ class ClassesPresenter(frontend.presenters.base_presenter.BasePresenter):
         )
 
     def get_all_records(self):
-        yield from self.MODEL_CLASS.from_db(
-            self.parent_presenter.focused_entity
-        )
+        yield from self.MODEL_CLASS.from_endpoint(self.parent_presenter.focused_entity)
 
     def associate_with_term_plan(self):
         import frontend.presenters.class_to_term_plan_presenter

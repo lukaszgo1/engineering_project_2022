@@ -1,7 +1,7 @@
 """Named differently than the class
 to avoid conflicts with the `class` keyword.
 """
-
+import requests
 from typing import (
     ClassVar,
     Optional,
@@ -16,6 +16,8 @@ import backend.models.class_to_term_plan
 @attrs.define(kw_only=True)
 class Class(bm._Owned_model):
 
+    get_endpoint: ClassVar[str] = "/get_class"
+    get_classesToTermPlan_endpoint: ClassVar[str] = "/get_classesToTermPlan"
     db_table_name: ClassVar[str] = "Classes"
     id_column_name: ClassVar[str] = "ClassId"
     owner_col_id_name: ClassVar[str] = "ClassInInstitution"
@@ -31,3 +33,12 @@ class Class(bm._Owned_model):
 
     def __str__(self) -> str:
         return self.ClassIdentifier
+
+    @classmethod
+    def from_classesToTermPlan_endpoint(cls, owner):
+        query = requests.get('http://127.0.0.1:5000' + cls.get_classesToTermPlan_endpoint + '/' + str(owner.id))
+        records_in_db = query.json()['item']
+        for record in records_in_db:
+            kwargs_with_vals = cls.initializer_params(record)
+            kwargs_with_vals["owner"] = owner.owner  # Classes belong to the inst, not to the term
+            yield cls(**kwargs_with_vals)

@@ -6,6 +6,7 @@ from typing import (
 )
 
 import attrs
+import requests
 
 import backend.models._base_model as bm
 import backend.models.subject
@@ -22,6 +23,7 @@ class NoMainCourse:
 @attrs.define(kw_only=True)
 class ClassRoom(bm._Owned_model):
 
+    get_endpoint: ClassVar[str] = "/get_classRooms"
     db_table_name: ClassVar[str] = "ClassRooms"
     id_column_name: ClassVar[str] = "ClassRoomId"
     owner_col_id_name: ClassVar[str] = "IsIn"
@@ -68,3 +70,17 @@ class ClassRoom(bm._Owned_model):
 
     def __str__(self) -> str:
         return self.ClassRoomIdentifier
+
+    @classmethod
+    def from_class_room_for_subj_end_point(cls, subj_model):
+        # All class rooms are placed
+        # in the same institution as the subject
+        class_room_owner = subj_model.owner
+        query = requests.get(
+            f"http://127.0.0.1:5000/get_ClassRoomsForSubject/{str(subj_model.id)}"
+        )
+        records_in_db = query.json()['item']
+        for record in records_in_db:
+            kwargs_with_vals = cls.initializer_params(record)
+            kwargs_with_vals["owner"] = class_room_owner
+            yield cls(**kwargs_with_vals)

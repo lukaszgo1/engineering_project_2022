@@ -13,6 +13,7 @@ import backend.models.subject
 @attrs.define(kw_only=True)
 class TermPlanDetail(bm._Owned_model):
 
+    get_endpoint: ClassVar[str] = "/get_termPlanDetails"
     db_table_name: ClassVar[str] = "TermPlanDetails"
     id_column_name: ClassVar[str] = "TermPlanDetailId"
     owner_col_id_name: ClassVar[str] = "TermPlanId"

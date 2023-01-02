@@ -9,7 +9,7 @@ from typing import (
 import attrs
 
 import backend.app_constants
-
+import requests
 USER_PRESENTABLE_FIELD_NAME: Final[str] = "userPresentable"
 
 
@@ -56,6 +56,14 @@ class _BaseModel:
             col_names=fields_to_select,
             table_name=cls.db_table_name
         )
+        for record in records_in_db:
+            kwargs_with_vals = cls.initializer_params(record)
+            yield cls(**kwargs_with_vals)
+
+    @classmethod
+    def from_endpoint(cls):
+        query = requests.get('http://127.0.0.1:5000'+cls.get_endpoint)
+        records_in_db = query.json()['item']
         for record in records_in_db:
             kwargs_with_vals = cls.initializer_params(record)
             yield cls(**kwargs_with_vals)
@@ -126,6 +134,15 @@ class _Owned_model(_BaseModel):
             condition_str=f"{cls.owner_col_id_name} = ?",
             seq=(str(owner.id),)
         )
+        for record in records_in_db:
+            kwargs_with_vals = cls.initializer_params(record)
+            kwargs_with_vals["owner"] = owner
+            yield cls(**kwargs_with_vals)
+
+    @classmethod
+    def from_endpoint(cls, owner: _BaseModel):
+        query = requests.get('http://127.0.0.1:5000'+cls.get_endpoint+'/'+str(owner.id))
+        records_in_db = query.json()['item']
         for record in records_in_db:
             kwargs_with_vals = cls.initializer_params(record)
             kwargs_with_vals["owner"] = owner

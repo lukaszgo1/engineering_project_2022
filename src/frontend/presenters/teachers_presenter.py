@@ -34,9 +34,7 @@ class TeachersPresenter(frontend.presenters.base_presenter.BasePresenter):
         )
 
     def get_all_records(self):
-        yield from self.MODEL_CLASS.from_db(
-            self.parent_presenter.focused_entity
-        )
+        yield from self.MODEL_CLASS.from_endpoint(self.parent_presenter.focused_entity)
 
     @property
     def initial_vals_for_add(self):

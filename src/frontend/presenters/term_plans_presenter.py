@@ -32,9 +32,7 @@ class TermPlanPresenter(frontend.presenters.base_presenter.BasePresenter):
         )
 
     def get_all_records(self):
-        yield from self.MODEL_CLASS.from_db(
-            self.parent_presenter.focused_entity
-        )
+        yield from self.MODEL_CLASS.from_endpoint(self.parent_presenter.focused_entity)
 
     def on_add_new_plan_entry(self):
         import frontend.presenters.term_plan_detail_presenter

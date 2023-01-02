@@ -58,7 +58,7 @@ class BasePresenter:
         )
         
     def get_all_records(self):
-        yield from self.MODEL_CLASS.from_db()
+        yield from self.MODEL_CLASS.from_endpoint()
 
     def present_all(self):
         self.is_presenting = True

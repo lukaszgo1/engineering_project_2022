@@ -20,6 +20,7 @@ import backend.models.Term
 @attrs.define(kw_only=True)
 class Institution(bm._BaseModel):
 
+    get_endpoint: ClassVar[str] = "/get_institutions"
     db_table_name: ClassVar[str] = "Institutions"
     id_column_name: ClassVar[str] = "InstitutionId"
     InstitutionName: str
@@ -37,9 +38,6 @@ class Institution(bm._BaseModel):
 
     def term_plans_in_inst(self):
         yield from itertools.chain(*[t.plans_in_term() for t in self.terms_in_inst()])
-
-    def classes_in_inst(self):
-        yield from backend.models.class_model.Class.from_db(self)
 
     def lessons(self):
         if self.NormalBreakLength is None or self.NormalLessonLength is None:

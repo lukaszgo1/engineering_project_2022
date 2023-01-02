@@ -111,6 +111,4 @@ class BreaksPresenter(frontend.presenters.base_presenter.BasePresenter):
         )
 
     def get_all_records(self):
-        yield from self.MODEL_CLASS.from_db(
-            self.break_for_inst
-        )
+        yield from self.MODEL_CLASS.from_endpoint(self.break_for_inst)
