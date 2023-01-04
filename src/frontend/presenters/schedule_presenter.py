@@ -17,10 +17,10 @@ import backend.models.class_model
 class SchedulePresenter(frontend.presenters.base_presenter.BasePresenter):
 
     MODEL_CLASS: type[
-        backend.models.class_room.ClassRoom
-    ] = backend.models.class_room.ClassRoom
+        backend.models.schedule.Schedule
+    ] = backend.models.schedule.Schedule
     view_collections = frontend.views.schedule
-    all_records: list[backend.models.class_room.ClassRoom]
+    all_records: list[backend.models.schedule.Schedule]
 
     def __init__(
         self,
@@ -28,6 +28,8 @@ class SchedulePresenter(frontend.presenters.base_presenter.BasePresenter):
     ) -> None:
         super().__init__()
         self.parent_presenter = parent_presenter
+        self.for_term = parent_presenter.focused_entity
+        self.term_in_inst = self.for_term.owner
 
     def subjects_in_plan_for_class(self, class_model):
         subjects = list(backend.models.subject.Subject.from_subjects_for_class_endpoint(
@@ -51,10 +53,15 @@ class SchedulePresenter(frontend.presenters.base_presenter.BasePresenter):
 
     def create_new_entity_from_user_input(self, entered_vals):
         return self.MODEL_CLASS(
-            ClassRoomIdentifier=entered_vals["ClassRoomIdentifier"],
-            MainSubjectId=entered_vals["PrimaryCourse"].id,
-            PrimaryCourse=entered_vals["PrimaryCourse"],
-            owner=self.parent_presenter.focused_entity
+            WeekDay=entered_vals["WeekDay"],
+            owner=self.term_in_inst,
+            ClassId=entered_vals["ClassId"],
+            ClassRoomId=entered_vals["ClassRoomId"],
+            InTerm=self.for_term,
+            LessonEndingHour=entered_vals["LessonEndingHour"],
+            LessonStartingHour=entered_vals["LessonStartingHour"],
+            TeacherId=entered_vals["TeacherId"],
+            SubjectId=entered_vals["SubjectId"]
         )
 
     def get_possible_ends_for_lesson(
@@ -63,25 +70,66 @@ class SchedulePresenter(frontend.presenters.base_presenter.BasePresenter):
         subject_obj,
         start_time
     ):
-        print(class_obj)
         query = requests.get(
             "http://127.0.0.1:5000/get_lessons_end_hours",
             params={
-                "class_id": class_obj["ClassId"].id,
-                "term_id": self.parent_presenter.focused_entity.id,
-                "subject_id": subject_obj["SubjectId"].id,
+                "class_id": class_obj.id,
+                "term_id": self.for_term.id,
+                "subject_id": subject_obj.id,
                 "chosen_lesson_start": start_time
             }
         )
         return query.json()["lesson_ends"]
 
+    def get_possible_week_days_for_lesson(
+        self,
+        class_obj,
+        subject_obj
+    ):
+        query = requests.get(
+            "http://127.0.0.1:5000/get_lesson_preferred_week_day",
+            params={
+                "class_id": class_obj.id,
+                "term_id": self.for_term.id,
+                "subject_id": subject_obj.id,
+            }
+        )
+        selection = query.json()["Preferred_day"]
+        return frontend.gui_controls_spec.ComboBoxvaluesSpec(
+            initial_selection=selection,
+            values=list(backend.models.schedule.WeekDay)
+        )
+
+    def get_possible_lesson_beginnings(
+        self,
+        class_obj,
+        subject_obj,
+        week_day,
+        teacher_obj,
+        class_room_obj
+    ):
+        query = requests.get(
+            "http://127.0.0.1:5000/get_institutions_lessons",
+            params={
+                "class_id": class_obj.id,
+                "term_id": self.for_term.id,
+                "subject_id": subject_obj.id,
+                "institution_id": self.term_in_inst.id,
+                "week_day": week_day.value,
+                "teacher_id": teacher_obj.id,
+                "class_room_id": class_room_obj.id
+            }
+        )
+        records = query.json()["lessons"]
+        return frontend.gui_controls_spec.ComboBoxvaluesSpec(
+            values=records,
+            initial_selection=0
+        )
+
     def get_all_records(self):
         yield from self.MODEL_CLASS.from_db(
             self.parent_presenter.focused_entity
         )
-
-    def add_new_entry(self):
-        return super().add_new_entry()
 
     @property
     def initial_vals_for_add(self):
@@ -94,13 +142,8 @@ class SchedulePresenter(frontend.presenters.base_presenter.BasePresenter):
             values=classes_with_plans,
             initial_selection=0
         )
-        week_days = list(backend.models.schedule.WeekDay)
         return {
             "ClassId": combobox_vals,
-            "WeekDay": frontend.gui_controls_spec.ComboBoxvaluesSpec(week_days),
-            "LessonStartingHour": frontend.gui_controls_spec.ComboBoxvaluesSpec(
-                [_.strftime("%H:%M") for _ in self.parent_presenter.focused_entity.owner.lessons()]
-            )
         }
 
     def vals_for_edit(self):

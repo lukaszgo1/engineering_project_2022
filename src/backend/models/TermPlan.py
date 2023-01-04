@@ -5,7 +5,6 @@ from typing import (
 import attrs
 
 import backend.models._base_model as bm
-import backend.models.term_plan_detail
 
 
 @attrs.define(kw_only=True)
@@ -19,6 +18,3 @@ class TermPlan(bm._Owned_model):
 
     def __str__(self) -> str:
         return self.TermPlanName
-
-    def entries_in_plan(self):
-        yield from backend.models.term_plan_detail.TermPlanDetail.from_db(self)

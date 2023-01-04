@@ -13,7 +13,7 @@ import backend.models.TermPlan
 
 def _http_date_to_py_date(date_str: str) -> datetime.date:
     """Convert the date in a HTTP format as returned by
-    `flask.jsonify to a Python date object.
+    `flask.jsonify` to a Python date object.
     """
     date_tpl = email.utils.parsedate(date_str)
     year, month, day, *_rest  = date_tpl

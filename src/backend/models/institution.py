@@ -40,17 +40,3 @@ class Institution(bm._BaseModel):
 
     def term_plans_in_inst(self):
         yield from itertools.chain(*[t.plans_in_term() for t in self.terms_in_inst()])
-
-    def lessons(self) -> list[datetime.time]:
-        if self.NormalBreakLength is None or self.NormalLessonLength is None:
-            raise RuntimeError
-        query = requests.get(
-            f"http://127.0.0.1:5000/get_institutions_lessons/{str(self.id)}"
-        )
-        records = query.json()["lessons"]
-        lessons_starts = [email.utils.parsedate(_) for _ in records]
-        res = []
-        for date_info in lessons_starts:
-            hour, minute = date_info[3:5]
-            res.append(datetime.time(hour, minute))
-        return res

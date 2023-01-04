@@ -40,10 +40,6 @@ class ClassToTermPlanPresenter(frontend.presenters.base_presenter.BasePresenter)
 
     @property
     def initial_vals_for_add(self):
-        Assigned_to_class = list(self.MODEL_CLASS.from_db(
-            self.parent_presenter.focused_entity
-        ))
-        assigned_ids = {_.AssociatedTermPlanId for _ in Assigned_to_class}
         term_plans_in_inst = list(
             self.parent_presenter.focused_entity.owner.term_plans_in_inst()
         )

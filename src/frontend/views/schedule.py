@@ -11,40 +11,90 @@ import frontend.gui_controls_spec
 import frontend.views._base_views
 
 
-class SubjectsInClassFilterer(frontend.gui_controls_spec.OnChangeListener):
+class LessonsBeginningSetterMixIn:
+    """This class is responsible for setting possible lesson starts
+    in the schedule entry dialog.
+    This is just a mix-in and therefore
+    has to be added to MRO of a specific change listener to be usefull.
+    """
+
+    # Universal signature to support being added\
+    # to a notifier for an arbitrary control
+    def populate_lesson_combo_box(self, *args, **kwargs):
+        selected_class = self.registered_control_by_identifier("ClassId").value
+        selected_subject = self.registered_control_by_identifier("SubjectId").value
+        selected_teacher = self.registered_control_by_identifier("TeacherId").value
+        selected_class_room = self.registered_control_by_identifier("ClassRoomId").value
+        selected_week_day =  self.registered_control_by_identifier("WeekDay").value
+        # Explicitely check for `None` rather than just for falsy values,
+        # since some enum members are falsy in a boolean context.
+        if not all((
+            _ is not None for _ in (
+                selected_class,
+                selected_class_room,
+                selected_subject,
+                selected_teacher,
+                selected_week_day
+            )
+        )):
+            return
+        possible_starts = self._presenter.get_possible_lesson_beginnings(
+            selected_class,
+            selected_subject,
+            selected_week_day,
+            selected_teacher,
+            selected_class_room
+        )
+        self.registered_control_by_identifier("LessonStartingHour").set_value(
+            possible_starts
+        )
+
+
+class SubjectsInClassFilterer(
+    frontend.gui_controls_spec.OnChangeListener,
+    LessonsBeginningSetterMixIn
+):
 
     def __init__(self, presenter, emitting_control) -> None:
         super().__init__(presenter, emitting_control)
         self._emitting_control.register_to_changes(self.on_new_class_selected)
 
     def on_new_class_selected(self, class_model):
-        for control in self._controls_to_modify:
-            if control.identifier == "SubjectId":
-                subjects = self._presenter.subjects_in_plan_for_class(class_model)
-                control.set_value(
-                    frontend.gui_controls_spec.ComboBoxvaluesSpec(subjects)
-                )
-                break
+        subjects = self._presenter.subjects_in_plan_for_class(class_model)
+        self.registered_control_by_identifier("SubjectId").set_value(
+            frontend.gui_controls_spec.ComboBoxvaluesSpec(subjects)
+        )
+        self.populate_lesson_combo_box()
 
 
-class TeachersAssignedToSubject(frontend.gui_controls_spec.OnChangeListener):
+class TeachersAssignedToSubject(
+    frontend.gui_controls_spec.OnChangeListener,
+    LessonsBeginningSetterMixIn
+):
 
     def __init__(self, presenter, emitting_control) -> None:
         super().__init__(presenter, emitting_control)
         self._emitting_control.register_to_changes(self.on_new_subject_selected)
 
     def on_new_subject_selected(self, subject):
-        for control in self._controls_to_modify:
-            if control.identifier == "TeacherId":
-                teachers = self._presenter.teachers_allowed_to_teach(subject)
-                control.set_value(
-                    frontend.gui_controls_spec.ComboBoxvaluesSpec(teachers)
-                )
-            if control.identifier == "ClassRoomId":
-                class_rooms = self._presenter.class_rooms_for_subject(subject)
-                control.set_value(
-                    frontend.gui_controls_spec.ComboBoxvaluesSpec(class_rooms)
-                )
+        teachers = self._presenter.teachers_allowed_to_teach(subject)
+        self.registered_control_by_identifier("TeacherId").set_value(
+            frontend.gui_controls_spec.ComboBoxvaluesSpec(teachers)
+        )
+        class_rooms = self._presenter.class_rooms_for_subject(subject)
+        self.registered_control_by_identifier("ClassRoomId").set_value(
+            frontend.gui_controls_spec.ComboBoxvaluesSpec(class_rooms)
+        )
+        selected_class = self.registered_control_by_identifier(
+            "ClassId"
+        ).value
+        self.registered_control_by_identifier("WeekDay").set_value(
+            self._presenter.get_possible_week_days_for_lesson(
+                selected_class,
+                subject
+            )
+        )
+        self.populate_lesson_combo_box()
 
 
 class EndLessonTimeFilterer(frontend.gui_controls_spec.OnChangeListener):
@@ -54,17 +104,9 @@ class EndLessonTimeFilterer(frontend.gui_controls_spec.OnChangeListener):
         self._emitting_control.register_to_changes(self.on_new_lesson_beginning_selected)
 
     def on_new_lesson_beginning_selected(self, lesson_start):
-        to_modify = None
-        for control in self._controls_to_modify:
-            if control.identifier == "LessonEndingHour":
-                to_modify = control
-            if control.identifier == "SubjectId":
-                subject = control.get_value()
-            if control.identifier == "ClassId":
-                selected_class = control.get_value()
-        if to_modify is None:
-            raise RuntimeError("Failed to find combo box with end times")
-        to_modify.set_value(
+        subject = self.registered_control_by_identifier("SubjectId").value
+        selected_class = self.registered_control_by_identifier("ClassId").value
+        self.registered_control_by_identifier("LessonEndingHour").set_value(
             frontend.gui_controls_spec.ComboBoxvaluesSpec(
                 self._presenter.get_possible_ends_for_lesson(
                     selected_class,
@@ -73,6 +115,16 @@ class EndLessonTimeFilterer(frontend.gui_controls_spec.OnChangeListener):
                 )
             )
         )
+
+
+class LessonBeginningSetterWhenChanged(
+    frontend.gui_controls_spec.OnChangeListener,
+    LessonsBeginningSetterMixIn
+    ):
+
+    def __init__(self, presenter, emitting_control) -> None:
+        super().__init__(presenter, emitting_control)
+        self._emitting_control.register_to_changes(self.populate_lesson_combo_box)
 
 
 class AddScheduleEntryDlg(frontend.views._base_views.BaseEEnterParamsDlg):
@@ -97,21 +149,26 @@ class AddScheduleEntryDlg(frontend.views._base_views.BaseEEnterParamsDlg):
         frontend.gui_controls_spec.LabeledComboBoxSpec(
             label="Prowadzący:",
             identifier="TeacherId",
-            should_react_to_changes=True
+            should_react_to_changes=True,
+            on_change_notifier=LessonBeginningSetterWhenChanged
         ),
         frontend.gui_controls_spec.LabeledComboBoxSpec(
             label="Sala:",
             identifier="ClassRoomId",
-            should_react_to_changes=True
+            should_react_to_changes=True,
+            on_change_notifier=LessonBeginningSetterWhenChanged
         ),
         frontend.gui_controls_spec.LabeledComboBoxSpec(
             label="Dzień tygodnia:",
-            identifier="WeekDay"
+            identifier="WeekDay",
+            should_react_to_changes=True,
+            on_change_notifier=LessonBeginningSetterWhenChanged
         ),
         frontend.gui_controls_spec.LabeledComboBoxSpec(
             label="Godzina rozpoczęcia:",
             identifier="LessonStartingHour",
-            on_change_notifier=EndLessonTimeFilterer
+            on_change_notifier=EndLessonTimeFilterer,
+            should_react_to_changes=True
         ),
         frontend.gui_controls_spec.LabeledComboBoxSpec(
             identifier="LessonEndingHour",
@@ -120,33 +177,61 @@ class AddScheduleEntryDlg(frontend.views._base_views.BaseEEnterParamsDlg):
         ),
     )
 
-    def get_values(self) -> Dict:
-        res = super().get_values()
-        res["MainSubjectId"] = res["PrimaryCourse"].id
-        return res
 
-
-class ClassRoomsListing(frontend.views._base_views.BaseEntityList):
+class SchedulesListing(frontend.views._base_views.BaseEntityList):
 
     buttons_in_view: List[frontend.gui_controls_spec.WXButtonSpec] = [
         frontend.gui_controls_spec.WXButtonSpec(
-            label="Dodaj salę",
+            label="Dodaj zajęcia do grafiku",
             on_press=lambda e: e.EventObject.Parent.presenter.add_new_entry()
-        )
+        ),
+        frontend.gui_controls_spec.WXButtonSpec(
+            label="Eksportuj grafik",
+            on_press=lambda e: e.EventObject.Parent.presenter.on_export()
+        ),
     ]
 
     list_view_columns: List[frontend.gui_controls_spec.WXListColumnSpec] = [
         frontend.gui_controls_spec.WXListColumnSpec(
-            header_name="Numer",
-            width=400,
-            value_getter=operator.attrgetter("ClassRoomIdentifier")
+            header_name="Dzień tygodnia",
+            width=100,
+            value_getter=operator.attrgetter("WeekDay"),
+            value_converter=str
         ),
         frontend.gui_controls_spec.WXListColumnSpec(
-            header_name="Główny kurs",
-            width=400,
-            value_getter=operator.attrgetter("PrimaryCourse"),
+            header_name="Początek zajęć",
+            width=100,
+            value_getter=operator.attrgetter("LessonStartingHour"),
+        ),
+        frontend.gui_controls_spec.WXListColumnSpec(
+            header_name="Koniec zajęć",
+            width=100,
+            value_getter=operator.attrgetter("LessonEndingHour")
+        ),
+        frontend.gui_controls_spec.WXListColumnSpec(
+            header_name="Przedmiot",
+            width=200,
+            value_getter=operator.attrgetter("SubjectId"),
             value_converter=str
-        )
+        ),
+        frontend.gui_controls_spec.WXListColumnSpec(
+            header_name="Grupa",
+            width=200,
+            value_getter=operator.attrgetter("ClassId"),
+            value_converter=str
+        ),
+        frontend.gui_controls_spec.WXListColumnSpec(
+            header_name="Prowadzący",
+            width=200,
+            value_getter=operator.attrgetter("TeacherId"),
+            value_converter=str
+        ),
+        frontend.gui_controls_spec.WXListColumnSpec(
+            header_name="Sala",
+            width=200,
+            value_getter=operator.attrgetter("ClassRoomId"),
+            value_converter=str
+        ),
     ]
 
 
@@ -171,6 +256,6 @@ class EditClassDlg(AddScheduleEntryDlg):
 
 
 add = AddScheduleEntryDlg
-listing = ClassRoomsListing
+listing = SchedulesListing
 context_menu_spec = items_list
 edit = EditClassDlg

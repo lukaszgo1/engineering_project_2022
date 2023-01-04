@@ -7,17 +7,6 @@ import frontend.views.institutions
 import frontend.presenters.institutions_presenter
 
 
-WEEK_DAYS = {
-	0: "Poniedziałek",
-	1: "Wtorek",
-	2: "Środa",
-	3: "Czwartek",
-	4: "Piątek",
-	5: "Sobota",
-	6: "Niedziela"
-}
-
-
 def generate_lessons_with_breaks(beginning, finish, lesson_length, break_length, extra_breaks):
 	"""Generates list of lessons for a given institution
 	taking into account irregular breaks."""
@@ -159,34 +148,6 @@ class LessonToScheduleDLG(wx.Dialog):
 			dialog = wx.MessageDialog(None, os.linesep.join(message), "Konflikt zajęć", wx.OK | wx.ICON_ERROR)
 			dialog.ShowModal()
 			return
-		else:
-			v = [
-				self.index,
-				self.controls["weekDay"].GetSelection(),
-				start_hour, end_hour,
-				self.teachersInInst[self.controls["teacher"].GetSelection()][0],
-				self.subjectsInInst[self.controls["subject"].GetSelection()][0],
-				self.classesInInst[self.controls["class"].GetSelection()][0],
-				self.classRoomsInInst[self.controls["classRoom"].GetSelection()][0]
-			]
-			app_global_vars.active_db_con.insert(
-				table_name="Schedule",
-				col_names=(
-					"InstitutionId",
-					"WeekDay",
-					"LessonStartingHour",
-					"LessonEndingHour",
-					"TeacherId",
-					"SubjectId",
-					"ClassId",
-					"ClassRoomId"
-				),
-				col_values=v
-			)
-			if self.refreshView:
-				self.Parent.list_ctrl.ClearAll()
-				self.Parent.populateListView()
-			self.Close()
 
 
 class EditScheduleDLG(wx.Dialog):
@@ -335,12 +296,6 @@ class InstitutionContextMenu(wx.Menu):
 		self.Bind(wx.EVT_MENU, self.parent.on_AddLessonToSchedule, lessonToSchedule)
 		self.Bind(wx.EVT_MENU, self.ShowSchedule, showSchedule)
 
-	def showBreaks(self, event):
-		index = self.parent.list_ctrl.GetFocusedItem()
-		dbIndex = self.parent.list_ctrl.GetItemData(index)
-		p = BreaksPanel(self.parent.Parent, dbIndex)
-		frame.showPanel(p)
-
 	def ShowSchedule(self, event):
 		index = self.parent.list_ctrl.GetFocusedItem()
 		dbIndex = self.parent.list_ctrl.GetItemData(index)
@@ -348,73 +303,13 @@ class InstitutionContextMenu(wx.Menu):
 		frame.showPanel(p)
 
 
-class SchedulesContextMenu(wx.Menu):
-
-	def __init__(self, parent):
-		super().__init__()
-		self.parent = parent
-		delSchedule = wx.MenuItem(self, id=wx.ID_DELETE, text='Usuń')
-		editSchedule = wx.MenuItem(self, id=wx.ID_EDIT, text='Edytuj')
-		self.Append(editSchedule)
-		self.Append(delSchedule)
-		self.Bind(wx.EVT_MENU, self.parent.on_edit, editSchedule)
-		self.Bind(wx.EVT_MENU, self.parent.on_remove, delSchedule)
-
-
 class SchedulesPanel(wx.Panel):
 
-	def __init__(self, parent, what, id):
-		"""Displays schedule for a given  entity.
-		To use provide entity id as a parameter and the name of the  column in the database representing it in a format table.colName"""
-		super().__init__(parent)
-		self.what = what
-		self.id = id
-		main_sizer = wx.BoxSizer(wx.VERTICAL)
-		self.list_ctrl = wx.ListCtrl(
-			self,
-			size=(-1, 200),
-			style=wx.LC_REPORT | wx.BORDER_SUNKEN
-		)
-		self.list_ctrl.Bind(wx.EVT_CONTEXT_MENU, self.onContext)
-		self.list_ctrl.Bind(wx.EVT_KEY_UP, self.onKey)
-		self.populateListView()
-		main_sizer.Add(self.list_ctrl, 0, wx.ALL | wx.EXPAND, 5)
-		new_scheduleBTN = wx.Button(self, label='Dodaj zajęcia do grafiku')
-		new_scheduleBTN.Bind(wx.EVT_BUTTON, self.on_NewSchedule)
-		main_sizer.Add(new_scheduleBTN, 0, wx.ALL | wx.CENTER, 5)
-		exportBTN = wx.Button(self, label='Eksportuj grafik')
-		exportBTN.Bind(wx.EVT_BUTTON, self.on_export)
-		main_sizer.Add(exportBTN, 0, wx.ALL | wx.CENTER, 5)
-		self.SetSizer(main_sizer)
-
-	def onContext(self, event):
-		self.PopupMenu(SchedulesContextMenu(self), event.GetPosition())
-
-	def onKey(self, event):
-		if event.KeyCode == wx.WXK_ESCAPE:
-			frame.switchPanels()
-
 	def populateListView(self):
-		self.list_ctrl.InsertColumn(0, 'Dzień tygodnia', width=100)
-		self.list_ctrl.InsertColumn(1, 'Początek zajęć', width=100)
-		self.list_ctrl.InsertColumn(2, 'Koniec zajęć', width=100)
-		self.list_ctrl.InsertColumn(3, 'Przedmiot', width=200)
-		self.list_ctrl.InsertColumn(4, 'Grupa', width=200)
-		self.list_ctrl.InsertColumn(5, 'Prowadzący', width=200)
-		self.list_ctrl.InsertColumn(6, 'Sala', width=200)
 		for index, row in enumerate(
 			app_global_vars.active_db_con.fetch_all_matching(
-				table_name=(
-					"Schedule sc JOIN  Subjects su ON sc.SubjectId = su.SubjectId "
-					"JOIN Classes cl ON sc.ClassId = cl.ClassId "
-					"join Teachers te on sc.TeacherId = te.TeacherId "
-					"JOIN ClassRooms cr on sc.ClassRoomId = cr.ClassRoomId"
-				),
 				col_names=(
 					"LessonId",
-					"WeekDay",
-					"LessonStartingHour",
-					"LessonEndingHour",
 					"SubjectName",
 					"ClassIdentifier",
 					"FirstName",
@@ -422,19 +317,9 @@ class SchedulesPanel(wx.Panel):
 					"ClassRoomIdentifier"
 				),
 				condition_str=f"{self.what} = ? ORDER BY  WeekDay, LessonStartingHour",
-				seq=(self.id,)
 			)
 		):
-			self.list_ctrl.InsertItem(index, WEEK_DAYS[row["WeekDay"]])
-			self.list_ctrl.SetItem(index, 1, row["LessonStartingHour"])
-			self.list_ctrl.SetItem(index, 2, row["LessonEndingHour"])
-			self.list_ctrl.SetItem(index, 3, row["SubjectName"])
-			self.list_ctrl.SetItem(index, 4, row["ClassIdentifier"])
-			self.list_ctrl.SetItem(index, 5, ' '.join((row["FirstName"], row["LastName"])))
 			self.list_ctrl.SetItem(index, 6, row["ClassRoomIdentifier"])
-			item = self.list_ctrl.GetItem(index)
-			item.SetData(row["LessonId"])
-			self.list_ctrl.SetItem(item)
 
 	def on_remove(self, event):
 		item = self.list_ctrl.GetItem(self.list_ctrl.GetFocusedItem())
@@ -491,16 +376,6 @@ class SchedulesPanel(wx.Panel):
 				writer.writerow(header)
 				for row in rows:
 					writer.writerow(row)
-
-
-class InstitutionsPanel(frontend.views.institutions.listing):
-
-	def on_AddLessonToSchedule(self, event):
-		index = self.list_ctrl.GetFocusedItem()
-		dbIndex = self.list_ctrl.GetItemData(index)
-		dlg = LessonToScheduleDLG(self.Parent, dbIndex, False)
-		dlg.ShowModal()
-		dlg.Destroy()
 
 
 if __name__ == '__main__':

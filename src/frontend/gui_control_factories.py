@@ -111,8 +111,12 @@ class spin_control_factory(_base_control):
     def add_to_sizer(self, parent_sizer: wx.Sizer) -> None:
         parent_sizer.Add(self._sizer)
 
+    @property
+    def value(self) -> int:
+        return self._spin_control.Value
+
     def get_value(self) -> Dict[str, int]:
-        return {self.identifier: self._spin_control.Value}
+        return {self.identifier: self.value}
 
     def set_value(self, new_val: int) -> None:
         if new_val is not None:
@@ -153,9 +157,12 @@ class radio_button_factory(_base_control):
     def add_to_sizer(self, parent_sizer: wx.Sizer) -> None:
         parent_sizer.Add(self._radio_button)
 
+    @property
+    def value(self):
+        return list(self._rb_raw_vals)[self._radio_button.Selection]
+
     def get_value(self) -> Dict[str, Any]:
-        val = list(self._rb_raw_vals)[self._radio_button.Selection]
-        return {self.identifier: val}
+        return {self.identifier: self.value}
 
     def set_value(self, new_val: Any) -> None:
         entry_index = list(self._rb_raw_vals).index(new_val)
@@ -185,7 +192,7 @@ class labeled_combo_box_factory(_base_control):
         self._parent = ctrl_parent
 
     def on_choice(self, event):
-        new_val = list(self.get_value().values())[0]
+        new_val = self.value
         for listener in self._registered_listeners:
             listener(new_val)
 
@@ -202,9 +209,15 @@ class labeled_combo_box_factory(_base_control):
         self._parent.Layout()
         self._parent.Fit()
 
+    @property
+    def value(self):
+        cb_selected_index = self._combobox.Selection
+        if cb_selected_index is wx.NOT_FOUND:
+            return None
+        return self._indexes_to_vals[cb_selected_index]
+
     def get_value(self) -> Dict[str, Any]:
-        selected_val = self._indexes_to_vals[self._combobox.Selection]
-        return {self.identifier: selected_val}
+        return {self.identifier: self.value}
 
 
 class labeled_edit_field_factory(_base_control):
@@ -238,8 +251,12 @@ class labeled_edit_field_factory(_base_control):
         if new_val:
             self._edit.SetValue(str(new_val))
 
+    @property
+    def value(self):
+        return self._edit.GetValue()
+
     def get_value(self) -> Dict[str, str]:
-        return {self.identifier: self._edit.GetValue()}
+        return {self.identifier: self.value}
 
 
 class checkbox_wrapper(_base_control):
@@ -269,8 +286,12 @@ class checkbox_wrapper(_base_control):
         # so notify observers ourselves.
         self.notify_when_state_changed(new_val)
 
+    @property
+    def value(self):
+        return self._chk.IsChecked()
+
     def get_value(self) -> Dict[str, bool]:
-        return {self.identifier: self._chk.IsChecked()}
+        return {self.identifier: self.value}
 
 
 class date_picker_factory(_base_control):
@@ -292,20 +313,22 @@ class date_picker_factory(_base_control):
         self._picker = wx.adv.DatePickerCtrl(ctrl_parent)
         self._sizer.Add(self._picker)
 
-
     def add_to_sizer(self, parent_sizer: wx.Sizer) -> None:
         parent_sizer.Add(self._sizer)
 
     def set_value(self, new_val: Any) -> None:
         self._picker.Value = wx.DateTime(new_val)
 
-    def get_value(self) -> Dict[str, Any]:
+    @property
+    def value(self):
         control_val = self._picker.Value
         year = control_val.year
         month = control_val.month + 1  # Month's in  WX are numbered from 0
         day = control_val.day
-        py_date = datetime.date(year=year, month=month, day=day)
-        return {self.identifier: py_date}
+        return datetime.date(year=year, month=month, day=day)
+
+    def get_value(self) -> Dict[str, Any]:
+        return {self.identifier: self.value}
 
 
 def wx_context_menu_factory(

@@ -44,6 +44,15 @@ class OnChangeListener:
     def add_dependend_control(self, control: _ControlWrapperBase):
         self._controls_to_modify.append(control)
 
+    def registered_control_by_identifier(self, identifier: str):
+        matching_controls = [
+            _ for _ in self._controls_to_modify
+            if _.identifier == identifier
+        ]
+        if len(matching_controls) > 1:
+            raise RuntimeError("Multiple controls with the same identifier were registered")
+        return matching_controls[0]
+
 
 class ComboBoxvaluesSpec:
 
