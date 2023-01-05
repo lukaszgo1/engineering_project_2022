@@ -1,4 +1,11 @@
+from __future__ import annotations
+
+from collections.abc import (
+    Sequence,
+)
+
 from app import app, db
+
 
 class Institutions(db.Model):
     __table__ = db.Model.metadata.tables['institutions']
@@ -177,3 +184,24 @@ class TermPlanDetails(db.Model):
 
 class Schedule(db.Model):
     __table__ = db.Model.metadata.tables['schedule']
+
+    def schedule_to_dict(self):
+        return {
+            "LessonId": self.LessonId,
+            "InstitutionId": self.InstitutionId,
+            "WeekDay": self.WeekDay,
+            "LessonStartingHour": self.LessonStartingHour,
+            "LessonEndingHour": self.LessonEndingHour,
+            "TeacherId": self.TeacherId,
+            "SubjectId": self.SubjectId,
+            "ClassId": self.ClassId,
+            "ClassRoomId": self.ClassRoomId,
+#            "LessonDate": self.LessonDate,
+            "InTerm": self.InTerm,
+        }
+
+    @staticmethod
+    def schedule_entries_to_dict(Schedule_entries: Sequence[Schedule]):
+        return {
+            "item": [_.schedule_to_dict() for _ in Schedule_entries]
+        }

@@ -270,3 +270,45 @@ def get_lesson_preferred_week_day():
         else:
             res = 0  # Monday
         return flask.jsonify({"Preferred_day": res})
+
+
+def _schedule_entries_for_teacher(term_id, teacher_id):
+    return Schedule.query.filter(
+        (Schedule.InTerm==term_id) & (Schedule.TeacherId==teacher_id)
+    ).order_by(Schedule.WeekDay, Schedule.LessonStartingHour).all()
+
+
+def _schedule_entries_for_class(term_id, class_id):
+    return Schedule.query.filter(
+        (Schedule.InTerm==term_id) & (Schedule.ClassId==class_id)
+    ).order_by(Schedule.WeekDay, Schedule.LessonStartingHour).all()
+
+
+def _schedule_entries_for_class_room(term_id, class_room_id):
+    return Schedule.query.filter(
+        (Schedule.InTerm==term_id) & (Schedule.ClassRoomId==class_room_id)
+    ).order_by(Schedule.WeekDay, Schedule.LessonStartingHour).all()
+
+
+@app.route("/get_teacher_lessons")
+def get_teacher_lessons():
+        teacher_id = flask.request.args["teacher_id"]
+        term_id = flask.request.args["term_id"]
+        res = _schedule_entries_for_teacher(term_id, teacher_id)
+        return flask.jsonify(Schedule.schedule_entries_to_dict(res))
+
+
+@app.route("/get_class_room_lessons")
+def get_class_room_lessons():
+        class_room_id = flask.request.args["class_room_id"]
+        term_id = flask.request.args["term_id"]
+        res = _schedule_entries_for_class_room(term_id, class_room_id)
+        return flask.jsonify(Schedule.schedule_entries_to_dict(res))
+
+
+@app.route("/get_class_lessons")
+def get_class_lessons():
+        class_id = flask.request.args["class_id"]
+        term_id = flask.request.args["term_id"]
+        res = _schedule_entries_for_class(term_id, class_id)
+        return flask.jsonify(Schedule.schedule_entries_to_dict(res))
