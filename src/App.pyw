@@ -305,22 +305,6 @@ class InstitutionContextMenu(wx.Menu):
 
 class SchedulesPanel(wx.Panel):
 
-	def populateListView(self):
-		for index, row in enumerate(
-			app_global_vars.active_db_con.fetch_all_matching(
-				col_names=(
-					"LessonId",
-					"SubjectName",
-					"ClassIdentifier",
-					"FirstName",
-					"LastName",
-					"ClassRoomIdentifier"
-				),
-				condition_str=f"{self.what} = ? ORDER BY  WeekDay, LessonStartingHour",
-			)
-		):
-			self.list_ctrl.SetItem(index, 6, row["ClassRoomIdentifier"])
-
 	def on_remove(self, event):
 		item = self.list_ctrl.GetItem(self.list_ctrl.GetFocusedItem())
 		app_global_vars.active_db_con.delete_record(

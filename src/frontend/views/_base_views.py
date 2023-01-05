@@ -23,6 +23,10 @@ class BaseEntityList(wx.Panel):
         self_context_menu_pos = None
         super().__init__(wx.GetApp().TopWindow)
         main_sizer = wx.BoxSizer(wx.VERTICAL)
+        self.toolbar_obj = wx.ToolBar(self, style=wx.TB_TEXT | wx.TB_HORIZONTAL)
+        main_sizer.Add(self.toolbar_obj, 0, wx.ALL | wx.EXPAND, 5)
+        self.toolbar_ids_to_items: dict[int, ctrl_specs.ToolBarItemSpec] = dict()
+        self.toolbar_obj.Bind(wx.EVT_TOOL, self.on_toolbar_item_clicked)
         self.list_ctrl = wx.ListCtrl(
             self,
             size=(-1, 200),
@@ -47,6 +51,23 @@ class BaseEntityList(wx.Panel):
                 5
             )
         self.SetSizer(main_sizer)
+
+    def populate_toolbar(
+        self,
+        items: list[ctrl_specs.ToolBarItemSpec]
+    ) -> None:
+        for item in items:
+            self.toolbar_obj.AddTool(
+                item.item_id,
+                item.label,
+                item.bitmap
+            )
+            self.toolbar_ids_to_items[item.item_id] = item
+            item.set_parent(self.toolbar_obj)
+        self.toolbar_obj.Realize()
+
+    def on_toolbar_item_clicked(self, event):
+        self.toolbar_ids_to_items[event.Id].click()
 
     def on_key_pressed(self, event):
         if event.KeyCode == wx.WXK_ESCAPE:
@@ -125,6 +146,7 @@ class BaseEntityList(wx.Panel):
 
     def show(self):
         wx.GetApp().TopWindow.sizer.Add(self, 1, wx.EXPAND)
+        self.populate_toolbar(self.presenter.toolbar_items_in_view)
         self.Show()
 
 

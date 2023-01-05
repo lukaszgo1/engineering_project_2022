@@ -2,8 +2,6 @@ import functools
 
 import wx
 
-import frontend.gui_controls_spec
-
 
 class MainFrame(wx.Frame):
 
@@ -11,43 +9,20 @@ class MainFrame(wx.Frame):
         super().__init__(parent=None, title="Układacz planu zajęć")
         self.sizer = wx.BoxSizer(wx.VERTICAL)
         self.SetSizer(self.sizer)
-        self.toolbar_obj: wx.ToolBar = self.CreateToolBar(style=wx.TB_TEXT | wx.TB_HORIZONTAL)
 
 
 class PresentationManager:
 
     def __init__(self) -> None:
         self._active_presenters = []
-        self.toolbar_ids_to_items: dict[int, frontend.gui_controls_spec.ToolBarItemSpec] = dict()
-
-    def on_toolbar_item_clicked(self, event):
-        self.toolbar_ids_to_items[event.Id].click()
-
+        
     def set_initial_presenter(self, presenter):
         self._initial_presenter = presenter
 
-    def populate_toolbar(
-        self,
-        items: list[frontend.gui_controls_spec.ToolBarItemSpec]
-    ) -> None:
-        self.frame_obj.toolbar_obj.ClearTools()
-        self.toolbar_ids_to_items.clear()
-        for item in items:
-            self.frame_obj.toolbar_obj.AddTool(
-                item.item_id,
-                item.label,
-                item.bitmap
-            )
-            self.toolbar_ids_to_items[item.item_id] = item
-            item.set_parent(self.frame_obj.toolbar_obj)
-        self.frame_obj.toolbar_obj.Realize()
-
     def present_initial_view(self):
         self.frame_obj = MainFrame()
-        self.frame_obj.toolbar_obj.Bind(wx.EVT_TOOL, self.on_toolbar_item_clicked)
         wx.GetApp().SetTopWindow(self.frame_obj)
         main_presenter = self._initial_presenter()
-        self.populate_toolbar(main_presenter.toolbar_items_in_view)
         main_presenter.present_all()
         self._active_presenters.append(main_presenter)
         self.frame_obj.Show()
@@ -58,7 +33,6 @@ class PresentationManager:
 
     def present(self, presenter_to_use):
         self._active_presenters.append(presenter_to_use)
-        self.populate_toolbar(self._active_presenters[-1].toolbar_items_in_view)
         self._active_presenters[-1].present_all()
         self._active_presenters[-2].hide()
         self.frame_obj.Layout()
@@ -67,7 +41,6 @@ class PresentationManager:
         if len(self._active_presenters) > 1:
             currently_presenting = self._active_presenters[-1]
             should_present = self._active_presenters[-2]
-            self.populate_toolbar(should_present.toolbar_items_in_view)
             del self._active_presenters[-2]
             del self._active_presenters[-1]
             self.frame_obj.sizer.Remove(0)
