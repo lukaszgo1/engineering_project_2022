@@ -13,6 +13,7 @@ import frontend.gui_controls_spec as ctrl_specs
 
 class BaseEntityList(wx.Panel):
 
+    detail_views = ()
     buttons_in_view: List[ctrl_specs.WXButtonSpec]
     list_view_columns: List[ctrl_specs.WXListColumnSpec]
     on_item_focused_listeners: List[Callable[[int], None]]
@@ -50,6 +51,19 @@ class BaseEntityList(wx.Panel):
                 wx.ALL | wx.CENTER,
                 5
             )
+            secondary_term_aware_views = [_ for _ in self.detail_views if _.is_term_aware]
+            if secondary_term_aware_views:
+                terms_list = ctrl_specs.LabeledComboBoxSpec(
+                    identifier="terms",
+                    label="Semestry:",
+                ).create(self)
+                terms_list.add_to_sizer(main_sizer)
+                terms_list.set_value(
+                    ctrl_specs.ComboBoxvaluesSpec(
+                        list(self.presenter.owning_inst.terms_in_inst()),
+                        initial_selection=0
+                    )
+                )
         self.SetSizer(main_sizer)
 
     def populate_toolbar(

@@ -14,6 +14,8 @@ import frontend.presentation_manager
 
 class BasePresenter:
 
+    is_term_aware: bool = False
+
     MODEL_CLASS: Type[backend.models._base_model._BaseModel]
     view_collections = Any  # Add type hint
     all_records: List[backend.models._base_model._BaseModel]

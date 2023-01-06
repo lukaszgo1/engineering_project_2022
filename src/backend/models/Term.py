@@ -40,3 +40,6 @@ class Term(bm._Owned_model):
 
     def plans_in_term(self) -> Iterator[backend.models.TermPlan.TermPlan]:
         yield from backend.models.TermPlan.TermPlan.from_db(self)
+
+    def __str__(self) -> str:
+        return self.TermName

@@ -9,6 +9,7 @@ import wx
 
 import frontend.gui_controls_spec
 import frontend.views._base_views
+import frontend.presenters.schedule_presenter
 
 
 class AddClassRoomDlg(frontend.views._base_views.BaseEEnterParamsDlg):
@@ -36,6 +37,7 @@ class AddClassRoomDlg(frontend.views._base_views.BaseEEnterParamsDlg):
 
 class ClassRoomsListing(frontend.views._base_views.BaseEntityList):
 
+    detail_views = (frontend.presenters.schedule_presenter.SchedulePresenter,)
     buttons_in_view: List[frontend.gui_controls_spec.WXButtonSpec] = [
         frontend.gui_controls_spec.WXButtonSpec(
             label="Dodaj salę",

@@ -16,6 +16,8 @@ import backend.models.class_model
 
 class SchedulePresenter(frontend.presenters.base_presenter.BasePresenter):
 
+    is_term_aware = True
+
     MODEL_CLASS: type[
         backend.models.schedule.Schedule
     ] = backend.models.schedule.Schedule

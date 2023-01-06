@@ -36,7 +36,7 @@ class Institution(bm._BaseModel):
         yield from backend.models.subject.Subject.from_db(self)
 
     def terms_in_inst(self) -> Iterator[backend.models.Term.Term]:
-        yield from backend.models.Term.Term.from_db(self)
+        yield from backend.models.Term.Term.from_endpoint(self)
 
     def term_plans_in_inst(self):
         yield from itertools.chain(*[t.plans_in_term() for t in self.terms_in_inst()])
