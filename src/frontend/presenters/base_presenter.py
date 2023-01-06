@@ -21,6 +21,7 @@ class BasePresenter:
     all_records: List[backend.models._base_model._BaseModel]
 
     def __init__(self) -> None:
+        self._initial_selection = 0
         self.is_presenting = False
         self._focused_entity_index = -1
         self.all_records = list()
@@ -71,11 +72,12 @@ class BasePresenter:
         self.p.show()
         for record in self.get_all_records():
             self._present_single_in_view(record)
-        self.p.focus_list()
+        self.p.focus_list(self._initial_selection)
         self.set_toolbar_icons_state()
 
     def hide(self):
         if self.is_presenting:
+            self._initial_selection = self._focused_entity_index
             self.p.Hide()
 
     @property
@@ -161,5 +163,4 @@ class BasePresenter:
         self.p.delete_item(index_to_remove)
 
     def show_previous_view(self):
-        import frontend.presentation_manager as pm
-        pm.get_presentation_manager().show_previous_view_if_any()
+        frontend.presentation_manager.get_presentation_manager().show_previous_view_if_any()

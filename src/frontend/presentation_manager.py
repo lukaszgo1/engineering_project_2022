@@ -33,7 +33,7 @@ class PresentationManager:
 
     def present(self, presenter_to_use):
         self._active_presenters.append(presenter_to_use)
-        self._active_presenters[-1].present_all()
+        presenter_to_use.present_all()
         self._active_presenters[-2].hide()
         self.frame_obj.Layout()
 

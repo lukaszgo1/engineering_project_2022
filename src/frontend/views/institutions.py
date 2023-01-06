@@ -115,6 +115,8 @@ def _to_string_if_truthy(val) -> str:
 
 class InstitutionsListing(frontend.views._base_views.BaseEntityList):
 
+    is_main_view: bool = True
+
     buttons_in_view: List[
             frontend.gui_controls_spec.WXButtonSpec
     ] = [

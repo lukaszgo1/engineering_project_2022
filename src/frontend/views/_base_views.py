@@ -17,6 +17,7 @@ class BaseEntityList(wx.Panel):
     buttons_in_view: List[ctrl_specs.WXButtonSpec]
     list_view_columns: List[ctrl_specs.WXListColumnSpec]
     on_item_focused_listeners: List[Callable[[int], None]]
+    is_main_view: bool = False
 
     def __init__(self, presenter) -> None:  # TODO: add type hint
         self.on_item_focused_listeners = []
@@ -39,7 +40,7 @@ class BaseEntityList(wx.Panel):
             self.on_new_item_focused
         )
         self._create_list_columns()
-        self.list_ctrl.Bind(wx.EVT_KEY_UP, self.on_key_pressed)
+        self.Bind(wx.EVT_CHAR_HOOK, self.on_key_pressed)
         main_sizer.Add(self.list_ctrl, 0, wx.ALL | wx.EXPAND, 5)
         for btn in self.buttons_in_view:
             main_sizer.Add(
@@ -64,6 +65,19 @@ class BaseEntityList(wx.Panel):
                         initial_selection=0
                     )
                 )
+        if not self.is_main_view:
+            main_sizer.Add(
+                    factories.wx_button_factory(
+                        ctrl_parent=self,
+                        control_params=ctrl_specs.WXButtonSpec(
+                            label="Wstecz",
+                            on_press=lambda e: e.EventObject.Parent.presenter.show_previous_view()
+                        )
+                    ),
+                    0,
+                    wx.ALL | wx.CENTER,
+                    5
+                )
         self.SetSizer(main_sizer)
 
     def populate_toolbar(
@@ -83,12 +97,18 @@ class BaseEntityList(wx.Panel):
     def on_toolbar_item_clicked(self, event):
         self.toolbar_ids_to_items[event.Id].click()
 
-    def on_key_pressed(self, event):
+    def on_key_pressed(self, event: wx.KeyEvent):
         if event.KeyCode == wx.WXK_ESCAPE:
             self.presenter.show_previous_view()
+        else:
+            event.Skip()
 
-    def focus_list(self):
-        self.list_ctrl.SetFocus()
+    def focus_list(self, item_index_to_focus=None):
+        if item_index_to_focus is not None:
+            self.list_ctrl.Select(item_index_to_focus)
+            self.list_ctrl.Focus(item_index_to_focus)
+        if not self.list_ctrl.HasFocus():
+            self.list_ctrl.SetFocus()
 
     def on_context(self, event: wx.ContextMenuEvent) -> None:
         if not self.presenter.any_focused:
