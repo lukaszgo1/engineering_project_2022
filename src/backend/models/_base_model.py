@@ -5,68 +5,109 @@ from typing import (
     Optional,
     Tuple,
 )
+from typing_extensions import (
+    Self,  # Python 3.11 adds native support
+)
+
+from collections.abc import (
+    Iterable,
+)
 
 import attrs
 
 import backend.app_constants
-import requests
+import backend.models._converters as convs_registry
+import frontend.api_utils
+
+
+class NonExistingEntityRequested(Exception):
+
+    """Raised when the entity with the given id does not exist in db."""
+
+
 USER_PRESENTABLE_FIELD_NAME: Final[str] = "userPresentable"
+
+
+# When / if refactoring consider to use enum.
+ID_FIELD_NAME: Final[str] = "is_id_columnt"
+MAIN_FK_FIELD_NAME: Final[str] = "main_fk"
+
+ID_FIELD = attrs.field(
+        default=None,
+        metadata={ID_FIELD_NAME: True},
+)
+main_fk_field = attrs.field(metadata={MAIN_FK_FIELD_NAME: True})
 
 
 @attrs.define(kw_only=True)
 class _BaseModel:
 
-    # `None` signifies that the record has not been inserted yet.
-    id: Optional[int] = attrs.field(
-        default=None, metadata={USER_PRESENTABLE_FIELD_NAME: False}
-    )
+    @classmethod
+    def field_name_for_truthy_metadata(cls, metadata_key: str) -> str:
+        for field_name, field_atrs in attrs.fields_dict(cls).items():
+            if field_atrs.metadata.get(metadata_key, False):
+                return field_name
+        else:
+            raise RuntimeError(
+                (
+                    f"Failed to find field with metadata {metadata_key}, "
+                    f"for class {cls}"
+                )
+            )
+
+    @property
+    def id(self) -> Optional[int]:
+        """Return id of this record.
+        If this is returns `None` the record has not been inserted into database yet.
+        """
+
+    @id.setter
+    def id(self, new_val: Optional[int]) -> None:
+        setattr(
+            self,
+            self.field_name_for_truthy_metadata(ID_FIELD_NAME),
+            new_val
+        )
 
     db_table_name: ClassVar[str]
     id_column_name: ClassVar[str]
+    get_endpoint: ClassVar[str]
+    get_single_end_point: ClassVar[str]
 
     @staticmethod
     def is_user_presentable(field) -> bool:
         return field.metadata.get(USER_PRESENTABLE_FIELD_NAME, True)
 
+    @staticmethod
+    def records_from_end_point(end_point_name):
+        yield from frontend.api_utils.get_data(end_point_name)["item"]
+
     @classmethod
-    def user_presentable_fields(cls) -> Tuple[str, ...]:
-        return tuple(
-            _.name for _ in attrs.fields(cls) if cls.is_user_presentable(_)
+    def from_json_info(cls, json_info) -> Self:
+        return convs_registry.from_json_conv.structure_attrs_fromdict(
+            json_info, cls
         )
 
     @classmethod
-    def initializer_params(cls, db_record: Dict) -> Dict:
-        initializer_fields = {"id": cls.id_column_name}
-        initializer_fields.update(
-            {_: _ for _ in cls.user_presentable_fields()}
-        )
-        kwargs_with_vals = dict(
-            zip(
-                initializer_fields.keys(),
-                tuple(db_record[key] for key in initializer_fields.values())
-            )
-        )
-        return kwargs_with_vals
+    def from_endpoint(cls) -> Iterable[Self]:
+        for record in cls.records_from_end_point(cls.get_endpoint):
+            yield cls.from_json_info(record)
 
     @classmethod
-    def from_db(cls):
-        fields_to_select = (cls.id_column_name,)
-        fields_to_select += cls.user_presentable_fields()
-        records_in_db = backend.app_constants.active_db_con.fetch_all(
-            col_names=fields_to_select,
-            table_name=cls.db_table_name
-        )
-        for record in records_in_db:
-            kwargs_with_vals = cls.initializer_params(record)
-            yield cls(**kwargs_with_vals)
+    def from_end_point_by_id(cls, entity_id: int) -> Self:
+        res = frontend.api_utils.get_data(
+            cls.get_single_end_point,
+            entity_id=str(entity_id)
+        )["item"]
+        if res is not None:
+            return cls.from_json_info(res)
+        raise NonExistingEntityRequested
 
     @classmethod
-    def from_endpoint(cls):
-        query = requests.get('http://127.0.0.1:5000'+cls.get_endpoint)
-        records_in_db = query.json()['item']
-        for record in records_in_db:
-            kwargs_with_vals = cls.initializer_params(record)
-            yield cls(**kwargs_with_vals)
+    def from_normalized_record(cls, record) -> Self:
+        return convs_registry.DEFAULT_CONV.structure_attrs_fromdict(
+            record, cls
+        )
 
     def cols_to_attrs(self):
         return attrs.asdict(
@@ -112,11 +153,23 @@ class _BaseModel:
 @attrs.define(kw_only=True)
 class _Owned_model(_BaseModel):
 
-    owner: _BaseModel = attrs.field(
-        metadata={
-            USER_PRESENTABLE_FIELD_NAME: False, "should_return_as_id": True
-        }
-    )
+    @property
+    def owner(self) -> _BaseModel:
+        """Return the entity representing main foreign key for this model"""
+        return getattr(self, self.fk_field_name())
+
+    @classmethod
+    def fk_field_name(cls):
+        return cls.field_name_for_truthy_metadata(MAIN_FK_FIELD_NAME)
+
+    @owner.setter
+    def owner(self, new_val):
+        setattr(
+            self,
+            self.fk_field_name(),
+            new_val
+        )
+
     owner_col_id_name: ClassVar[str]
 
     def cols_for_insert(self) -> Dict:
@@ -124,26 +177,17 @@ class _Owned_model(_BaseModel):
         res[self.owner_col_id_name] = self.owner.id
         return res
 
-    @classmethod
-    def from_db(cls, owner: _BaseModel):
-        fields_to_select = (cls.id_column_name,)
-        fields_to_select += cls.user_presentable_fields()
-        records_in_db = backend.app_constants.active_db_con.fetch_all_matching(
-            col_names=fields_to_select,
-            table_name=cls.db_table_name,
-            condition_str=f"{cls.owner_col_id_name} = ?",
-            seq=(str(owner.id),)
-        )
-        for record in records_in_db:
-            kwargs_with_vals = cls.initializer_params(record)
-            kwargs_with_vals["owner"] = owner
-            yield cls(**kwargs_with_vals)
+    @staticmethod
+    def data_from_end_point(end_point_name, end_point_id):
+        yield from frontend.api_utils.get_data(
+            end_point_name,
+            entity_id=end_point_id
+        )["item"]
 
     @classmethod
     def from_endpoint(cls, owner: _BaseModel):
-        query = requests.get('http://127.0.0.1:5000'+cls.get_endpoint+'/'+str(owner.id))
-        records_in_db = query.json()['item']
-        for record in records_in_db:
-            kwargs_with_vals = cls.initializer_params(record)
-            kwargs_with_vals["owner"] = owner
-            yield cls(**kwargs_with_vals)
+        for record in cls.data_from_end_point(
+            end_point_name=cls.get_endpoint,
+            end_point_id=str(owner.id)
+        ):
+            yield cls.from_json_info(record)

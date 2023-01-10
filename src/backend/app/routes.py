@@ -312,3 +312,129 @@ def get_class_lessons():
         term_id = flask.request.args["term_id"]
         res = _schedule_entries_for_class(term_id, class_id)
         return flask.jsonify(Schedule.schedule_entries_to_dict(res))
+
+
+def _possible_breaks(inst_id, length):
+        inst =Institutions.query.filter_by(InstitutionId=inst_id).first()
+        normal_break = inst.NormalBreakLength
+        lesson_len = inst.NormalLessonLength
+        existing_breaks = Breaks.query.filter_by(InstitutionId=inst_id).order_by("BreakStartingHour").all()
+        if existing_breaks:
+            starting_hour = existing_breaks[-1].BreakEndingHour
+        else:
+            starting_hour = inst.StartingHour
+        ending_hour = inst.EndingHour
+        default_date = "2000-01-02 "
+        start_obj = datetime.datetime.fromisoformat(
+            f"{default_date}{starting_hour}"
+        )
+        end_obj = datetime.datetime.fromisoformat(
+            f"{default_date}{ending_hour}"
+        )
+        long_break_td = datetime.timedelta(minutes=length)
+        normal_break_td = datetime.timedelta(minutes=normal_break)
+        lesson_td = datetime.timedelta(minutes=lesson_len)
+        res = []
+        lesson_start = (start_obj + normal_break_td + lesson_td)
+        while lesson_start < end_obj:
+            lesson_start = lesson_start + lesson_td
+            possible_break_start = lesson_start
+            possible_end = (lesson_start + long_break_td)
+            if possible_end >= end_obj:
+                break
+            lesson_start = lesson_start + normal_break_td
+            if lesson_start >= end_obj:
+                break
+            res.append((possible_break_start, possible_end))
+        return res[:-1]
+
+
+@app.route("/get_possible_breaks")
+def get_possible_breaks():
+        inst_id = int(flask.request.args["inst_id"])
+        break_length = int(flask.request.args["break_length"])
+        return flask.jsonify(
+            {"Breaks": _possible_breaks(inst_id,  break_length)}
+        )
+
+
+@app.route('/get_institution/<inst_id>')
+def get_institution(inst_id):
+    inst = Institutions.query.filter_by(InstitutionId=inst_id).first()
+    if inst is not None:
+        inst = inst.institution_to_dict()
+    return jsonify({"item": inst})
+
+
+@app.route('/get_term/<term_id>')
+def get_term(term_id):
+    term = Terms.query.filter_by(TermId=term_id).first()
+    if term is not None:
+        term = term.term_to_dict()
+    return jsonify({"item": term})
+
+
+@app.route('/get_subject/<subject_id>')
+def get_subject(subject_id):
+    subject = Subjects.query.filter_by(SubjectId=subject_id).first()
+    if subject is not None:
+        subject = subject.subject_to_dict()
+    return jsonify({"item": subject})
+
+
+@app.route('/get_teacher/<teacher_id>')
+def get_teacher(teacher_id):
+    teacher = Teachers.query.filter_by(TeacherId=teacher_id).first()
+    if teacher is not None:
+        teacher = teacher.teacher_to_dict()
+    return jsonify({"item": teacher})
+
+
+@app.route('/get_term_plan/<term_plan_id>')
+def get_term_plan(term_plan_id):
+    tp = TermPlan.query.filter_by(TermPlanId=term_plan_id).first()
+    if tp is not None:
+        tp = tp.termPlan_to_dict()
+    return jsonify({"item": tp})
+
+
+@app.route('/get_single_class/<class_id>')
+def get_single_class(class_id):
+    class_model = Classes.query.filter_by(ClassId=class_id).first()
+    if class_model is not None:
+        class_model = class_model.class_to_dict()
+    return jsonify({"item": class_model})
+
+
+@app.route('/get_class_to_term_plan/<class_id>')
+def get_class_to_term_plan(class_id):
+    cttp = ClassToTermPlan.query.filter_by(ClassId=class_id).first()
+    if cttp is not None:
+        cttp = cttp.classToTermPlan_to_dict()
+    return jsonify({"item": cttp})
+
+
+@app.route('/get_teachersToSubjects/<teacher_id>')
+def get_teachersToSubjects(teacher_id):
+    teachersToSubjects = TeachersToSubjects.query.filter_by(TeacherId=teacher_id).all()
+    return jsonify(TeachersToSubjects.TeachersToSubjects_to_dict(teachersToSubjects))
+
+
+@app.route('/get_Teachers_not_assigned_to/<teacher_id>')
+def get_teachers_not_assigned_to(teacher_id):
+    subjects = (
+            Subjects.query.outerjoin(TeachersToSubjects)
+            .outerjoin(Teachers)
+            .filter(Subjects.SubjectId.not_in(TeachersToSubjects.query.with_entities(TeachersToSubjects.SubjectId).filter(TeachersToSubjects.TeacherId==teacher_id)))
+            .filter(Subjects.TaughtIn.in_(Teachers.query.with_entities(Teachers.EmployedIn).filter(Teachers.TeacherId==teacher_id)))
+            .all()
+        )
+    return jsonify(Subjects.subjects_to_dict(subjects))
+
+
+@app.route('/get_single_class_room/<class_room_id>')
+def get_single_class_room(class_room_id):
+    cr = ClassRooms.query.filter_by(ClassRoomId=class_room_id).first()
+    if cr is not None:
+        cr = cr.classRoom_to_dict()
+    return jsonify({"item": cr})

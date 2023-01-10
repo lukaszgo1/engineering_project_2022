@@ -15,7 +15,7 @@ class PresentationManager:
 
     def __init__(self) -> None:
         self._active_presenters = []
-        
+
     def set_initial_presenter(self, presenter):
         self._initial_presenter = presenter
 

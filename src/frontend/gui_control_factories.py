@@ -23,7 +23,7 @@ import wx
 import wx.adv
 
 if TYPE_CHECKING:
-    import frontend.gui_controls_spec as ctrl_specs
+    import gui_controls_spec as ctrl_specs
 
 
 def wx_button_factory(
@@ -153,7 +153,7 @@ class radio_button_factory(_base_control):
     def on_value_change(self, event):
         new_val = list(self._rb_raw_vals)[self._radio_button.Selection]
         self.notify_listeners(new_val)
-        
+
     def add_to_sizer(self, parent_sizer: wx.Sizer) -> None:
         parent_sizer.Add(self._radio_button)
 
@@ -191,10 +191,13 @@ class labeled_combo_box_factory(_base_control):
         self._combobox.Bind(wx.EVT_CHOICE, self.on_choice)
         self._parent = ctrl_parent
 
-    def on_choice(self, event):
+    def notify_when_state_changed(self):
         new_val = self.value
         for listener in self._registered_listeners:
             listener(new_val)
+
+    def on_choice(self, event):
+        self.notify_when_state_changed()
 
     def add_to_sizer(self, parent_sizer: wx.Sizer) -> None:
         parent_sizer.Add(self._sizer)
@@ -204,6 +207,7 @@ class labeled_combo_box_factory(_base_control):
         self._combobox.Set([str(_) for _ in self._indexes_to_vals.values()])
         if new_val.initial_selection is not None:
             self._combobox.SetSelection(new_val.initial_selection)
+            self.notify_when_state_changed()
         self._combobox.InvalidateBestSize()
         self._combobox.SetSize(self._combobox.GetBestSize())
         self._parent.Layout()

@@ -8,42 +8,31 @@ import attrs
 
 import backend.models._base_model as bm
 import backend.models.TermPlan
+import backend.models.class_model
 
 
 @attrs.define(kw_only=True)
 class ClassToTermPlan(bm._Owned_model):
 
     db_table_name: ClassVar[str] = "ClassToTermPlan"
-    id_column_name: ClassVar[str] = "ClassToTermPlanId"
-    owner_col_id_name: ClassVar[str] = "ClassId"
-    AssociatedTermPlanId: Optional[int] = attrs.field(
-        default=None,
-        metadata={bm.USER_PRESENTABLE_FIELD_NAME: False}
-    )
-    TermPlanId: Optional[
-        backend.models.TermPlan.TermPlan
-    ] = None
+    get_single_end_point: ClassVar[str] = "get_class_to_term_plan"
+    ClassToTermPlanId: Optional[int] = bm.ID_FIELD
+    ClassId: backend.models.class_model.Class = bm.main_fk_field
+    TermPlanId: backend.models.TermPlan.TermPlan
 
-    def __attrs_post_init__(self):
-        if self.AssociatedTermPlanId is not None:
-            if self.TermPlanId is None:
-                owning_inst = self.owner.owner
-                for tp in owning_inst.term_plans_in_inst():
-                    if tp.id == self.AssociatedTermPlanId:
-                        self.TermPlanId= tp
-                        break
-                else:
-                    raise RuntimeError("Failed to find term plan in DB")
+    # This model is pretty specific,
+    # since a single class can have only one term plan assigned,
+    # which in turn means that selecting all records
+    # always returns a single one.
+    #  For now just omit the end point for retrieving all records.
+
+    @property
+    def id(self) -> Optional[int]:
+        return self.ClassToTermPlanId
 
     def cols_for_insert(self) -> dict:
         res = super().cols_for_insert()
         res["TermPlanId"] = self.AssociatedTermPlanId
-        return res
-
-    @classmethod
-    def initializer_params(cls, db_record: dict) -> dict:
-        res = super().initializer_params(db_record)
-        res["AssociatedTermPlanId"] = res.pop("TermPlanId")
         return res
 
     def __str__(self) -> str:

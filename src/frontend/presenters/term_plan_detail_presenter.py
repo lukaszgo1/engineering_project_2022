@@ -5,46 +5,37 @@ from typing import (
     Type,
 )
 
-import frontend.presenters.base_presenter
-import frontend.views.term_plan_details
-import frontend.gui_controls_spec
+import presenters.base_presenter
+import views.term_plan_details
+import gui_controls_spec
 import backend.models.term_plan_detail
 
 
-class TermPlanDetailsPresenter(frontend.presenters.base_presenter.BasePresenter):
+class TermPlanDetailsPresenter(presenters.base_presenter.BasePresenter):
 
     MODEL_CLASS: Type[
         backend.models.term_plan_detail.TermPlanDetail
     ] = backend.models.term_plan_detail.TermPlanDetail
-    view_collections = frontend.views.term_plan_details
+    view_collections = views.term_plan_details
     all_records: List[backend.models.term_plan_detail.TermPlanDetail]
 
     def __init__(
         self,
-        parent_presenter: frontend.presenters.base_presenter.BasePresenter
+        parent_presenter: presenters.base_presenter.BasePresenter
     ) -> None:
         super().__init__()
         self.parent_presenter = parent_presenter
 
     def create_new_entity_from_user_input(self, entered_vals):
-        return self.MODEL_CLASS(
-            LessonsAmount=entered_vals["LessonsAmount"],
-            LessonsWeekly=entered_vals["LessonsWeekly"],
-            MaxBlockSize=entered_vals["MaxBlockSize"],
-            MinBlockSize=entered_vals["MinBlockSize"],
-            PreferredDistanceInDays=entered_vals["PreferredDistanceInDays"],
-            PreferredDistanceInWeeks=entered_vals["PreferredDistanceInWeeks"],
-            SubjectId=entered_vals["SubjectId"],
-            EntryDescribingSubjectId=entered_vals["SubjectId"].id,
-            owner=self.parent_presenter.focused_entity
-        )
+        entered_vals[self.MODEL_CLASS.fk_field_name()] = self.parent_presenter.focused_entity
+        return self.MODEL_CLASS.from_normalized_record(entered_vals)
 
     def get_all_records(self):
         yield from self.MODEL_CLASS.from_endpoint(self.parent_presenter.focused_entity)
 
     @property
     def initial_vals_for_add(self):
-        subjs_in_inst = frontend.gui_controls_spec.ComboBoxvaluesSpec(
+        subjs_in_inst = gui_controls_spec.ComboBoxvaluesSpec(
             list(self.parent_presenter.parent_presenter.focused_entity.owner.subjects_taught_in_inst())
         )
         return {

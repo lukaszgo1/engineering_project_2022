@@ -7,24 +7,28 @@ from typing import (
 
 import wx
 
-import frontend.gui_control_factories as factories
-import frontend.gui_controls_spec as ctrl_specs
+import gui_control_factories as factories
+import gui_controls_spec as ctrl_specs
 
 
 class BaseEntityList(wx.Panel):
 
-    detail_views = ()
     buttons_in_view: List[ctrl_specs.WXButtonSpec]
     list_view_columns: List[ctrl_specs.WXListColumnSpec]
     on_item_focused_listeners: List[Callable[[int], None]]
     is_main_view: bool = False
 
-    def __init__(self, presenter) -> None:  # TODO: add type hint
+    def get_parent(self):
+        return wx.GetApp().TopWindow
+
+    def __init__(self, presenter, detail_presenters=()) -> None:  # TODO: add type hint
         self.on_item_focused_listeners = []
         self.presenter = presenter
+        self.detail_presenters = detail_presenters
         self_context_menu_pos = None
-        super().__init__(wx.GetApp().TopWindow)
+        super().__init__(self.get_parent())
         main_sizer = wx.BoxSizer(wx.VERTICAL)
+        self.main_sizer = main_sizer
         self.toolbar_obj = wx.ToolBar(self, style=wx.TB_TEXT | wx.TB_HORIZONTAL)
         main_sizer.Add(self.toolbar_obj, 0, wx.ALL | wx.EXPAND, 5)
         self.toolbar_ids_to_items: dict[int, ctrl_specs.ToolBarItemSpec] = dict()
@@ -52,32 +56,10 @@ class BaseEntityList(wx.Panel):
                 wx.ALL | wx.CENTER,
                 5
             )
-            secondary_term_aware_views = [_ for _ in self.detail_views if _.is_term_aware]
-            if secondary_term_aware_views:
-                terms_list = ctrl_specs.LabeledComboBoxSpec(
-                    identifier="terms",
-                    label="Semestry:",
-                ).create(self)
-                terms_list.add_to_sizer(main_sizer)
-                terms_list.set_value(
-                    ctrl_specs.ComboBoxvaluesSpec(
-                        list(self.presenter.owning_inst.terms_in_inst()),
-                        initial_selection=0
-                    )
-                )
-        if not self.is_main_view:
-            main_sizer.Add(
-                    factories.wx_button_factory(
-                        ctrl_parent=self,
-                        control_params=ctrl_specs.WXButtonSpec(
-                            label="Wstecz",
-                            on_press=lambda e: e.EventObject.Parent.presenter.show_previous_view()
-                        )
-                    ),
-                    0,
-                    wx.ALL | wx.CENTER,
-                    5
-                )
+        self.to_show_as_secondary = []
+        for d in self.detail_presenters:
+            d.present_as_detail(self)
+            self.to_show_as_secondary.append(d)
         self.SetSizer(main_sizer)
 
     def populate_toolbar(
@@ -178,10 +160,25 @@ class BaseEntityList(wx.Panel):
         self.list_ctrl.DeleteItem(index)
         self.list_ctrl.SetFocus()
 
-    def show(self):
-        wx.GetApp().TopWindow.sizer.Add(self, 1, wx.EXPAND)
+    def show(self, view_pos):
+        wx.GetApp().TopWindow.sizer.Add(self, view_pos, wx.EXPAND)
         self.populate_toolbar(self.presenter.toolbar_items_in_view)
         self.Show()
+        for view in self.to_show_as_secondary:
+            view.present_all()
+        if not self.is_main_view:
+            self.main_sizer.Add(
+                factories.wx_button_factory(
+                    ctrl_parent=self,
+                    control_params=ctrl_specs.WXButtonSpec(
+                        label="Wstecz",
+                        on_press=lambda e: e.EventObject.Parent.presenter.show_previous_view()
+                    )
+                ),
+                0,
+                wx.ALL | wx.CENTER,
+                5
+            )
 
 
 class BaseEEnterParamsDlg(wx.Dialog):

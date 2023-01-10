@@ -8,6 +8,7 @@ import attrs
 
 import backend.models._base_model as bm
 import backend.models.subject
+import backend.models.TermPlan
 
 
 @attrs.define(kw_only=True)
@@ -15,29 +16,19 @@ class TermPlanDetail(bm._Owned_model):
 
     get_endpoint: ClassVar[str] = "/get_termPlanDetails"
     db_table_name: ClassVar[str] = "TermPlanDetails"
-    id_column_name: ClassVar[str] = "TermPlanDetailId"
-    owner_col_id_name: ClassVar[str] = "TermPlanId"
+    TermPlanDetailId: Optional[int] = bm.ID_FIELD
+    TermPlanId: backend.models.TermPlan.TermPlan = bm.main_fk_field
     LessonsAmount: int
     LessonsWeekly: int
     MinBlockSize: int
     MaxBlockSize: int
     PreferredDistanceInDays: Optional[int] = None
     PreferredDistanceInWeeks: Optional[int] = None
-    EntryDescribingSubjectId: int = attrs.field(
-        metadata={bm.USER_PRESENTABLE_FIELD_NAME: False}
-    )
-    SubjectId: Optional[
-        backend.models.subject.Subject
-    ] = None
+    SubjectId: backend.models.subject.Subject
 
-    def __attrs_post_init__(self):
-        if self.SubjectId is None:
-            for subj in self.owner.owner.owner.subjects_taught_in_inst():
-                if subj.id == self.EntryDescribingSubjectId:
-                    self.SubjectId = subj
-                    break
-            else:
-                raise RuntimeError("Failed to find the subject in db")
+    @property
+    def id(self) -> Optional[int]:
+        return self.TermPlanDetailId
 
     def cols_for_insert(self) -> Dict:
         res = super().cols_for_insert()
@@ -50,10 +41,3 @@ class TermPlanDetail(bm._Owned_model):
         super().update_db_record(new_values)
         self.EntryDescribingSubjectId = chosen_subject_model.id
         self.SubjectId = chosen_subject_model
-
-    @classmethod
-    def initializer_params(cls, db_record: Dict) -> Dict:
-        res = super().initializer_params(db_record)
-        res["EntryDescribingSubjectId"] = res["SubjectId"]
-        del res["SubjectId"]
-        return res

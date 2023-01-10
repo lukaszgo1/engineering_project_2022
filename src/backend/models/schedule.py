@@ -1,6 +1,7 @@
 import enum
 from typing import (
     ClassVar,
+    Optional,
 )
 
 import attrs
@@ -10,7 +11,9 @@ import backend.models.teacher
 import backend.models.subject
 import backend.models.class_model
 import backend.models.class_room
+import backend.models.institution
 import backend.models.Term
+import frontend.api_utils
 
 
 @enum.unique
@@ -42,8 +45,13 @@ class Schedule(bm._Owned_model):
     get_endpoint: ClassVar[str] = "/get_class"
     post_endpoint: ClassVar[str] = "/add_schedule"
     db_table_name: ClassVar[str] = "Schedule"
-    id_column_name: ClassVar[str] = "LessonId"
-    owner_col_id_name: ClassVar[str] = "InstitutionId"
+    LessonId: Optional[int] = bm.ID_FIELD
+
+    @property
+    def id(self) -> Optional[int]:
+        return self.LessonId
+
+    InstitutionId: backend.models.institution.Institution = bm.main_fk_field
     WeekDay: WeekDay
     LessonStartingHour: str
     LessonEndingHour: str
@@ -52,6 +60,30 @@ class Schedule(bm._Owned_model):
     ClassId: backend.models.class_model.Class
     ClassRoomId: backend.models.class_room.ClassRoom
     InTerm: backend.models.Term.Term
+
+    @classmethod
+    def entries_in_class_room(cls, class_room, term):
+        for record in frontend.api_utils.get_data(
+            end_point_name="get_class_room_lessons",
+            params={"class_room_id": class_room.id, "term_id": term.id}
+        )["item"]:
+            yield cls.from_json_info(record)
+
+    @classmethod
+    def entries_for_teacher(cls, teacher, term):
+        for record in frontend.api_utils.get_data(
+            end_point_name="get_teacher_lessons",
+            params={"teacher_id": teacher.id, "term_id": term.id}
+        )["item"]:
+            yield cls.from_json_info(record)
+
+    @classmethod
+    def entries_for_class(cls, class_model, term):
+        for record in frontend.api_utils.get_data(
+            end_point_name="get_class_lessons",
+            params={"class_id": class_model.id, "term_id": term.id}
+        )["item"]:
+            yield cls.from_json_info(record)
 
     def cols_for_insert(self) -> dict:
         res =  super().cols_for_insert()

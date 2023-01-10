@@ -1,6 +1,11 @@
 import wx
 import os
 import csv
+
+
+import sys
+sys.path.append("frontend")
+sys.path.append("backend")
 import backend.mariadb_connector
 import backend.app_constants as app_global_vars
 import frontend.views.institutions

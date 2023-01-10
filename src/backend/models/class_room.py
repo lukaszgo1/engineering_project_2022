@@ -6,10 +6,11 @@ from typing import (
 )
 
 import attrs
-import requests
 
 import backend.models._base_model as bm
 import backend.models.subject
+import backend.models.institution
+import backend.models._converters as convs_registry
 
 
 class NoMainCourse:
@@ -24,29 +25,16 @@ class NoMainCourse:
 class ClassRoom(bm._Owned_model):
 
     get_endpoint: ClassVar[str] = "/get_classRooms"
+    get_single_end_point: ClassVar[str] = "get_single_class_room"
     db_table_name: ClassVar[str] = "ClassRooms"
-    id_column_name: ClassVar[str] = "ClassRoomId"
-    owner_col_id_name: ClassVar[str] = "IsIn"
+    ClassRoomId: Optional[int] = bm.ID_FIELD
+    IsIn: backend.models.institution.Institution = bm.main_fk_field
     ClassRoomIdentifier: str
-    MainSubjectId: Optional[int] = attrs.field(
-        default=None,
-        metadata={bm.USER_PRESENTABLE_FIELD_NAME: False}
-    )
-    PrimaryCourse: Optional[
-        Union[backend.models.subject.Subject, NoMainCourse]
-            ] = None
+    PrimaryCourse: Union[backend.models.subject.Subject, NoMainCourse]
 
-    def __attrs_post_init__(self):
-        if self.MainSubjectId is not None:
-            if self.PrimaryCourse is None:
-                for subj in backend.models.subject.Subject.from_db(self.owner):
-                    if subj.id == self.MainSubjectId:
-                        self.PrimaryCourse = subj
-                        break
-                else:
-                    raise RuntimeError("Failed to find the subject in db")
-        else:
-            self.PrimaryCourse = NoMainCourse()
+    @property
+    def id(self) -> Optional[int]:
+        return self.ClassRoomId
 
     def cols_for_insert(self) -> Dict:
         res = super().cols_for_insert()
@@ -61,26 +49,29 @@ class ClassRoom(bm._Owned_model):
         self.MainSubjectId = chosen_subject_model.id
         self.PrimaryCourse = chosen_subject_model
 
-    @classmethod
-    def initializer_params(cls, db_record: Dict) -> Dict:
-        res = super().initializer_params(db_record)
-        res["MainSubjectId"] = res["PrimaryCourse"]
-        del res["PrimaryCourse"]
-        return res
-
     def __str__(self) -> str:
         return self.ClassRoomIdentifier
 
     @classmethod
     def from_class_room_for_subj_end_point(cls, subj_model):
-        # All class rooms are placed
-        # in the same institution as the subject
-        class_room_owner = subj_model.owner
-        query = requests.get(
-            f"http://127.0.0.1:5000/get_ClassRoomsForSubject/{str(subj_model.id)}"
-        )
-        records_in_db = query.json()['item']
-        for record in records_in_db:
-            kwargs_with_vals = cls.initializer_params(record)
-            kwargs_with_vals["owner"] = class_room_owner
-            yield cls(**kwargs_with_vals)
+        for record in cls.data_from_end_point(
+            end_point_name="get_ClassRoomsForSubject",
+            end_point_id=str(subj_model.id)
+        ):
+            yield cls.from_json_info(record)
+
+def _get_main_subj_from_id(subj_id: Optional[int], typ):
+    if subj_id is None:
+        return NoMainCourse()
+    return backend.models.subject.Subject.from_end_point_by_id(subj_id)
+
+
+convs_registry.from_json_conv.register_structure_hook(
+    cl=Union[backend.models.subject.Subject, NoMainCourse],
+    func=_get_main_subj_from_id
+)
+
+convs_registry.from_json_conv.register_structure_hook(
+    cl=ClassRoom,
+    func=lambda cr_id, typ: ClassRoom.from_end_point_by_id(cr_id)
+)

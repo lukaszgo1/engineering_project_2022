@@ -4,6 +4,11 @@ py2exe==0.10.4.0
 mariadb
 typing_extensions
 attrs
+# Until structuring/un-structuring hooks for individual attributes are released
+# in stable version of Cattrs
+# install the development version
+git+https://github.com/python-attrs/cattrs@0f1d7ef0c47584062312e7f07f8ea6a35e4a10c5#egg=cattrs
+
 flake8
 flask
 flask-sqlalchemy

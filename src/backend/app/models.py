@@ -120,6 +120,22 @@ class ClassRooms(db.Model):
 class TeachersToSubjects(db.Model):
     __table__ = db.Model.metadata.tables['teacherstosubjects']
 
+    def teacherToSubject_to_dict(self):
+        data = {
+            'TeacherToSubjectId': self.TeacherToSubjectId,
+            'TeacherId': self.TeacherId,
+            'SubjectId': self.SubjectId
+        }
+        return data
+
+    @staticmethod
+    def TeachersToSubjects_to_dict(teachersToSubjects):
+        data = {
+            'item': [teacherToSubject.teacherToSubject_to_dict() for teacherToSubject in teachersToSubjects]
+        }
+        return data
+
+
 class Terms(db.Model):
     __table__ = db.Model.metadata.tables['terms']
     def term_to_dict(self):
@@ -158,6 +174,15 @@ class TermPlan(db.Model):
 
 class ClassToTermPlan(db.Model):
     __table__ = db.Model.metadata.tables['classtotermplan']
+
+    def classToTermPlan_to_dict(self):
+        data = {
+            'ClassToTermPlanId': self.ClassToTermPlanId,
+            'ClassId': self.ClassId,
+            'TermPlanId': self.TermPlanId
+        }
+        return data
+
 
 class TermPlanDetails(db.Model):
     __table__ = db.Model.metadata.tables['termplandetails']

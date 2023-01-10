@@ -9,7 +9,7 @@ from typing_extensions import Self  # Python 3.11 adds native support
 if True:  # remove when backend becomes a standalone app
     import sys
     import os
-    sys.path.append(os.path.dirname(__file__))
+    sys.path.insert(0, os.path.dirname(__file__))
 import app_constants
 
 

@@ -2,9 +2,9 @@ from __future__ import annotations
 
 import requests
 
-import frontend.presenters.base_presenter
-import frontend.views.schedule
-import frontend.gui_controls_spec
+import presenters.base_presenter
+import views.schedule
+import gui_controls_spec
 import backend.models.class_room
 import backend.models.subject
 import backend.models.class_to_term_plan
@@ -14,24 +14,27 @@ import backend.models.schedule
 import backend.models.class_model
 
 
-class SchedulePresenter(frontend.presenters.base_presenter.BasePresenter):
-
-    is_term_aware = True
+class SchedulePresenter(presenters.base_presenter.BasePresenter):
 
     MODEL_CLASS: type[
         backend.models.schedule.Schedule
     ] = backend.models.schedule.Schedule
-    view_collections = frontend.views.schedule
+    view_collections = views.schedule
     all_records: list[backend.models.schedule.Schedule]
 
-    def __init__(
-        self,
-        parent_presenter: frontend.presenters.base_presenter.BasePresenter
-    ) -> None:
-        super().__init__()
-        self.parent_presenter = parent_presenter
-        self.for_term = parent_presenter.focused_entity
-        self.term_in_inst = self.for_term.owner
+    def get_controls_for_secondary_view(self):
+        self.terms_list = gui_controls_spec.LabeledComboBoxSpec(
+            identifier="terms",
+            label="Semestry:",
+        )
+        yield self.terms_list
+
+    def present_as_detail(self, master_presenter)-> None:
+        self.conts = []
+        for c in self.get_controls_for_secondary_view():
+            res = c.create(master_presenter)
+            res.add_to_sizer(master_presenter.main_sizer)
+            self.conts.append(res)
 
     def subjects_in_plan_for_class(self, class_model):
         subjects = list(backend.models.subject.Subject.from_subjects_for_class_endpoint(
@@ -40,6 +43,8 @@ class SchedulePresenter(frontend.presenters.base_presenter.BasePresenter):
         return subjects
 
     def teachers_allowed_to_teach(self, subject):
+        if subject is None:
+            return []
         return list(
             backend.models.teacher.Teacher.from_teachers_for_subjs_end_point(
                 subject
@@ -47,6 +52,8 @@ class SchedulePresenter(frontend.presenters.base_presenter.BasePresenter):
         )
 
     def class_rooms_for_subject(self, subject):
+        if subject is None:
+            return []
         return list(
             backend.models.class_room.ClassRoom.from_class_room_for_subj_end_point(
                 subject
@@ -97,7 +104,7 @@ class SchedulePresenter(frontend.presenters.base_presenter.BasePresenter):
             }
         )
         selection = query.json()["Preferred_day"]
-        return frontend.gui_controls_spec.ComboBoxvaluesSpec(
+        return gui_controls_spec.ComboBoxvaluesSpec(
             initial_selection=selection,
             values=list(backend.models.schedule.WeekDay)
         )
@@ -123,24 +130,22 @@ class SchedulePresenter(frontend.presenters.base_presenter.BasePresenter):
             }
         )
         records = query.json()["lessons"]
-        return frontend.gui_controls_spec.ComboBoxvaluesSpec(
+        return gui_controls_spec.ComboBoxvaluesSpec(
             values=records,
             initial_selection=0
         )
 
     def get_all_records(self):
-        yield from self.MODEL_CLASS.from_db(
-            self.parent_presenter.focused_entity
-        )
+        return []
 
     @property
     def initial_vals_for_add(self):
         classes_with_plans = list(
             backend.models.class_model.Class.from_classesToTermPlan_endpoint(
-                self.parent_presenter.focused_entity
+                self.for_term
             )
         )
-        combobox_vals = frontend.gui_controls_spec.ComboBoxvaluesSpec(
+        combobox_vals = gui_controls_spec.ComboBoxvaluesSpec(
             values=classes_with_plans,
             initial_selection=0
         )
@@ -148,13 +153,31 @@ class SchedulePresenter(frontend.presenters.base_presenter.BasePresenter):
             "ClassId": combobox_vals,
         }
 
-    def vals_for_edit(self):
-        res = super().vals_for_edit()
-        possible_course_choices = self.initial_vals_for_add["PrimaryCourse"]
-        chosen_course_id = res["PrimaryCourse"].id 
-        for index, course in enumerate(possible_course_choices.values):
-            if course.id == chosen_course_id:
-                possible_course_choices.initial_selection = index
+
+
+class SchedForClassRoomPres(SchedulePresenter):
+
+    def get_all_records_for_detail(self):
+        yield from self.MODEL_CLASS.entries_in_class_room(term=self.for_term, class_room=self.class_room)
+
+    def populate_on_change(self):
+        while True:
+            if not self.p.list_ctrl.DeleteItem(0):
                 break
-        res["PrimaryCourse"] = possible_course_choices
-        return res
+        for record in self.get_all_records_for_detail():
+            self._present_single_in_view(record)
+        self.p.list_ctrl.Select(0)
+        self.p.list_ctrl.Focus(0)
+        self.set_toolbar_icons_state()
+
+
+class SchedForTeacherPres(SchedForClassRoomPres):
+
+    def get_all_records_for_detail(self):
+        yield from self.MODEL_CLASS.entries_for_teacher(term=self.for_term, teacher=self.teacher)
+
+
+class SchedForClassPres(SchedForClassRoomPres):
+
+    def get_all_records_for_detail(self):
+        yield from self.MODEL_CLASS.entries_for_class(term=self.for_term, class_model=self.class_mod)

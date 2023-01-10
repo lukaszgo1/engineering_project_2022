@@ -1,16 +1,19 @@
 """Named differently than the class
 to avoid conflicts with the `class` keyword.
 """
-import requests
 from typing import (
     ClassVar,
     Optional,
+    TYPE_CHECKING,
 )
 
 import attrs
 
 import backend.models._base_model as bm
-import backend.models.class_to_term_plan
+if TYPE_CHECKING:
+    import backend.models.class_to_term_plan
+import backend.models.institution
+import backend.models._converters as convs_registry
 
 
 @attrs.define(kw_only=True)
@@ -18,17 +21,23 @@ class Class(bm._Owned_model):
 
     get_endpoint: ClassVar[str] = "/get_class"
     get_classesToTermPlan_endpoint: ClassVar[str] = "/get_classesToTermPlan"
+    get_single_end_point: ClassVar[str] = "get_single_class"
     db_table_name: ClassVar[str] = "Classes"
-    id_column_name: ClassVar[str] = "ClassId"
-    owner_col_id_name: ClassVar[str] = "ClassInInstitution"
-    ClassIdentifier: str
-
+    ClassId: Optional[int] = bm.ID_FIELD
 
     @property
-    def assigned_term_plan(self) -> Optional[backend.models.class_to_term_plan.ClassToTermPlan]:
+    def id(self) -> Optional[int]:
+        return self.ClassId
+
+    ClassInInstitution: backend.models.institution.Institution = bm.main_fk_field
+    ClassIdentifier: str
+
+    @property
+    def assigned_term_plan(self) -> "Optional[backend.models.class_to_term_plan.ClassToTermPlan]":
+        import backend.models.class_to_term_plan
         try:
-            return list(backend.models.class_to_term_plan.ClassToTermPlan.from_db(self))[0]
-        except IndexError:
+            return backend.models.class_to_term_plan.ClassToTermPlan.from_end_point_by_id(self.id)
+        except bm.NonExistingEntityRequested:
             return None
 
     def __str__(self) -> str:
@@ -36,9 +45,14 @@ class Class(bm._Owned_model):
 
     @classmethod
     def from_classesToTermPlan_endpoint(cls, owner):
-        query = requests.get('http://127.0.0.1:5000' + cls.get_classesToTermPlan_endpoint + '/' + str(owner.id))
-        records_in_db = query.json()['item']
-        for record in records_in_db:
-            kwargs_with_vals = cls.initializer_params(record)
-            kwargs_with_vals["owner"] = owner.owner  # Classes belong to the inst, not to the term
-            yield cls(**kwargs_with_vals)
+        for record in cls.data_from_end_point(
+            end_point_name=cls.get_classesToTermPlan_endpoint,
+            end_point_id=str(owner.id)
+        ):
+            yield cls.from_json_info(record)
+
+
+convs_registry.from_json_conv.register_structure_hook(
+    cl=Class,
+    func=lambda class_id, typ: Class.from_end_point_by_id(class_id)
+)

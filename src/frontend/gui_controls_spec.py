@@ -15,7 +15,7 @@ from typing import (
 import attrs
 import wx
 
-import frontend.gui_control_factories as control_factories
+import gui_control_factories as control_factories
 
 
 @ attrs.define(frozen=True)
@@ -50,7 +50,9 @@ class OnChangeListener:
             if _.identifier == identifier
         ]
         if len(matching_controls) > 1:
-            raise RuntimeError("Multiple controls with the same identifier were registered")
+            raise RuntimeError(
+                "Multiple controls with the same identifier were registered"
+            )
         return matching_controls[0]
 
 
@@ -186,7 +188,7 @@ class ToolBarItemSpec:
         if not presenter.any_focused:
             self.state = False
         else:
-            if(
+            if (
                 self._obj_spec.should_show is not None
                 and callable(self._obj_spec.should_show)
             ):
@@ -195,7 +197,7 @@ class ToolBarItemSpec:
                 self.state = True
 
     @property
-    def  label(self) -> str:
+    def label(self) -> str:
         return self._obj_spec.name
 
     @property

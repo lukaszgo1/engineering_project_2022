@@ -7,51 +7,44 @@ from typing import (
 
 import wx
 
-import frontend.gui_controls_spec
-import frontend.views._base_views
-import frontend.presenters.schedule_presenter
+import gui_controls_spec
+import views._base_views
 
 
-class AddClassRoomDlg(frontend.views._base_views.BaseEEnterParamsDlg):
+class AddClassRoomDlg(views._base_views.BaseEEnterParamsDlg):
 
     title: str = "Dodaj salę"
     affirmative_btn_label: str = "Dodaj"
     control_specs: Tuple[
-        frontend.gui_controls_spec._ControlWrapperBase, ...
+        gui_controls_spec._ControlWrapperBase, ...
     ] = (
-        frontend.gui_controls_spec.LabeledEditFieldSpec(
+        gui_controls_spec.LabeledEditFieldSpec(
             label="Numer:",
             identifier="ClassRoomIdentifier"
         ),
-        frontend.gui_controls_spec.LabeledComboBoxSpec(
+        gui_controls_spec.LabeledComboBoxSpec(
             label="Główny przedmiot:",
             identifier="PrimaryCourse"
         ),
     )
 
-    def get_values(self) -> Dict:
-        res = super().get_values()
-        res["MainSubjectId"] = res["PrimaryCourse"].id
-        return res
 
+class ClassRoomsListing(views._base_views.BaseEntityList):
 
-class ClassRoomsListing(frontend.views._base_views.BaseEntityList):
-
-    detail_views = (frontend.presenters.schedule_presenter.SchedulePresenter,)
-    buttons_in_view: List[frontend.gui_controls_spec.WXButtonSpec] = [
-        frontend.gui_controls_spec.WXButtonSpec(
+    buttons_in_view: list[gui_controls_spec.WXButtonSpec] = [
+        gui_controls_spec.WXButtonSpec(
             label="Dodaj salę",
             on_press=lambda e: e.EventObject.Parent.presenter.add_new_entry()
         )
     ]
 
-    list_view_columns: List[frontend.gui_controls_spec.WXListColumnSpec] = [
-        frontend.gui_controls_spec.WXListColumnSpec(
+    list_view_columns: list[gui_controls_spec.WXListColumnSpec] = [
+        gui_controls_spec.WXListColumnSpec(
             header_name="Numer",
             width=400,
             value_getter=operator.attrgetter("ClassRoomIdentifier")
         ),
-        frontend.gui_controls_spec.WXListColumnSpec(
+        gui_controls_spec.WXListColumnSpec(
             header_name="Główny kurs",
             width=400,
             value_getter=operator.attrgetter("PrimaryCourse"),
@@ -60,13 +53,13 @@ class ClassRoomsListing(frontend.views._base_views.BaseEntityList):
     ]
 
 
-items_list: Tuple[frontend.gui_controls_spec.MenuItemSpec, ...] = (
-    frontend.gui_controls_spec.MenuItemSpec(
+items_list: tuple[gui_controls_spec.MenuItemSpec, ...] = (
+    gui_controls_spec.MenuItemSpec(
         id=wx.ID_EDIT,
         name="Edytuj",
         on_activate_listener_name="on_edit"
     ),
-    frontend.gui_controls_spec.MenuItemSpec(
+    gui_controls_spec.MenuItemSpec(
         id=wx.ID_DELETE,
         name="Usuń",
         on_activate_listener_name="on_delete"
