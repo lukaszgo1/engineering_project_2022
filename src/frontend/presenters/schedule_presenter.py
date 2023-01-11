@@ -12,6 +12,7 @@ import backend.models.teacher
 import backend.models.teacher_to_subject
 import backend.models.schedule
 import backend.models.class_model
+import api_utils
 
 
 class SchedulePresenter(presenters.base_presenter.BasePresenter):
@@ -21,6 +22,30 @@ class SchedulePresenter(presenters.base_presenter.BasePresenter):
     ] = backend.models.schedule.Schedule
     view_collections = views.schedule
     all_records: list[backend.models.schedule.Schedule]
+
+    def on_move_entries(self):
+        currently_in_term = self.for_term
+        possible_terms = [
+            _ for _ in currently_in_term.TermInInst.terms_in_inst()
+            if _.id != currently_in_term.id
+        ]
+        entries_ids_to_move = [_.id for _ in self.all_records]
+        move_dlg = self.view_collections.MoveScheduleEntriesDlg(parent=self.p)
+        move_dlg.set_values(
+            {"target_term": gui_controls_spec.ComboBoxvaluesSpec(
+                possible_terms
+            )}
+        )
+        with move_dlg as dlg:
+            if dlg.ShowModal() == dlg.AffirmativeId:
+                new_values = dlg.get_values()
+                api_utils.post_data(
+                    end_point_name="move_schedule",
+                    json_data={
+                        "schedule_ids": entries_ids_to_move,
+                        "new_term": new_values["target_term"].id
+                    }
+                )
 
     def get_controls_for_secondary_view(self):
         self.terms_list = gui_controls_spec.LabeledComboBoxSpec(
@@ -161,6 +186,7 @@ class SchedForClassRoomPres(SchedulePresenter):
         yield from self.MODEL_CLASS.entries_in_class_room(term=self.for_term, class_room=self.class_room)
 
     def populate_on_change(self):
+        self.all_records.clear()
         while True:
             if not self.p.list_ctrl.DeleteItem(0):
                 break

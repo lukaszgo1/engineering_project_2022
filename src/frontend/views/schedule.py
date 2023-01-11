@@ -193,6 +193,10 @@ class SchedulesListing(views._base_views.BaseEntityList):
             label="Eksportuj grafik",
             on_press=lambda e: e.EventObject.Parent.presenter.on_export()
         ),
+        gui_controls_spec.WXButtonSpec(
+            label="Przenieś wpisy",
+            on_press=lambda e: e.EventObject.Parent.presenter.on_move_entries()
+        ),
     ]
 
     list_view_columns: list[gui_controls_spec.WXListColumnSpec] = [
@@ -262,6 +266,19 @@ class EditClassDlg(AddScheduleEntryDlg):
 
     title: str = "Edytuj salę lekcyjną"
     affirmative_btn_label: str = "Zapisz zmiany"
+
+
+class MoveScheduleEntriesDlg(views._base_views.BaseEEnterParamsDlg):
+
+    title: str = "Przenieś zajęcia"
+    affirmative_btn_label: str = "Przenieś"
+
+    control_specs = (
+        gui_controls_spec.LabeledComboBoxSpec(
+            identifier="target_term",
+            label="Docelowy semestr"
+        ),
+    )
 
 
 add = AddScheduleEntryDlg
