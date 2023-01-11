@@ -28,3 +28,10 @@ def get_data(
         params=params
     )
     return query.json()
+
+
+def post_data(end_point_name: str, json_data: dict):
+    requests.post(
+        f"{_API_URL}/{end_point_name}",
+        json=json_data
+    )

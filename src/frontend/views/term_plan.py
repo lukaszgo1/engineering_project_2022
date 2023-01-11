@@ -6,35 +6,35 @@ from typing import (
 
 import wx
 
-import frontend.gui_controls_spec
-import frontend.views._base_views
+import gui_controls_spec
+import views._base_views
 
 
-class AddTermPlanDlg(frontend.views._base_views.BaseEEnterParamsDlg):
+class AddTermPlanDlg(views._base_views.BaseEEnterParamsDlg):
 
     title: str = "Dodaj plan semestralny"
     affirmative_btn_label: str = "Dodaj"
     control_specs: Tuple[
-        frontend.gui_controls_spec._ControlWrapperBase, ...
+        gui_controls_spec._ControlWrapperBase, ...
     ] = (
-        frontend.gui_controls_spec.LabeledEditFieldSpec(
+        gui_controls_spec.LabeledEditFieldSpec(
             label="Nazwa:",
             identifier="TermPlanName"
         ),
     )
 
 
-class TermPlanListing(frontend.views._base_views.BaseEntityList):
+class TermPlanListing(views._base_views.BaseEntityList):
 
-    buttons_in_view: List[frontend.gui_controls_spec.WXButtonSpec] = [
-        frontend.gui_controls_spec.WXButtonSpec(
+    buttons_in_view: list[gui_controls_spec.WXButtonSpec] = [
+        gui_controls_spec.WXButtonSpec(
             label="Dodaj nowy plan semestralny",
             on_press=lambda e: e.EventObject.Parent.presenter.add_new_entry()
         )
     ]
 
-    list_view_columns: List[frontend.gui_controls_spec.WXListColumnSpec] = [
-        frontend.gui_controls_spec.WXListColumnSpec(
+    list_view_columns: list[gui_controls_spec.WXListColumnSpec] = [
+        gui_controls_spec.WXListColumnSpec(
             header_name="Nazwa",
             width=400,
             value_getter=operator.attrgetter("TermPlanName")
@@ -42,21 +42,25 @@ class TermPlanListing(frontend.views._base_views.BaseEntityList):
     ]
 
 
-items_list: Tuple[frontend.gui_controls_spec.MenuItemSpec, ...] = (
-    frontend.gui_controls_spec.MenuItemSpec(
+items_list: tuple[gui_controls_spec.MenuItemSpec, ...] = (
+    gui_controls_spec.MenuItemSpec(
         id=wx.ID_EDIT,
         name="Edytuj",
         on_activate_listener_name="on_edit"
     ),
-    frontend.gui_controls_spec.MenuItemSpec(
+    gui_controls_spec.MenuItemSpec(
         id=wx.ID_DELETE,
         name="Usuń",
         on_activate_listener_name="on_delete"
     ),
-    frontend.gui_controls_spec.MenuItemSpec(
+    gui_controls_spec.MenuItemSpec(
         name="Wpisy w podstawie",
         on_activate_listener_name="on_show_plan_entries",
-    )
+    ),
+    gui_controls_spec.MenuItemSpec(
+        name="Przenieś podstawę do semestru",
+        on_activate_listener_name="on_move_term_plan",
+    ),
 )
 
 
@@ -64,6 +68,23 @@ class EditTermPlanDlg(AddTermPlanDlg):
 
     title: str = "Edytuj plan semestralny"
     affirmative_btn_label: str = "Zapisz zmiany"
+
+
+class MoveTermPlanDlg(views._base_views.BaseEEnterParamsDlg):
+
+    title: str = "Przenieś podstawę"
+    affirmative_btn_label: str = "Przenieś"
+
+    control_specs = (
+        gui_controls_spec.LabeledEditFieldSpec(
+            identifier="new_plan_name",
+            label="Nazwa nowej podstawy:"
+        ),
+        gui_controls_spec.LabeledComboBoxSpec(
+            identifier="target_term",
+            label="Docelowy semestr"
+        ),
+    )
 
 
 add = AddTermPlanDlg

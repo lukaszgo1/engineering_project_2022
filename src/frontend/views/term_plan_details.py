@@ -7,8 +7,8 @@ from typing import (
 
 import wx
 
-import frontend.gui_controls_spec
-import frontend.views._base_views
+import gui_controls_spec
+import views._base_views
 
 
 class PossibleDistance(enum.IntEnum):
@@ -23,7 +23,7 @@ class PossibleDistance(enum.IntEnum):
         return "tygodniach"
 
 
-class NonApplicableDistanceCtsDisabler(frontend.gui_controls_spec.OnChangeListener):
+class NonApplicableDistanceCtsDisabler(gui_controls_spec.OnChangeListener):
 
     def __init__(self, presenter, emitting_control) -> None:
         super().__init__(presenter, emitting_control)
@@ -39,46 +39,46 @@ class NonApplicableDistanceCtsDisabler(frontend.gui_controls_spec.OnChangeListen
                 control.set_state(new_weeks_distance_state)
 
 
-class AddTermPlanDetailDlg(frontend.views._base_views.BaseEEnterParamsDlg):
+class AddTermPlanDetailDlg(views._base_views.BaseEEnterParamsDlg):
 
     title: str = "Dodaj wpis do podstawy"
     affirmative_btn_label: str = "Dodaj"
     control_specs: Tuple[
-        frontend.gui_controls_spec._ControlWrapperBase, ...
+        gui_controls_spec._ControlWrapperBase, ...
     ] = (
-        frontend.gui_controls_spec.LabeledComboBoxSpec(
+        gui_controls_spec.LabeledComboBoxSpec(
             label="Przedmiot:",
             identifier="SubjectId"
         ),
-        frontend.gui_controls_spec.SpinControlSpec(
+        gui_controls_spec.SpinControlSpec(
             label="Liczba godzin lekcyjnych:",
             identifier="LessonsAmount"
         ),
-        frontend.gui_controls_spec.SpinControlSpec(
+        gui_controls_spec.SpinControlSpec(
             label="Liczba godzin w tygodniu:",
             identifier="LessonsWeekly"
         ),
-        frontend.gui_controls_spec.SpinControlSpec(
+        gui_controls_spec.SpinControlSpec(
             identifier="MinBlockSize",
             label="Minimalna liczba godzin w bloku:"
         ),
-        frontend.gui_controls_spec.SpinControlSpec(
+        gui_controls_spec.SpinControlSpec(
             label="Maksymalna liczba godzin w bloku:",
             identifier="MaxBlockSize"
         ),
-        frontend.gui_controls_spec.RadioButtonspec(
+        gui_controls_spec.RadioButtonspec(
             label="Odstęp w:",
             choices=list(PossibleDistance),
             identifier="DistanceIn",
             on_change_notifier=NonApplicableDistanceCtsDisabler
         ),
-        frontend.gui_controls_spec.SpinControlSpec(
+        gui_controls_spec.SpinControlSpec(
             label="Odstęp w dniach:",
             identifier="PreferredDistanceInDays",
             max_val=4,
             should_react_to_changes=True
         ),
-        frontend.gui_controls_spec.SpinControlSpec(
+        gui_controls_spec.SpinControlSpec(
             label="Odstęp w tygodniach:",
             identifier="PreferredDistanceInWeeks",
             should_react_to_changes=True
@@ -105,53 +105,53 @@ def _to_string_if_not_none(val_to_convert):
     return ""
 
 
-class TermPlanDetailsListing(frontend.views._base_views.BaseEntityList):
+class TermPlanDetailsListing(views._base_views.BaseEntityList):
 
-    buttons_in_view: List[frontend.gui_controls_spec.WXButtonSpec] = [
-        frontend.gui_controls_spec.WXButtonSpec(
+    buttons_in_view: list[gui_controls_spec.WXButtonSpec] = [
+        gui_controls_spec.WXButtonSpec(
             label="Dodaj nowy wpis do podstawy",
             on_press=lambda e: e.EventObject.Parent.presenter.add_new_entry()
         )
     ]
 
-    list_view_columns: List[frontend.gui_controls_spec.WXListColumnSpec] = [
-        frontend.gui_controls_spec.WXListColumnSpec(
+    list_view_columns: list[gui_controls_spec.WXListColumnSpec] = [
+        gui_controls_spec.WXListColumnSpec(
             header_name="Nazwa przedmiotu",
             width=400,
             value_getter=operator.attrgetter("SubjectId"),
             value_converter=str
         ),
-        frontend.gui_controls_spec.WXListColumnSpec(
+        gui_controls_spec.WXListColumnSpec(
             header_name="Godziny w semestrze",
             width=100,
             value_getter=operator.attrgetter("LessonsAmount"),
             value_converter=str
         ),  
-        frontend.gui_controls_spec.WXListColumnSpec(
+        gui_controls_spec.WXListColumnSpec(
             header_name="Godziny w tygodniu",
             width=100,
             value_getter=operator.attrgetter("LessonsWeekly"),
             value_converter=str
         ),  
-        frontend                .gui_controls_spec.WXListColumnSpec(
+        gui_controls_spec.WXListColumnSpec(
             header_name="Minimalna liczba godzin w bloku",
             width=100,
             value_getter    =operator.attrgetter("MinBlockSize"),
             value_converter=str
         ),
-        frontend                .gui_controls_spec.WXListColumnSpec(
+        gui_controls_spec.WXListColumnSpec(
             header_name="Maksymalna  liczba godzin w bloku",
             width=100,
             value_getter    =operator.attrgetter("MaxBlockSize"),
             value_converter=str
         ),
-        frontend                .gui_controls_spec.WXListColumnSpec(
+        gui_controls_spec.WXListColumnSpec(
             header_name="Odstęp w dniach",
             width=100,  
             value_getter    =operator.attrgetter("PreferredDistanceInDays"),
             value_converter=_to_string_if_not_none
         ),
-        frontend                .gui_controls_spec.WXListColumnSpec(
+        gui_controls_spec.WXListColumnSpec(
             header_name="Odstęp w tygodniach",
             width=100,  
             value_getter    =operator.attrgetter("PreferredDistanceInWeeks"),
@@ -160,13 +160,13 @@ class TermPlanDetailsListing(frontend.views._base_views.BaseEntityList):
     ]
 
 
-items_list: Tuple[frontend.gui_controls_spec.MenuItemSpec, ...] = (
-    frontend.gui_controls_spec.MenuItemSpec(
+items_list: tuple[gui_controls_spec.MenuItemSpec, ...] = (
+    gui_controls_spec.MenuItemSpec(
         id=wx.ID_EDIT,
         name="Edytuj",
         on_activate_listener_name="on_edit"
     ),
-    frontend.gui_controls_spec.MenuItemSpec(
+    gui_controls_spec.MenuItemSpec(
         id=wx.ID_DELETE,
         name="Usuń",
         on_activate_listener_name="on_delete"
