@@ -1,0 +1,266 @@
+\documentclass[12pt,a4paper,oneside]{article}
+\usepackage[QX]{polski}
+
+\usepackage[utf8]{inputenc}
+\usepackage{latexsym}
+\usepackage{tgpagella}
+\usepackage{lmodern}
+\usepackage{amsmath,amsthm,amsfonts,amssymb,alltt}
+\usepackage{epsfig}
+\usepackage{pdflscape}
+\usepackage{caption}
+\usepackage{indentfirst}
+\usepackage{float}
+%\usepackage{showkeys}
+\bibliographystyle{plabbrv}
+
+
+\usepackage{color}
+\usepackage[polish]{babel}
+\usepackage{datetime2}
+\usepackage[x11names,dvipsnames,table]{xcolor}
+\usepackage{hyperref}
+\hypersetup{
+pdfauthor={Łukasz Golonka},
+unicode,  % So that 'Ł' in 'Łukasz' renders correctly in PDF properties
+colorlinks=True,
+linkcolor=darkgray,  % color of internal links (change box color with linkbordercolor)
+citecolor=BrickRed,  % color of links to bibliography
+filecolor=Magenta,   % color of file links
+urlcolor=BlueViolet}	%%pdfpagemode=FullScreen}
+
+% diagramy, grafy itp.
+\usepackage{tikz}
+\usetikzlibrary{positioning}
+\usetikzlibrary{arrows}
+\usetikzlibrary{arrows.meta}
+\usetikzlibrary{chains,fit,shapes,calc}
+\tikzset{main node/.style={circle,fill=blue!20,draw,minimum size=1cm,inner sep=0pt}}
+
+% algorytmy
+\usepackage[linesnumbered,lined,commentsnumbered]{algorithm2e}
+\SetKwFor{ForEach}{for each}{do}{end for}%
+\SetKwFor{ForAll}{for all}{do}{end for}%
+\newenvironment{myalgorithm}
+{\rule{\textwidth}{0.5mm}\\\SetAlCapSty{}\SetAlgoNoEnd\SetAlgoNoLine\begin{algorithm}}{\end{algorithm}\rule{\textwidth}{0.5mm}}
+
+
+%---------------------
+\overfullrule=2mm
+\pagestyle{plain}
+\textwidth=15cm \textheight=685pt \topmargin=-25pt \linespread{1.3} 
+\setlength{\parskip}{0pt}
+\setlength\arraycolsep{2pt}
+\oddsidemargin =0.9cm
+\evensidemargin =-0.1cm
+
+\captionsetup{width=.95\linewidth, justification=centering}
+%---------------------
+
+
+
+
+\newtheorem{tw}{Twierdzenie}[section]
+\newtheorem{lem}[tw]{Lemat}
+\newtheorem{co}[tw]{Wniosek}
+\newtheorem{prop}[tw]{Stwierdzenie}
+\theoremstyle{definition}
+\newtheorem{ex}{Przykład}
+\newtheorem{re}[tw]{Uwaga}
+\newtheorem{de}{Definicja}[section]
+
+
+
+\newcommand{\bC}{{\mathbb C}}
+\newcommand{\bR}{{\mathbb R}}
+\newcommand{\bZ}{{\mathbb Z}}
+\newcommand{\bQ}{{\mathbb Q}}
+\newcommand{\bN}{{\mathbb N}}
+\newcommand{\captionT}[1]{\caption{\textsc{\footnotesize{#1}}}}
+\renewcommand\figurename{Rys.}
+
+\numberwithin{equation}{section}
+\renewcommand{\thefootnote}{\arabic{footnote})}
+%\renewcommand{\thefootnote}{\alph{footnote})}
+
+
+
+\begin{document}
+
+% --------------------------------------------
+% Strona tytułowa
+% --------------------------------------------
+
+\thispagestyle{empty}
+\begin{titlepage}
+\begin{center}\Large
+Uniwersytet Pedagogiczny im. Komisji Edukacji Narodowej \\
+\large
+Instytut Bezpieczeństwa i Informatyki\\
+\vskip 10pt
+\end{center}
+\begin{center}
+\centering \includegraphics[width=0.4\columnwidth]{../resources/images/logoUP_pl.pdf}
+\end{center}
+
+\begin{center}
+ {\bf \fontsize{14pt}{14pt}\selectfont PROJEKT INŻYNIERSKI \\ RAPORT Z REALIZACJI PROJEKTU\\
+ }
+ {\fontsize{12pt}{12pt} raport z okresu: 15.12.2022 - 11.01.2023}
+\end{center}
+\vskip 5pt
+\begin{center}
+ {\bf \fontsize{22pt}{22pt}\selectfont Aplikacja do układania planu zajęć w architekturze klient-serwer}
+\end{center}
+
+\begin{center}
+ {\fontsize{12pt}{12pt}\selectfont wykonany przez: }
+\end{center}
+\begin{center}
+ {\bf\fontsize{16pt}{16pt}\selectfont Łukasza Golonkę}\\
+ {\fontsize{12pt}{12pt}\selectfont Nr albumu: 142881 \\}
+\end{center}
+\begin{center}
+ {\fontsize{12pt}{12pt}\selectfont pod opieką:}\\
+ {\bf\fontsize{12pt}{12pt}\selectfont Doktora inżyniera Łukasza Bibrzyckiego i Doktora inżyniera Marcina Piekarczyka}
+\end{center}
+
+%\mbox{}
+\vspace*{\fill}
+%\vskip 50pt
+\begin{center}
+\large
+Kraków \the\year\\
+(ostatnia aktualizacja: \DTMcurrenttime,\;\today)
+\end{center}
+\end{titlepage}
+\setcounter{page}{0} 
+\newpage\null\thispagestyle{empty}
+%\setcounter{page}{0} 
+%\newpage
+%\thispagestyle{empty}
+
+\tableofcontents
+
+
+\newpage
+
+\section{Informacja na temat postępów prac nad projektem}
+\subsection{Zespół projektowy}
+Łukasz Golonka - \href{mailto:lukasz.golonka@student.up.krakow.pl}{lukasz.golonka@student.up.krakow.pl}
+\subsection{Zrealizowane zadania}
+\paragraph{Łukasz Golonka}
+\begin{itemize}
+\item Uproszczenie menu kontekstowych (sekcja 1.3.1)
+\item Zmiany w okienku wprowadzania podstaw programowych (sekcja 1.3.2)
+\item Dodanie możliwości powiązania klasy z podstawą programową (sekcja 1.3.3)
+\item Dodanie do aplikacji paska narzędzi (sekcja 1.3.4)
+\item Implementacja dodawania lekcji do grafiku (sekcja 1.3.5)
+\item Implementacja serwerowego API programu (sekcja 1.3.6)
+\item Poprawki interfejsu graficznego (sekcja 1.3.7)
+\item Dodanie wyświetlania pozycji w grafiku w dodatkowym widoku dla poszczególnych encji (sekcja 1.3.8)
+\item Dodanie możliwości przenoszenia wpisów pomiędzy semestrami (sekcja 1.3.9)
+\item Dodanie możliwości eksportu grafiku do pliku csv (sekcja 1.3.10)
+\end{itemize}
+
+\subsection {Opis zrealizowanych prac}
+\subsubsection{Łukasz Golonka: Uproszczenie menu kontekstowych}
+Aby zmniejszyć ilość opcji dostępnych z poziomu menu kontekstowego dla każdej z encji usunięto pozycje pozwalającą na jej dodanie. Funkcjonalność ta jest dostępna z poziomu widoku dla każdej z nich, zatem bezcelowym jest jej  duplikowanie.
+Implementacja dostępna w załączniku nr 1
+
+\subsubsection{Łukasz Golonka: Zmiany w okienku wprowadzania podstaw programowych}
+W ramach zadania:
+\begin{itemize}
+\item Dodano informacje o ilości godzin danego przedmiotu w tygodniu
+\item Zmieniono etykietki pól w okienku wprowadzania pozycji tak, aby poprawić jego czytelność
+\end{itemize}
+Implementacja dostępna w załączniku nr 2.
+
+
+\subsubsection{Łukasz Golonka: Dodanie możliwości powiązania klasy z podstawą programową}
+Aby możliwym było proponowanie przedmiotów dla klasy przy układaniu grafiku należało wzbogacić projekt o funkcjonalność powiązywania klasy z podstawą programową.
+\begin{itemize}
+\item jedna klasa może być powiązana tylko z jedną podstawą
+\item proces powiązania i jego usunięcia odbywa się z poziomu paska narzędzi lub menu kontekstowego na liście klas
+\end{itemize}
+Implementacja dostępna w załączniku nr 3
+
+\subsubsection{Łukasz Golonka: Dodanie do aplikacji paska narzędzi}
+Aby ułatwić operatorowi prace opcje dostępne poprzednio tylko z poziomu menu kontekstowego są wyświetlane na pasku narzędzi nad listą encji.
+Przy implementacji zadbano o to ,aby wyświetlane opcje były  zdefiniowane tylko raz zarówno menu kontekstowe jak i pasek narzędzi wykorzystują tę samą listę.
+Upewniono się również, że opcje paska narzędzi, które nie mają zastosowania w danej sytuacji są dynamicznie dezaktywowane przy przemieszczaniu się po liście encji.
+Implementacja dostępna w załącznikach nr 4, 5 i 6 (na dalszym etapie pracy konieczna okazała się zmiana implementacji polegająca na tym, że pasek narzędzi jest częścią konkretnego widoku zamiast być zarządzanym przez globalnego managera odpowiedzialnego za prezentację widoków).
+
+\subsubsection{Łukasz Golonka: Implementacja dodawania lekcji do grafiku}
+Do aplikacji dodano okienko pozwalające na wprowadzanie wpisów do grafiku działające w następujący sposób:
+\begin{itemize}
+\item proponowane są tylko klasy z przypisanymi podstawami programowymi w danym semestrze
+\item dla wybranej klasy proponowane są tylko przedmioty, dla których ma ona wpis w podstawie
+\item dla wybranego przedmiotu proponowani są tylko nauczyciele, którzy mają uprawnienia do nauczania danego przedmiotu
+\item lista proponowanych sal lekcyjnych jest zawężona do pracowni, dla których wybrany przedmiot jest głównym dodatkowo na końcu listy wyświetlane są sale bez przypisanego głównego kursu
+\item w zależności od tego czy wybrany przedmiot ma już dla konkretnej klasy wpisy w grafiku aplikacja dynamicznie proponuje dzień tygodnia bazując na informacji z podstawy programowej o tym co ile dni powinny odbywać się zajęcia
+\item na podstawie wszystkich powyższych danych wyświetlane są wyłącznie godziny, w których w danym dniu dana sala, klasa, i nauczyciel są dostępni
+\item godziny końca zajęć są generowane dynamicznie bazując na informacji z podstawy programowej o tym ile lekcji powinno się odbywać w jednym bloku
+\end{itemize}
+Implementacja dostępna w załącznikach nr 7, 8 i 9.
+
+\subsubsection{Łukasz Golonka: Implementacja serwerowego API programu}
+Aby możliwe było skalowanie projektu w przyszłości należało wzbogacić go o serwerowe API w standardzie JSON, za pośrednictwem którego odbywać się będzie komunikacja z bazą danych.
+Komponent serwerowy jest również odpowiedzialny za generowanie możliwych godzin początku i końca dla lekcji oraz długich przerw.
+Do zaimplementowania API wykorzystana została biblioteka Flask \cite{flask}.
+Do komunikacji z bazą danych wykorzystano bibliotekę SQLAlchemy \cite{alchemy} co znacząco zwiększyło elastyczność projektu.
+Implementacja dostępna w załączniku nr 10.
+
+\subsubsection{Łukasz Golonka: Poprawki interfejsu graficznego}
+W ramach zadania:
+\begin{itemize}
+\item dodano przycisk pozwalający na powrót do poprzedniego widoku w sytuacjach, w których wyświetlone okienko nie jest główną listą instytucji
+\item dodano zapamiętywanie ostatnio wybranej encji przy powrocie do poprzedniego widoku
+\item poprawiono obsługę klawisza ESC w sytuacjach, w których operator korzysta z niego do odrzucenia zmian lub zamknięcia menu kontekstowego
+\end{itemize}
+Implementacja dostępna w załączniku nr 11.
+
+\subsubsection{Łukasz Golonka: Dodanie wyświetlania pozycji w grafiku w dodatkowym widoku dla poszczególnych encji}
+Aby ułatwić operatorowi pracę z aplikacją konieczne jest wyświetlanie wpisów w grafiku przypisanych do poszczególnych encji.
+W ramach zadania zaimplementowano dodatkowe listy (z ang. Master-detail) wyświetlające pozycje w grafiku dla konkretnego nauczyciela, Sali lekcyjnej oraz klasy.
+Domyślnie wyświetlane są pozycje dla pierwszego semestru w instytucji - operator ma oczywiście możliwość wybrania interesującego go semestru z listy  rozwijanej dostępnej na każdym okienku.
+Przy implementacji dotychczasowy sposób wybierania z API modeli okazał się niepraktyczny, skorzystano zatem z biblioteki cattrs \cite{cattrs} pozwalającej na deserializowanie z i serializowanie do JSON-a obiektów data klas.
+Bazuje ona na konwerterach rejestrowanych dla adnotacji typów dla pól w modelach, co pozwala na zdefiniowanie procedury konwersji dla identyfikatora encji z bazy dla konkretnej tabeli reprezentowanej przez typ modelu, a nie, tak jak to miało miejsce przy poprzedniej (ręcznej) implementacji, dla każdej kolumny będącej kluczem obcym.
+Implementacja dostępna w załączniku nr 12.
+
+\subsubsection{Łukasz Golonka: Dodanie możliwości przenoszenia wpisów pomiędzy semestrami}
+Aby możliwe było bazowanie na historycznych wersjach grafiku i podstaw programowych wzbogacono projekt o funkcjonalność przenoszenia ich pomiędzy semestrami.
+Implementacja dostępna w załącznikach 13 i 14.
+
+\subsubsection{Łukasz Golonka: Dodanie możliwości eksportu grafiku do pliku csv}
+W ramach zadania dodano możliwość wyeksportowania wyświetlonych pozycji grafiku do pliku csv.
+Format ten został wybrany ze względu na swoją uniwersalność oraz duże możliwości dowolnego formatowania jakie są dostępne po zaimportowaniu danych do programu MS Excel.
+Implementacja dostępna w załączniku nr 15.
+
+
+\subsection{Załączniki}
+\begin{itemize}
+\item Załącznik nr 1 - \href{https://github.com/lukaszgo1/engineering_project_2022/commit/1807f34678a5940b36bcbea7407224c9ea4142ab}{Commit w repozytorium projektu zmniejszający ilość opcji w menu kontekstowym}
+\item Załącznik nr 2 - \href{https://github.com/lukaszgo1/engineering_project_2022/commit/f4b1f22299328794a14487390e3c698d1763dd00}{Commit w repozytorium projektu modyfikujący okienko dodawania pozycji do grafiku}
+\item Załącznik nr 3 - \href{https://github.com/lukaszgo1/engineering_project_2022/commit/56420ada0b0a60ab2cbd6e5fda40b68271330d3f}{Commit w repozytorium projektu dodający możliwość powiązania klasy z podstawą programową}
+\item Załącznik nr 4 - \href{https://github.com/lukaszgo1/engineering_project_2022/commit/dfb622b84fd1e21f7649248df3dad96013d2deb5}{Commit w repozytorium projektu dodający pasek narzędzi do aplikacji}
+\item Załącznik nr 5 - \href{https://github.com/lukaszgo1/engineering_project_2022/commit/6adeb26e162a14669d40813456dfd21fe0cf4389}{Commit w repozytorium projektu poprawiający wyświetlanie paska narzędzi}
+\item Załącznik nr 6 - \href{https://github.com/lukaszgo1/engineering_project_2022/commit/6f41565d96de18d2d68b954a7334a4056f5cf154}{Commit w repozytorium projektu przenoszący zarządzanie paskiem narzędzi do widoku}
+\item Załącznik nr 7 - \href{https://github.com/lukaszgo1/engineering_project_2022/commit/940233bd6bc5f586b3a83642cd7790683cd380c2}{Commit w repozytorium projektu Wstępnie implementujący okienko wprowadzania pozycji do grafiku}
+\item Załącznik nr 8 \href{https://github.com/lukaszgo1/engineering_project_2022/commit/60bd08e510a6b5598f768242a879fa3ee13644ea}{Commit w repozytorium projektu implementujący generowanie możliwych godzin lekcji po stronie serwera}
+\item Załącznik nr 9 \href{https://github.com/lukaszgo1/engineering_project_2022/commit/1594029c9db0f9ae554b0fe906565e62a55aab31}{Commit w repozytorium projektu implemetujący filtrowanie lekcji bazując na wpisach w grafiku}
+\item Załącznik nr 10 - \href{https://github.com/lukaszgo1/engineering_project_2022/commit/479b4b65ee9b45367f5e7985e87f001f8d60647b}{Commit w repozytorium projektu dodający serwerowe API}
+\item Załącznik nr 11 - \href{https://github.com/lukaszgo1/engineering_project_2022/commit/9842bde11c168d8dacb7b31f03c153d7a1c860ab}{Commit w repozytorium projektu poprawiający interfejs graficzny}
+\item Załącznik nr 12 - \href{https://github.com/lukaszgo1/engineering_project_2022/commit/53bd0562dd965e03288110a23f2c0e64c3819d69}{Commit w repozytorium projektu implementujący wyświetlanie grafiku w widoku master-detail}
+\item Załącznik nr 13 - \href{https://github.com/lukaszgo1/engineering_project_2022/commit/6de614c476dc4f8532b835665cd36c029f43980f}{Commit w repozytorium projektu dodający możliwość przenoszenia podstaw programowych z wpisami pomiędzy semestrami}
+\item Załącznik nr 14 - \href{https://github.com/lukaszgo1/engineering_project_2022/commit/29fdef6a99f6d53d65ed517fe1d4f195728598c1}{Commit w repozytorium projektu dodający możliwość przenoszenia wpisów w grafiku pomiędzy semestrami}
+\item Załącznik nr 15 - \href{https://github.com/lukaszgo1/engineering_project_2022/commit/c5ebee19c096eceb62118d0d7a4f2df3691063be}{Commit w repozytorium projektu dodający możliwość eksportu do csv}
+\end{itemize}
+
+
+
+\renewcommand\refname{Literatura (jeżeli wymagana)}
+\bibliography{references}
+\addcontentsline{toc}{section}{Literatura}
+\end{document}
+
