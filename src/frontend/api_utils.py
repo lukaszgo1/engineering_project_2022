@@ -31,7 +31,7 @@ def get_data(
 
 
 def post_data(end_point_name: str, json_data: dict):
-    requests.post(
+    return requests.post(
         f"{_API_URL}/{end_point_name}",
         json=json_data
     )

@@ -1,7 +1,5 @@
 import wx
 import os
-import csv
-
 
 import sys
 sys.path.append("frontend")
@@ -333,38 +331,6 @@ class SchedulesPanel(wx.Panel):
 		dlg = EditScheduleDLG(self, dbIndex, cols)
 		dlg.ShowModal()
 		dlg.Destroy()
-
-	def on_export(self, event):
-		rows = []
-		header = [
-			"Dzień tygodnia",
-			"Godzina rozpoczęcia",
-			"Godzina zakończenia",
-			"Przedmiot",
-			"Grupa",
-			"Prowadzący",
-			"Sala"
-		]
-		for itemIndex in range(0, self.list_ctrl.ItemCount):
-			row = []
-			for colIndex in range(0, self.list_ctrl.GetColumnCount()):
-				row.append(self.list_ctrl.GetItemText(itemIndex, colIndex))
-			rows.append(row)
-		with wx.FileDialog(
-			self,
-			"Wybierz plik, do którego chcesz zapisać grafik",
-			defaultFile="*.csv",
-			wildcard="plik csv (*.csv)|*.csv",
-			style=wx.FD_SAVE | wx.FD_OVERWRITE_PROMPT
-		) as fileDialog:
-			if fileDialog.ShowModal() == wx.ID_CANCEL:
-				return
-			pathname = fileDialog.GetPath()
-			with open(pathname, "w", newline='', encoding='utf-8') as file:
-				writer = csv.writer(file, delimiter="\t")
-				writer.writerow(header)
-				for row in rows:
-					writer.writerow(row)
 
 
 if __name__ == '__main__':

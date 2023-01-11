@@ -5,11 +5,45 @@ from typing import (
     Tuple,
 )
 
+import attrs
 import wx
 
 import gui_controls_spec
 import views._base_views
 import presentation_manager
+
+
+@attrs.define(kw_only=True)
+class ScheduleExporter:
+
+    label: str
+    default_file_name: str
+    wildcard: str
+    export_end_point: str
+
+    def do_export(self, parent: wx.Window, content_to_write: str) -> None:
+        with wx.FileDialog(
+            parent,
+            "Wybierz plik, do którego chcesz zapisać grafik",
+            defaultFile=self.default_file_name,
+            wildcard=self.wildcard,
+            style=wx.FD_SAVE | wx.FD_OVERWRITE_PROMPT
+        )as fileDialog:
+            if fileDialog.ShowModal() == wx.ID_CANCEL:
+                return None
+            pathname = fileDialog.GetPath()
+            with open(pathname, "w", newline='', encoding='utf-8') as file:
+                file.write(content_to_write)
+
+
+exporters = (
+    ScheduleExporter(
+        label="CSV",
+        wildcard="plik csv (*.csv)|*.csv",
+        default_file_name="*.csv",
+        export_end_point="export_to_csv"
+    ),
+)
 
 
 class LessonsBeginningSetterMixIn:
@@ -277,6 +311,20 @@ class MoveScheduleEntriesDlg(views._base_views.BaseEEnterParamsDlg):
         gui_controls_spec.LabeledComboBoxSpec(
             identifier="target_term",
             label="Docelowy semestr"
+        ),
+    )
+
+
+class ExportScheduleEntriesDlg(views._base_views.BaseEEnterParamsDlg):
+
+    title: str = "Eksportuj grafik"
+    affirmative_btn_label: str = "Eksportuj"
+
+    control_specs = (
+        gui_controls_spec.RadioButtonspec(
+            identifier="exporter_to_use",
+            label="Format:",
+            choices=exporters
         ),
     )
 

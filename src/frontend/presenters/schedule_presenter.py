@@ -23,6 +23,20 @@ class SchedulePresenter(presenters.base_presenter.BasePresenter):
     view_collections = views.schedule
     all_records: list[backend.models.schedule.Schedule]
 
+    def on_export(self):
+        entries_ids_to_export = [_.id for _ in self.all_records]
+        export_dlg = self.view_collections.ExportScheduleEntriesDlg(parent=self.p)
+        with export_dlg as dlg:
+            if dlg.ShowModal() == dlg.AffirmativeId:
+                selected_exporter = dlg.get_values()["exporter_to_use"]
+                exported_content = api_utils.post_data(
+                    end_point_name=selected_exporter.export_end_point,
+                    json_data={
+                        "lesson_ids": entries_ids_to_export,
+                    }
+                )
+                selected_exporter.do_export(self.p, exported_content.text)
+
     def on_move_entries(self):
         currently_in_term = self.for_term
         possible_terms = [

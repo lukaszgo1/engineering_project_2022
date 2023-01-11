@@ -1,4 +1,6 @@
+import csv
 import datetime
+import io
 
 from flask import jsonify
 from app import app, db
@@ -41,6 +43,53 @@ def move_schedule():
         db.session.add(movedSchedule)
         db.session.commit()
     return ''
+
+
+@app.route('/export_to_csv', methods=['POST'])
+def export_to_csv():
+    weekDays = {
+        0: 'Poniedziałek',
+        1: 'Wtorek',
+        2: 'środa',
+        3: 'Czwartek',
+        4: 'Piątek',
+        5: 'Sobota',
+        6: 'Niedziela'
+    }
+    header = [
+        "Dzień tygodnia",
+        "Godzina rozpoczęcia",
+        "Godzina zakończenia",
+        "Przedmiot",
+        "Grupa",
+        "Prowadzący",
+        "Sala"
+    ]
+    rows = []
+    for id in flask.request.json['lesson_ids']:
+        lesson = Schedule.query.join(Subjects, Schedule.SubjectId == Subjects.SubjectId).join(Classes, Schedule.ClassId == Classes.ClassId)\
+            .join(Teachers, Schedule.TeacherId == Teachers.TeacherId).join(ClassRooms, Schedule.ClassRoomId == ClassRooms.ClassRoomId).filter(Schedule.LessonId==id).with_entities(
+            Schedule.WeekDay, Schedule.LessonStartingHour, Schedule.LessonEndingHour, Subjects.SubjectName,
+            Classes.ClassIdentifier, Teachers.FirstName, Teachers.LastName, ClassRooms.ClassRoomIdentifier
+        ).first()
+        row = [
+            weekDays[lesson.WeekDay],
+            lesson.LessonStartingHour,
+            lesson.LessonEndingHour,
+            lesson.SubjectName,
+            lesson.ClassIdentifier,
+            ' '.join((lesson.FirstName, lesson.LastName)),
+            lesson.ClassRoomIdentifier
+        ]
+        rows.append(row)
+    if not rows:
+        return ""
+    in_memory_file = io.StringIO(newline="")
+    writer = csv.writer(in_memory_file, delimiter="\t")
+    writer.writerow(header)
+    for row in rows:
+        writer.writerow(row)
+    return in_memory_file.getvalue()
 
 
 @app.route('/get_institutions')
