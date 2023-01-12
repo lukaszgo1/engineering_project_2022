@@ -14,6 +14,7 @@ import backend.models.class_room
 import backend.models.institution
 import backend.models.Term
 import frontend.api_utils
+import backend.models._converters as convs_registry
 
 
 @enum.unique
@@ -39,6 +40,7 @@ class WeekDay(enum.IntEnum):
         }[self]
 
 
+@convs_registry.create_unstructuring_converters
 @attrs.define(kw_only=True)
 class Schedule(bm._Owned_model):
 
@@ -84,13 +86,3 @@ class Schedule(bm._Owned_model):
             params={"class_id": class_model.id, "term_id": term.id}
         )["item"]:
             yield cls.from_json_info(record)
-
-    def cols_for_insert(self) -> dict:
-        res =  super().cols_for_insert()
-        res["WeekDay"] = res["WeekDay"].value
-        res["TeacherId"] = res["TeacherId"].id
-        res["SubjectId"] = res["SubjectId"].id
-        res["ClassId"] = res["ClassId"].id
-        res["ClassRoomId"] = res["ClassRoomId"].id
-        res["InTerm"] = res["InTerm"].id
-        return res

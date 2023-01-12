@@ -10,6 +10,7 @@ import backend.models._converters as convs_registry
 import backend.models.institution
 
 
+@convs_registry.create_unstructuring_converters
 @attrs.define(kw_only=True)
 class Subject(bm._Owned_model):
 

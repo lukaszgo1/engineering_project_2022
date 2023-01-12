@@ -16,6 +16,7 @@ import backend.models.institution
 import backend.models._converters as convs_registry
 
 
+@convs_registry.create_unstructuring_converters
 @attrs.define(kw_only=True)
 class Class(bm._Owned_model):
 

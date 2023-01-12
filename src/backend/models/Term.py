@@ -25,6 +25,7 @@ def _http_date_to_py_date(date_str: str) -> datetime.date:
     return datetime.date(year, month, day)
 
 
+@convs_registry.create_unstructuring_converters
 @attrs.define(kw_only=True)
 class Term(bm._Owned_model):
 

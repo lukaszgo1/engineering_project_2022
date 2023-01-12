@@ -9,8 +9,10 @@ import attrs
 import backend.models._base_model as bm
 import backend.models.TermPlan
 import backend.models.class_model
+import backend.models._converters as convs_registry
 
 
+@convs_registry.create_unstructuring_converters
 @attrs.define(kw_only=True)
 class ClassToTermPlan(bm._Owned_model):
 
@@ -29,11 +31,6 @@ class ClassToTermPlan(bm._Owned_model):
     @property
     def id(self) -> Optional[int]:
         return self.ClassToTermPlanId
-
-    def cols_for_insert(self) -> dict:
-        res = super().cols_for_insert()
-        res["TermPlanId"] = self.AssociatedTermPlanId
-        return res
 
     def __str__(self) -> str:
         return str(self.TermPlanId)

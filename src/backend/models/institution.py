@@ -16,6 +16,7 @@ if TYPE_CHECKING:
 import backend.models._converters as convs_registry
 
 
+@convs_registry.create_unstructuring_converters
 @attrs.define(kw_only=True)
 class Institution(bm._BaseModel):
 

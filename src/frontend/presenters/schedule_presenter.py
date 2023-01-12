@@ -100,17 +100,9 @@ class SchedulePresenter(presenters.base_presenter.BasePresenter):
         )
 
     def create_new_entity_from_user_input(self, entered_vals):
-        return self.MODEL_CLASS(
-            WeekDay=entered_vals["WeekDay"],
-            owner=self.term_in_inst,
-            ClassId=entered_vals["ClassId"],
-            ClassRoomId=entered_vals["ClassRoomId"],
-            InTerm=self.for_term,
-            LessonEndingHour=entered_vals["LessonEndingHour"],
-            LessonStartingHour=entered_vals["LessonStartingHour"],
-            TeacherId=entered_vals["TeacherId"],
-            SubjectId=entered_vals["SubjectId"]
-        )
+        entered_vals[self.MODEL_CLASS.fk_field_name()] = self.term_in_inst
+        entered_vals["InTerm"] = self.for_term
+        return self.MODEL_CLASS.from_normalized_record(entered_vals)
 
     def get_possible_ends_for_lesson(
         self,

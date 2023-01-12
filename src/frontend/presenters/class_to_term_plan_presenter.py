@@ -27,11 +27,8 @@ class ClassToTermPlanPresenter(presenters.base_presenter.BasePresenter):
         presentation_manager.get_presentation_manager()._active_presenters[-1].set_toolbar_icons_state()
 
     def create_new_entity_from_user_input(self, entered_vals):
-        return self.MODEL_CLASS(
-            TermPlanId=entered_vals["TermPlanId"],
-            AssociatedTermPlanId=entered_vals["TermPlanId"].id,
-            owner=self.parent_presenter.focused_entity
-        )
+        entered_vals[self.MODEL_CLASS.fk_field_name()] = self.parent_presenter.focused_entity
+        return self.MODEL_CLASS.from_normalized_record(entered_vals)
 
     def get_all_records(self):
         raise RuntimeError(

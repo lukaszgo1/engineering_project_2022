@@ -1,7 +1,6 @@
 from typing import (
     ClassVar,
     Dict,
-    Final,
     Optional,
     Tuple,
 )
@@ -14,10 +13,12 @@ from collections.abc import (
 )
 
 import attrs
+import cattrs
 
 import backend.app_constants
 import backend.models._converters as convs_registry
 import frontend.api_utils
+import backend.models._constants as constants
 
 
 class NonExistingEntityRequested(Exception):
@@ -25,25 +26,27 @@ class NonExistingEntityRequested(Exception):
     """Raised when the entity with the given id does not exist in db."""
 
 
-USER_PRESENTABLE_FIELD_NAME: Final[str] = "userPresentable"
-
-
-# When / if refactoring consider to use enum.
-ID_FIELD_NAME: Final[str] = "is_id_columnt"
-MAIN_FK_FIELD_NAME: Final[str] = "main_fk"
-
 ID_FIELD = attrs.field(
         default=None,
-        metadata={ID_FIELD_NAME: True},
+        metadata={constants.FieldSpecifiers.ID_COLUMN: True},
 )
-main_fk_field = attrs.field(metadata={MAIN_FK_FIELD_NAME: True})
+main_fk_field = attrs.field(metadata={constants.FieldSpecifiers.MAIN_FK_COLUMN: True})
 
 
 @attrs.define(kw_only=True)
 class _BaseModel:
 
+    # This is present only for type annotations and auto complete in id's.
+    # The actual converter instance
+    # is added dynamically by the decorator at runtime.
+    to_json_converter: ClassVar[cattrs.Converter]
+
     @classmethod
-    def field_name_for_truthy_metadata(cls, metadata_key: str) -> str:
+    def id_field_name(cls):
+        return cls.field_name_for_truthy_metadata(constants.FieldSpecifiers.ID_COLUMN)
+
+    @classmethod
+    def field_name_for_truthy_metadata(cls, metadata_key: constants.FieldSpecifiers) -> str:
         for field_name, field_atrs in attrs.fields_dict(cls).items():
             if field_atrs.metadata.get(metadata_key, False):
                 return field_name
@@ -61,22 +64,16 @@ class _BaseModel:
         If this is returns `None` the record has not been inserted into database yet.
         """
 
-    @id.setter
-    def id(self, new_val: Optional[int]) -> None:
+    def set_id(self, new_val: Optional[int]) -> None:
         setattr(
             self,
-            self.field_name_for_truthy_metadata(ID_FIELD_NAME),
+            self.field_name_for_truthy_metadata(constants.FieldSpecifiers.ID_COLUMN),
             new_val
         )
 
     db_table_name: ClassVar[str]
-    id_column_name: ClassVar[str]
     get_endpoint: ClassVar[str]
     get_single_end_point: ClassVar[str]
-
-    @staticmethod
-    def is_user_presentable(field) -> bool:
-        return field.metadata.get(USER_PRESENTABLE_FIELD_NAME, True)
 
     @staticmethod
     def records_from_end_point(end_point_name):
@@ -105,36 +102,39 @@ class _BaseModel:
 
     @classmethod
     def from_normalized_record(cls, record) -> Self:
-        return convs_registry.DEFAULT_CONV.structure_attrs_fromdict(
-            record, cls
-        )
+        return cls(**record)
 
     def cols_to_attrs(self):
+
+        def should_include(attr, val) -> bool:
+            return attr.metadata.get(constants.FieldSpecifiers.ID_COLUMN, True)
+
         return attrs.asdict(
             inst=self,
-            filter=lambda attr, val: self.is_user_presentable(attr),
+            filter=should_include,
             recurse=False
         )
 
     def cols_for_insert(self) -> Dict:
-        return self.cols_to_attrs()
+        res = self.to_json_converter.unstructure(self)
+        return res
 
     def insert_into_db(self) -> None:
         if self.id is not None:
             raise RuntimeError("Model is already in the database.")
         current_instance_vars = self.cols_for_insert()
-        self.id = backend.app_constants.active_db_con.insert(
+        self.set_id(backend.app_constants.active_db_con.insert(
             table_name=self.db_table_name,
             col_names=tuple(current_instance_vars.keys()),
             col_values=tuple(current_instance_vars.values())
-        )
+        ))
 
     def update_db_record(self, new_values: Dict) -> None:
         backend.app_constants.active_db_con.update_record(
             table_name=self.db_table_name,
             col_names=tuple(new_values.keys()),
             col_values=tuple(new_values.values()),
-            condition_str=f"{self.id_column_name} = ?",
+            condition_str=f"{self.id_field_name()} = ?",
             condition_values=(str(self.id),)
         )
         # Update the instance fields only after
@@ -145,7 +145,7 @@ class _BaseModel:
     def delete_db_record(self) -> None:
         backend.app_constants.active_db_con.delete_record(
             table_name=self.db_table_name,
-            condition_string=f"{self.id_column_name} = ?",
+            condition_string=f"{self.id_field_name()} = ?",
             seq=(str(self.id),)
         )
 
@@ -160,7 +160,7 @@ class _Owned_model(_BaseModel):
 
     @classmethod
     def fk_field_name(cls):
-        return cls.field_name_for_truthy_metadata(MAIN_FK_FIELD_NAME)
+        return cls.field_name_for_truthy_metadata(constants.FieldSpecifiers.MAIN_FK_COLUMN)
 
     @owner.setter
     def owner(self, new_val):
@@ -169,13 +169,6 @@ class _Owned_model(_BaseModel):
             self.fk_field_name(),
             new_val
         )
-
-    owner_col_id_name: ClassVar[str]
-
-    def cols_for_insert(self) -> Dict:
-        res = super().cols_for_insert()
-        res[self.owner_col_id_name] = self.owner.id
-        return res
 
     @staticmethod
     def data_from_end_point(end_point_name, end_point_id):
