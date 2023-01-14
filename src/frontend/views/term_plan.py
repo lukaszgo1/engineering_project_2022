@@ -54,12 +54,8 @@ items_list: tuple[gui_controls_spec.MenuItemSpec, ...] = (
         on_activate_listener_name="on_delete"
     ),
     gui_controls_spec.MenuItemSpec(
-        name="Wpisy w podstawie",
+        name="Wpisy w planie semestralnym",
         on_activate_listener_name="on_show_plan_entries",
-    ),
-    gui_controls_spec.MenuItemSpec(
-        name="Przenieś podstawę do semestru",
-        on_activate_listener_name="on_move_term_plan",
     ),
 )
 

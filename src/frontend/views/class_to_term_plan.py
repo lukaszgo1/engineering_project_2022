@@ -4,13 +4,13 @@ import views._base_views
 
 class AssignClassToTermPlanDlg(views._base_views.BaseEEnterParamsDlg):
 
-    title: str = "Powiąż z podstawą"
+    title: str = "Powiąż z planem semestralnym"
     affirmative_btn_label: str = "Powiąż"
     control_specs: tuple[
         gui_controls_spec._ControlWrapperBase, ...
     ] = (
         gui_controls_spec.LabeledComboBoxSpec(
-            label="Podstawy:",
+            label="plany semestralne:",
             identifier="TermPlanId"
         ),
     )
@@ -18,7 +18,7 @@ class AssignClassToTermPlanDlg(views._base_views.BaseEEnterParamsDlg):
 
 class RemoveAssignmentDlg(AssignClassToTermPlanDlg):
 
-    title: str = "Usuń powiązanie z podstawą"
+    title: str = "Usuń powiązanie z planem"
     affirmative_btn_label: str = "Usuń powiązanie"
 
 

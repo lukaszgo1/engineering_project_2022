@@ -74,7 +74,7 @@ items_list: tuple[gui_controls_spec.MenuItemSpec, ...] = (
         on_activate_listener_name="on_delete"
     ),
     gui_controls_spec.MenuItemSpec(
-        name="Podstawy programowe w semestrze",
+        name="Wyświetl plany semestralne",
         on_activate_listener_name="on_show_term_plans"
     ),
     gui_controls_spec.MenuItemSpec(

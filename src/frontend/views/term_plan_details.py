@@ -41,7 +41,7 @@ class NonApplicableDistanceCtsDisabler(gui_controls_spec.OnChangeListener):
 
 class AddTermPlanDetailDlg(views._base_views.BaseEEnterParamsDlg):
 
-    title: str = "Dodaj wpis do podstawy"
+    title: str = "Dodaj wpis do planu semestralnego"
     affirmative_btn_label: str = "Dodaj"
     control_specs: Tuple[
         gui_controls_spec._ControlWrapperBase, ...
@@ -109,7 +109,7 @@ class TermPlanDetailsListing(views._base_views.BaseEntityList):
 
     buttons_in_view: list[gui_controls_spec.WXButtonSpec] = [
         gui_controls_spec.WXButtonSpec(
-            label="Dodaj nowy wpis do podstawy",
+            label="Dodaj nowy wpis do planu semestralnego",
             on_press=lambda e: e.EventObject.Parent.presenter.add_new_entry()
         )
     ]
@@ -176,7 +176,7 @@ items_list: tuple[gui_controls_spec.MenuItemSpec, ...] = (
 
 class EditTermPlanDetailDlg(AddTermPlanDetailDlg):
 
-    title: str = "Edytuj wpis w podstawie"
+    title: str = "Edytuj wpis w planie semestralnym"
     affirmative_btn_label: str = "Zapisz zmiany"
 
 
