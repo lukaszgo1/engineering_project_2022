@@ -70,23 +70,6 @@ class EditTermPlanDlg(AddTermPlanDlg):
     affirmative_btn_label: str = "Zapisz zmiany"
 
 
-class MoveTermPlanDlg(views._base_views.BaseEEnterParamsDlg):
-
-    title: str = "Przenieś podstawę"
-    affirmative_btn_label: str = "Przenieś"
-
-    control_specs = (
-        gui_controls_spec.LabeledEditFieldSpec(
-            identifier="new_plan_name",
-            label="Nazwa nowej podstawy:"
-        ),
-        gui_controls_spec.LabeledComboBoxSpec(
-            identifier="target_term",
-            label="Docelowy semestr"
-        ),
-    )
-
-
 add = AddTermPlanDlg
 listing = TermPlanListing
 context_menu_spec = items_list

@@ -78,8 +78,8 @@ items_list: tuple[gui_controls_spec.MenuItemSpec, ...] = (
         on_activate_listener_name="on_show_term_plans"
     ),
     gui_controls_spec.MenuItemSpec(
-        name="Dodaj zajęcia do grafiku",
-        on_activate_listener_name="on_add_new_schedule_entry"
+        name="Klonuj semestr",
+        on_activate_listener_name="on_clone_term"
     ),
 )
 
@@ -88,6 +88,19 @@ class EditTermDlg(AddTermDlg):
 
     title: str = "Edytuj semestr"
     affirmative_btn_label: str = "Zapisz zmiany"
+
+
+class CloneTermDlg(views._base_views.BaseEEnterParamsDlg):
+
+    title: str = "Klonuj semestr"
+    affirmative_btn_label: str = "Klonuj"
+
+    control_specs = (
+        gui_controls_spec.LabeledComboBoxSpec(
+            identifier="target_term",
+            label="Docelowy semestr"
+        ),
+    )
 
 
 add = AddTermDlg

@@ -8,6 +8,8 @@ from typing import (
 import presenters.base_presenter
 import views.terms
 import backend.models.Term
+import gui_controls_spec
+import api_utils
 
 
 class TermsPresenter(presenters.base_presenter.BasePresenter):
@@ -33,6 +35,29 @@ class TermsPresenter(presenters.base_presenter.BasePresenter):
         yield from self.MODEL_CLASS.from_endpoint(
             self.parent_presenter.focused_entity
         )
+
+    def on_clone_term(self):
+        currently_in_term = self.focused_entity
+        possible_terms = [
+            _ for _ in currently_in_term.TermInInst.terms_in_inst()
+            if _.id != currently_in_term.id
+        ]
+        move_dlg = self.view_collections.CloneTermDlg(parent=self.p)
+        move_dlg.set_values(
+            {"target_term": gui_controls_spec.ComboBoxvaluesSpec(
+                possible_terms
+            )}
+        )
+        with move_dlg as dlg:
+            if dlg.ShowModal() == dlg.AffirmativeId:
+                new_values = dlg.get_values()
+                api_utils.post_data(
+                    end_point_name="move_from_term",
+                    json_data={
+                        "orig_term": currently_in_term.id,
+                        "new_term": new_values["target_term"].id
+                    }
+                )
 
     def on_show_term_plans(self):
         import presentation_manager

@@ -8,40 +8,37 @@ from .models import *
 import flask
 
 
-@app.route('/move_termPlan', methods=['POST'])
-def move_termPlan():
-    orig_term_plan_id = flask.request.get_json()['term_plan_id']
-    origTermPlan = TermPlan.query.filter_by(TermPlanId=orig_term_plan_id).first()
-    movedTermPlan = TermPlan(TermPlanName=flask.request.get_json()['new_term_plan_name'])
-    movedTermPlan.AppliesToTerm = flask.request.json['term_id']
-    db.session.add(movedTermPlan)
-    db.session.commit()
-    origTermPlanDetails = TermPlanDetails.query.filter_by(TermPlanId=orig_term_plan_id).all()
-    for detail in origTermPlanDetails:
-        movedTermPlanDetail = TermPlanDetails(
-            TermPlanId=movedTermPlan.TermPlanId, SubjectId=detail.SubjectId,
-            LessonsAmount=detail.LessonsAmount, LessonsWeekly=detail.LessonsWeekly,
-            MinBlockSize=detail.MinBlockSize, MaxBlockSize=detail.MaxBlockSize,
-            PreferredDistanceInDays=detail.PreferredDistanceInDays, PreferredDistanceInWeeks=detail.PreferredDistanceInWeeks
-        )
-        db.session.add(movedTermPlanDetail)
-        db.session.commit()
-    return ''
-
-
-@app.route('/move_schedule', methods=['POST'])
-def move_schedule():
-    for id in flask.request.json['schedule_ids']:
-        origSchedule = Schedule.query.filter_by(LessonId=id).first()
+@app.route('/move_from_term', methods=['POST'])
+def move_from_term():
+    term = Terms.query.filter_by(TermId=flask.request.get_json()['orig_term']).first()
+    schedules = Schedule.query.filter_by(InTerm=flask.request.get_json()['orig_term']).all()
+    for sched in schedules:
         movedSchedule = Schedule(
-            InstitutionId=origSchedule.InstitutionId, WeekDay=origSchedule.WeekDay,
-            LessonStartingHour=origSchedule.LessonStartingHour, LessonEndingHour=origSchedule.LessonEndingHour,
-            TeacherId=origSchedule.TeacherId, SubjectId=origSchedule.SubjectId,
-            ClassId=origSchedule.ClassId, ClassRoomId=origSchedule.ClassRoomId,
-            InTerm=flask.request.json['new_term']
+            InstitutionId=sched.InstitutionId, WeekDay=sched.WeekDay,
+            LessonStartingHour=sched.LessonStartingHour, LessonEndingHour=sched.LessonEndingHour,
+            TeacherId=sched.TeacherId, SubjectId=sched.SubjectId,
+            ClassId=sched.ClassId, ClassRoomId=sched.ClassRoomId,
+            InTerm=flask.request.get_json()['new_term']
         )
         db.session.add(movedSchedule)
         db.session.commit()
+    termPlans = TermPlan.query.filter_by(AppliesToTerm=flask.request.get_json()['orig_term']).all()
+    for orig_term_plan in termPlans:
+        movedTermPlan = TermPlan(TermPlanName=f"{orig_term_plan.TermPlanName}_{term.TermName}")
+        movedTermPlan.AppliesToTerm = flask.request.get_json()['new_term']
+        db.session.add(movedTermPlan)
+        db.session.commit()
+        origTermPlanDetails = TermPlanDetails.query.filter_by(TermPlanId=orig_term_plan.TermPlanId).all()
+        for detail in origTermPlanDetails:
+            movedTermPlanDetail = TermPlanDetails(
+                TermPlanId=movedTermPlan.TermPlanId, SubjectId=detail.SubjectId,
+                LessonsAmount=detail.LessonsAmount, LessonsWeekly=detail.LessonsWeekly,
+                MinBlockSize=detail.MinBlockSize, MaxBlockSize=detail.MaxBlockSize,
+                PreferredDistanceInDays=detail.PreferredDistanceInDays,
+                PreferredDistanceInWeeks=detail.PreferredDistanceInWeeks
+            )
+            db.session.add(movedTermPlanDetail)
+            db.session.commit()
     return ''
 
 

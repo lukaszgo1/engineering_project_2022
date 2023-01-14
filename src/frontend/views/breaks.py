@@ -77,11 +77,6 @@ class BreaksListing(views._base_views.BaseEntityList):
 
 items_list: tuple[gui_controls_spec.MenuItemSpec, ...] = (
     gui_controls_spec.MenuItemSpec(
-        id=wx.ID_EDIT,
-        name="Edytuj",
-        on_activate_listener_name="on_edit"
-    ),
-    gui_controls_spec.MenuItemSpec(
         id=wx.ID_DELETE,
         name="Usuń",
         on_activate_listener_name="on_delete"

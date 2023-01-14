@@ -37,30 +37,6 @@ class SchedulePresenter(presenters.base_presenter.BasePresenter):
                 )
                 selected_exporter.do_export(self.p, exported_content.text)
 
-    def on_move_entries(self):
-        currently_in_term = self.for_term
-        possible_terms = [
-            _ for _ in currently_in_term.TermInInst.terms_in_inst()
-            if _.id != currently_in_term.id
-        ]
-        entries_ids_to_move = [_.id for _ in self.all_records]
-        move_dlg = self.view_collections.MoveScheduleEntriesDlg(parent=self.p)
-        move_dlg.set_values(
-            {"target_term": gui_controls_spec.ComboBoxvaluesSpec(
-                possible_terms
-            )}
-        )
-        with move_dlg as dlg:
-            if dlg.ShowModal() == dlg.AffirmativeId:
-                new_values = dlg.get_values()
-                api_utils.post_data(
-                    end_point_name="move_schedule",
-                    json_data={
-                        "schedule_ids": entries_ids_to_move,
-                        "new_term": new_values["target_term"].id
-                    }
-                )
-
     def get_controls_for_secondary_view(self):
         self.terms_list = gui_controls_spec.LabeledComboBoxSpec(
             identifier="terms",

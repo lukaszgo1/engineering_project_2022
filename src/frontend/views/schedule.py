@@ -227,10 +227,6 @@ class SchedulesListing(views._base_views.BaseEntityList):
             label="Eksportuj grafik",
             on_press=lambda e: e.EventObject.Parent.presenter.on_export()
         ),
-        gui_controls_spec.WXButtonSpec(
-            label="Przenieś wpisy",
-            on_press=lambda e: e.EventObject.Parent.presenter.on_move_entries()
-        ),
     ]
 
     list_view_columns: list[gui_controls_spec.WXListColumnSpec] = [
@@ -284,35 +280,11 @@ class SchedulesListing(views._base_views.BaseEntityList):
 
 items_list: tuple[gui_controls_spec.MenuItemSpec, ...] = (
     gui_controls_spec.MenuItemSpec(
-        id=wx.ID_EDIT,
-        name="Edytuj",
-        on_activate_listener_name="on_edit"
-    ),
-    gui_controls_spec.MenuItemSpec(
         id=wx.ID_DELETE,
         name="Usuń",
         on_activate_listener_name="on_delete"
     ),
 )
-
-
-class EditClassDlg(AddScheduleEntryDlg):
-
-    title: str = "Edytuj salę lekcyjną"
-    affirmative_btn_label: str = "Zapisz zmiany"
-
-
-class MoveScheduleEntriesDlg(views._base_views.BaseEEnterParamsDlg):
-
-    title: str = "Przenieś zajęcia"
-    affirmative_btn_label: str = "Przenieś"
-
-    control_specs = (
-        gui_controls_spec.LabeledComboBoxSpec(
-            identifier="target_term",
-            label="Docelowy semestr"
-        ),
-    )
 
 
 class ExportScheduleEntriesDlg(views._base_views.BaseEEnterParamsDlg):
@@ -332,4 +304,3 @@ class ExportScheduleEntriesDlg(views._base_views.BaseEEnterParamsDlg):
 add = AddScheduleEntryDlg
 listing = SchedulesListing
 context_menu_spec = items_list
-edit = EditClassDlg
