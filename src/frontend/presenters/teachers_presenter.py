@@ -33,6 +33,8 @@ class TeachersPresenter(presenters.base_presenter.BasePresenter):
         return self.MODEL_CLASS.from_normalized_record(entered_vals)
 
     def on_new_term_selected(self, term_obj):
+        if term_obj is None:
+            return
         self.det.for_term = term_obj
         self.det.term_in_inst = self.det.for_term.owner
         self.det.populate_on_change()
@@ -43,7 +45,10 @@ class TeachersPresenter(presenters.base_presenter.BasePresenter):
 
     def handle_detail_presenter(self, detail_pres):
         self.det = detail_pres
-        self.det.teacher =  self.focused_entity
+        try:
+            self.det.teacher =  self.focused_entity
+        except RuntimeError:
+            pass
         c = None
         for c in detail_pres.conts:
             if c.identifier == "terms":

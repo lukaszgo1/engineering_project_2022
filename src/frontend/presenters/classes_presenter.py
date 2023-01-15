@@ -26,6 +26,8 @@ class ClassesPresenter(presenters.base_presenter.BasePresenter):
         self.parent_presenter = parent_presenter
 
     def on_new_term_selected(self, term_obj):
+        if term_obj  is None:
+            return
         self.det.for_term = term_obj
         self.det.term_in_inst = self.det.for_term.owner
         self.det.populate_on_change()
@@ -36,7 +38,10 @@ class ClassesPresenter(presenters.base_presenter.BasePresenter):
 
     def handle_detail_presenter(self, detail_pres):
         self.det = detail_pres
-        self.det.class_mod =  self.focused_entity
+        try:
+            self.det.class_mod =  self.focused_entity
+        except RuntimeError:
+            pass
         c = None
         for c in detail_pres.conts:
             if c.identifier == "terms":

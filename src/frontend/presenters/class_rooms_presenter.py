@@ -29,6 +29,8 @@ class ClassRoomsPresenter(presenters.base_presenter.BasePresenter):
         return presentation_manager.get_presentation_manager()._active_presenters[-2].focused_entity
 
     def on_new_term_selected(self, term_obj):
+        if term_obj is None:
+            return
         self.det.for_term = term_obj
         self.det.term_in_inst = self.det.for_term.owner
         self.det.populate_on_change()
@@ -39,7 +41,10 @@ class ClassRoomsPresenter(presenters.base_presenter.BasePresenter):
 
     def handle_detail_presenter(self, detail_pres):
         self.det = detail_pres
-        self.det.class_room =  self.focused_entity
+        try:
+            self.det.class_room =  self.focused_entity
+        except RuntimeError:  # Empty list - we cannot continue in that case
+            pass
         c = None
         for c in detail_pres.conts:
             if c.identifier == "terms":
