@@ -165,7 +165,10 @@ class SchedulePresenter(presenters.base_presenter.BasePresenter):
 class SchedForClassRoomPres(SchedulePresenter):
 
     def get_all_records_for_detail(self):
-        yield from self.MODEL_CLASS.entries_in_class_room(term=self.for_term, class_room=self.class_room)
+        try:
+            yield from self.MODEL_CLASS.entries_in_class_room(term=self.for_term, class_room=self.class_room)
+        except AttributeError:
+            return []
 
     def populate_on_change(self):
         self.all_records.clear()
@@ -182,10 +185,16 @@ class SchedForClassRoomPres(SchedulePresenter):
 class SchedForTeacherPres(SchedForClassRoomPres):
 
     def get_all_records_for_detail(self):
-        yield from self.MODEL_CLASS.entries_for_teacher(term=self.for_term, teacher=self.teacher)
+        try:
+            yield from self.MODEL_CLASS.entries_for_teacher(term=self.for_term, teacher=self.teacher)
+        except AttributeError:
+            return []
 
 
 class SchedForClassPres(SchedForClassRoomPres):
 
     def get_all_records_for_detail(self):
-        yield from self.MODEL_CLASS.entries_for_class(term=self.for_term, class_model=self.class_mod)
+        try:
+            yield from self.MODEL_CLASS.entries_for_class(term=self.for_term, class_model=self.class_mod)
+        except AttributeError:
+            return []
