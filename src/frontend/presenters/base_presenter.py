@@ -130,7 +130,8 @@ class BasePresenter:
             dlg: self.view_collections.edit
             if dlg.ShowModal() == dlg.AffirmativeId:
                 new_values = dlg.get_values()
-                self.focused_entity.update_db_record(new_values=new_values)
+                updated_model = self.focused_entity.update_db_record(new_values=new_values)
+                self.all_records[self._focused_entity_index] = updated_model
                 self.p.update_shown_entity(
                     self.focused_entity,
                     self._focused_entity_index

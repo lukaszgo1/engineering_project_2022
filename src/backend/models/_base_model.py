@@ -129,18 +129,17 @@ class _BaseModel:
             col_values=tuple(current_instance_vars.values())
         ))
 
-    def update_db_record(self, new_values: Dict) -> None:
+    def update_db_record(self, new_values: Dict) -> Self:
+        record_with_updated_vals = attrs.evolve(self, **new_values)
+        updated_fields = record_with_updated_vals.to_json_converter.unstructure(record_with_updated_vals)
         backend.app_constants.active_db_con.update_record(
             table_name=self.db_table_name,
-            col_names=tuple(new_values.keys()),
-            col_values=tuple(new_values.values()),
+            col_names=tuple(updated_fields.keys()),
+            col_values=tuple(updated_fields.values()),
             condition_str=f"{self.id_field_name()} = ?",
             condition_values=(str(self.id),)
         )
-        # Update the instance fields only after
-        # the record was correctly updated in the data base.
-        for col_name, col_value in new_values.items():
-            setattr(self, col_name, col_value)
+        return record_with_updated_vals
 
     def delete_db_record(self) -> None:
         backend.app_constants.active_db_con.delete_record(
