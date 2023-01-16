@@ -10,7 +10,7 @@ class AssignClassToTermPlanDlg(views._base_views.BaseEEnterParamsDlg):
         gui_controls_spec._ControlWrapperBase, ...
     ] = (
         gui_controls_spec.LabeledComboBoxSpec(
-            label="plany semestralne:",
+            label="Plany semestralne:",
             identifier="TermPlanId"
         ),
     )
