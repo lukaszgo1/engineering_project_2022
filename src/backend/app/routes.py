@@ -10,7 +10,7 @@ import flask
 
 @app.route('/move_from_term', methods=['POST'])
 def move_from_term():
-    term = Terms.query.filter_by(TermId=flask.request.get_json()['orig_term']).first()
+    term = Terms.query.filter_by(TermId=flask.request.get_json()['new_term']).first()
     schedules = Schedule.query.filter_by(InTerm=flask.request.get_json()['orig_term']).all()
     for sched in schedules:
         movedSchedule = Schedule(
