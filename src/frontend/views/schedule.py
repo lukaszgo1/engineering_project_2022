@@ -97,7 +97,7 @@ class SubjectsInClassFilterer(
     def on_new_class_selected(self, class_model):
         subjects = self._presenter.subjects_in_plan_for_class(class_model)
         self.registered_control_by_identifier("SubjectId").set_value(
-            gui_controls_spec.ComboBoxvaluesSpec(subjects)
+            gui_controls_spec.ComboBoxvaluesSpec(subjects, initial_selection=0)
         )
         self.populate_lesson_combo_box()
 
@@ -114,11 +114,11 @@ class TeachersAssignedToSubject(
     def on_new_subject_selected(self, subject):
         teachers = self._presenter.teachers_allowed_to_teach(subject)
         self.registered_control_by_identifier("TeacherId").set_value(
-            gui_controls_spec.ComboBoxvaluesSpec(teachers)
+            gui_controls_spec.ComboBoxvaluesSpec(teachers, initial_selection=0)
         )
         class_rooms = self._presenter.class_rooms_for_subject(subject)
         self.registered_control_by_identifier("ClassRoomId").set_value(
-            gui_controls_spec.ComboBoxvaluesSpec(class_rooms)
+            gui_controls_spec.ComboBoxvaluesSpec(class_rooms, initial_selection=0)
         )
         selected_class = self.registered_control_by_identifier(
             "ClassId"
@@ -147,7 +147,8 @@ class EndLessonTimeFilterer(gui_controls_spec.OnChangeListener):
                     selected_class,
                     subject,
                     lesson_start
-                )
+                ),
+                initial_selection=0
             )
         )
 
