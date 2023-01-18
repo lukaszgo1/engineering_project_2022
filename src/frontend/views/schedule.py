@@ -43,6 +43,12 @@ exporters = (
         default_file_name="*.csv",
         export_end_point="export_to_csv"
     ),
+    ScheduleExporter(
+        export_end_point="export_to_calendar",
+        label="Plik kalendarza",
+        default_file_name="*.ics",
+        wildcard="plik ics (*.ics)|*.ics"
+    ),
 )
 
 

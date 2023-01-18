@@ -6,6 +6,46 @@ from flask import jsonify
 from app import app, db
 from .models import *
 import flask
+import icalendar
+
+
+def calculate_dates(start_date, end_date, week_day):
+    lesson_dates = []
+    first_day = start_date.weekday()
+    last_day = end_date.weekday()
+    if week_day > first_day:
+        lesson_date = start_date + datetime.timedelta(days = week_day - first_day)
+    elif week_day < first_day:
+        lesson_date = start_date + datetime.timedelta(days = week_day + 7 - first_day)
+    else:
+        lesson_date = start_date + datetime.timedelta(days = week_day)
+    while lesson_date <= end_date:
+        lesson_dates.append(''.join(lesson_date.__str__().split('-')))
+        lesson_date += datetime.timedelta(days = 7)
+    return lesson_dates
+
+
+@app.route('/export_to_calendar', methods=['POST'])
+def export_to_calendar():
+    cal = icalendar.Calendar()
+    cal.add('prodid', '-//My calendar product//mxm.dk//')
+    cal.add('version', '2.0')
+    for id in flask.request.get_json()['lesson_ids']:
+        schedule = Schedule.query.join(Subjects, Schedule.SubjectId == Subjects.SubjectId)\
+        .join(Terms, Schedule.InTerm == Terms.TermId).filter(Schedule.LessonId == id).with_entities(
+        Schedule.WeekDay, Schedule.LessonStartingHour, Schedule.LessonEndingHour, Subjects.SubjectName, Terms.StartDate, Terms.EndDate
+        ).first()
+        lesson_dates = calculate_dates(schedule.StartDate, schedule.EndDate, schedule.WeekDay)
+        for date in lesson_dates:
+            event = icalendar.Event()
+            event['dtstart'] = ''.join((date, 'T', ''.join(schedule.LessonStartingHour.split(':')), '00'))
+            event['dtend'] = ''.join((date, 'T', ''.join(schedule.LessonEndingHour.split(':')), '00'))
+            event['summary'] = schedule.SubjectName
+            cal.add_component(event)
+    in_memory_file = io.BytesIO()
+    in_memory_file.write(cal.to_ical())
+    content = in_memory_file.getvalue()
+    return content
 
 
 @app.route('/move_from_term', methods=['POST'])
