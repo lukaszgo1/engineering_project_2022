@@ -1,3 +1,6 @@
+
+import ctypes
+ctypes.windll.user32.SetProcessDpiAwarenessContext(-4)
 import wx
 import os
 
