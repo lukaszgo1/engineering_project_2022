@@ -9,11 +9,11 @@ from typing import (
 
 import attrs
 
-import backend.models._base_model as bm
+import models._base_model as bm
 if TYPE_CHECKING:
-    import backend.models.subject
-    import backend.models.Term
-import backend.models._converters as convs_registry
+    import models.subject
+    import models.Term
+import models._converters as convs_registry
 
 
 @convs_registry.create_unstructuring_converters
@@ -22,6 +22,9 @@ class Institution(bm._BaseModel):
 
     get_endpoint: ClassVar[str] = "/get_institutions"
     get_single_end_point: ClassVar[str] = "get_institution"
+    add_endpoint: ClassVar[str] = "/add_institution"
+    delete_endpoint: ClassVar[str] = "/delete_institution"
+    edit_endpoint: ClassVar[str] = "/edit_institution"
     db_table_name: ClassVar[str] = "Institutions"
 
     @property
@@ -36,13 +39,13 @@ class Institution(bm._BaseModel):
     NormalBreakLength: Optional[int] = None
     NormalLessonLength: Optional[int] = None
 
-    def subjects_taught_in_inst(self) -> "Iterator[backend.models.subject.Subject]":
-        import backend.models.subject
-        yield from backend.models.subject.Subject.from_endpoint(self)
+    def subjects_taught_in_inst(self) -> "Iterator[models.subject.Subject]":
+        import models.subject
+        yield from models.subject.Subject.from_endpoint(self)
 
-    def terms_in_inst(self) -> "Iterator[backend.models.Term.Term]":
-        import backend.models.Term
-        yield from backend.models.Term.Term.from_endpoint(self)
+    def terms_in_inst(self) -> "Iterator[models.Term.Term]":
+        import models.Term
+        yield from models.Term.Term.from_endpoint(self)
 
     def term_plans_in_inst(self):
         yield from itertools.chain(*[t.plans_in_term() for t in self.terms_in_inst()])

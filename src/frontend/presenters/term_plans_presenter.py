@@ -7,7 +7,7 @@ from typing import (
 
 import presenters.base_presenter
 import views.term_plan
-import backend.models.TermPlan
+import models.TermPlan
 import presentation_manager
 import gui_controls_spec
 
@@ -15,10 +15,10 @@ import gui_controls_spec
 class TermPlanPresenter(presenters.base_presenter.BasePresenter):
 
     MODEL_CLASS: Type[
-        backend.models.TermPlan.TermPlan
-    ] = backend.models.TermPlan.TermPlan
+        models.TermPlan.TermPlan
+    ] = models.TermPlan.TermPlan
     view_collections = views.term_plan
-    all_records: List[backend.models.TermPlan.TermPlan]
+    all_records: List[models.TermPlan.TermPlan]
 
     def __init__(
         self,

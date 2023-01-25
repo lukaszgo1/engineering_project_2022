@@ -5,7 +5,7 @@ from typing import (
 import attrs
 import cattrs
 
-import backend.models._constants as constants
+import models._constants as constants
 
 
 DEFAULT_CONV = cattrs.Converter(forbid_extra_keys=True)

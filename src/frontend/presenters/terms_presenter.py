@@ -7,7 +7,7 @@ from typing import (
 
 import presenters.base_presenter
 import views.terms
-import backend.models.Term
+import models.Term
 import gui_controls_spec
 import api_utils
 
@@ -15,10 +15,10 @@ import api_utils
 class TermsPresenter(presenters.base_presenter.BasePresenter):
 
     MODEL_CLASS: Type[
-        backend.models.Term.Term
-    ] = backend.models.Term.Term
+        models.Term.Term
+    ] = models.Term.Term
     view_collections = views.terms
-    all_records: List[backend.models.Term.Term]
+    all_records: List[models.Term.Term]
 
     def __init__(
         self,

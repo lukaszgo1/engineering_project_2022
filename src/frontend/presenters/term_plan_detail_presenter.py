@@ -8,16 +8,16 @@ from typing import (
 import presenters.base_presenter
 import views.term_plan_details
 import gui_controls_spec
-import backend.models.term_plan_detail
+import models.term_plan_detail
 
 
 class TermPlanDetailsPresenter(presenters.base_presenter.BasePresenter):
 
     MODEL_CLASS: Type[
-        backend.models.term_plan_detail.TermPlanDetail
-    ] = backend.models.term_plan_detail.TermPlanDetail
+        models.term_plan_detail.TermPlanDetail
+    ] = models.term_plan_detail.TermPlanDetail
     view_collections = views.term_plan_details
-    all_records: List[backend.models.term_plan_detail.TermPlanDetail]
+    all_records: List[models.term_plan_detail.TermPlanDetail]
 
     def __init__(
         self,

@@ -6,14 +6,14 @@ from typing import (
 
 import presenters.base_presenter
 import views.subjects
-import backend.models.subject
+import models.subject
 
 
 class SubjectsPresenter(presenters.base_presenter.BasePresenter):
 
-    MODEL_CLASS = backend.models.subject.Subject
+    MODEL_CLASS = models.subject.Subject
     view_collections = views.subjects
-    all_records: list[backend.models.subject.Subject]
+    all_records: list[models.subject.Subject]
 
     def __init__(
         self,

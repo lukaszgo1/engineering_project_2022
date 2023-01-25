@@ -4,7 +4,7 @@ from typing import (
 
 import requests
 
-import frontend.app_constants_new as app_constants_new
+import app_constants_new as app_constants_new
 
 
 _API_URL = f"{app_constants_new.API_HOST}:{app_constants_new.API_PORT}"
@@ -33,5 +33,17 @@ def get_data(
 def post_data(end_point_name: str, json_data: dict):
     return requests.post(
         f"{_API_URL}/{end_point_name}",
+        json=json_data
+    )
+
+def delete_data(end_point_name: str, json_data: dict):
+    return requests.delete(
+        f"{_API_URL}/{end_point_name}",
+        json=json_data
+    )
+
+def edit_data(end_point_name: str, entity_id: str, json_data: dict):
+    return requests.put(
+        f"{_API_URL}/{end_point_name}/{entity_id}",
         json=json_data
     )

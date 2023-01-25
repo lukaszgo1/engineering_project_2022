@@ -5,23 +5,23 @@ import requests
 import presenters.base_presenter
 import views.schedule
 import gui_controls_spec
-import backend.models.class_room
-import backend.models.subject
-import backend.models.class_to_term_plan
-import backend.models.teacher
-import backend.models.teacher_to_subject
-import backend.models.schedule
-import backend.models.class_model
+import models.class_room
+import models.subject
+import models.class_to_term_plan
+import models.teacher
+import models.teacher_to_subject
+import models.schedule
+import models.class_model
 import api_utils
 
 
 class SchedulePresenter(presenters.base_presenter.BasePresenter):
 
     MODEL_CLASS: type[
-        backend.models.schedule.Schedule
-    ] = backend.models.schedule.Schedule
+        models.schedule.Schedule
+    ] = models.schedule.Schedule
     view_collections = views.schedule
-    all_records: list[backend.models.schedule.Schedule]
+    all_records: list[models.schedule.Schedule]
 
     def on_export(self):
         entries_ids_to_export = [_.id for _ in self.all_records]
@@ -52,7 +52,7 @@ class SchedulePresenter(presenters.base_presenter.BasePresenter):
             self.conts.append(res)
 
     def subjects_in_plan_for_class(self, class_model):
-        subjects = list(backend.models.subject.Subject.from_subjects_for_class_endpoint(
+        subjects = list(models.subject.Subject.from_subjects_for_class_endpoint(
             class_model
         ))
         return subjects
@@ -61,7 +61,7 @@ class SchedulePresenter(presenters.base_presenter.BasePresenter):
         if subject is None:
             return []
         return list(
-            backend.models.teacher.Teacher.from_teachers_for_subjs_end_point(
+            models.teacher.Teacher.from_teachers_for_subjs_end_point(
                 subject
             )
         )
@@ -70,7 +70,7 @@ class SchedulePresenter(presenters.base_presenter.BasePresenter):
         if subject is None:
             return []
         return list(
-            backend.models.class_room.ClassRoom.from_class_room_for_subj_end_point(
+            models.class_room.ClassRoom.from_class_room_for_subj_end_point(
                 subject
             )
         )
@@ -113,7 +113,7 @@ class SchedulePresenter(presenters.base_presenter.BasePresenter):
         selection = query.json()["Preferred_day"]
         return gui_controls_spec.ComboBoxvaluesSpec(
             initial_selection=selection,
-            values=list(backend.models.schedule.WeekDay)
+            values=list(models.schedule.WeekDay)
         )
 
     def get_possible_lesson_beginnings(
@@ -148,7 +148,7 @@ class SchedulePresenter(presenters.base_presenter.BasePresenter):
     @property
     def initial_vals_for_add(self):
         classes_with_plans = list(
-            backend.models.class_model.Class.from_classesToTermPlan_endpoint(
+            models.class_model.Class.from_classesToTermPlan_endpoint(
                 self.for_term
             )
         )

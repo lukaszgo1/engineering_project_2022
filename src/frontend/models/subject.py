@@ -5,9 +5,9 @@ from typing import (
 
 import attrs
 
-import backend.models._base_model as bm
-import backend.models._converters as convs_registry
-import backend.models.institution
+import models._base_model as bm
+import models._converters as convs_registry
+import models.institution
 
 
 @convs_registry.create_unstructuring_converters
@@ -17,9 +17,12 @@ class Subject(bm._Owned_model):
     get_endpoint: ClassVar[str] = "/get_subjects"
     get_subjectsForClass_endpoint: ClassVar[str] = "/get_subjectsForClass"
     get_single_end_point: ClassVar[str] = "get_subject"
+    add_endpoint: ClassVar[str] = "/add_subject"
+    delete_endpoint: ClassVar[str] = "/delete_subject"
+    edit_endpoint: ClassVar[str] = "/edit_subject"
     db_table_name: ClassVar[str] = "Subjects"
     SubjectId: Optional[int] = bm.ID_FIELD
-    TaughtIn: backend.models.institution.Institution = bm.main_fk_field
+    TaughtIn: models.institution.Institution = bm.main_fk_field
     SubjectName: str
 
     @property

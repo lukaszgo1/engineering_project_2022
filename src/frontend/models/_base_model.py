@@ -15,10 +15,9 @@ from collections.abc import (
 import attrs
 import cattrs
 
-import backend.app_constants
-import backend.models._converters as convs_registry
-import frontend.api_utils
-import backend.models._constants as constants
+import models._converters as convs_registry
+import api_utils
+import models._constants as constants
 
 
 class NonExistingEntityRequested(Exception):
@@ -77,7 +76,7 @@ class _BaseModel:
 
     @staticmethod
     def records_from_end_point(end_point_name):
-        yield from frontend.api_utils.get_data(end_point_name)["item"]
+        yield from api_utils.get_data(end_point_name)["item"]
 
     @classmethod
     def from_json_info(cls, json_info) -> Self:
@@ -92,7 +91,7 @@ class _BaseModel:
 
     @classmethod
     def from_end_point_by_id(cls, entity_id: int) -> Self:
-        res = frontend.api_utils.get_data(
+        res = api_utils.get_data(
             cls.get_single_end_point,
             entity_id=str(entity_id)
         )["item"]
@@ -123,31 +122,16 @@ class _BaseModel:
         if self.id is not None:
             raise RuntimeError("Model is already in the database.")
         current_instance_vars = self.cols_for_insert()
-        self.set_id(backend.app_constants.active_db_con.insert(
-            table_name=self.db_table_name,
-            col_names=tuple(current_instance_vars.keys()),
-            col_values=tuple(current_instance_vars.values())
-        ))
+        self.set_id(api_utils.post_data(self.add_endpoint, current_instance_vars))
 
     def update_db_record(self, new_values: Dict) -> Self:
         record_with_updated_vals = attrs.evolve(self, **new_values)
         updated_fields = record_with_updated_vals.to_json_converter.unstructure(record_with_updated_vals)
-        backend.app_constants.active_db_con.update_record(
-            table_name=self.db_table_name,
-            col_names=tuple(updated_fields.keys()),
-            col_values=tuple(updated_fields.values()),
-            condition_str=f"{self.id_field_name()} = ?",
-            condition_values=(str(self.id),)
-        )
+        api_utils.edit_data(self.edit_endpoint, str(self.id), updated_fields)
         return record_with_updated_vals
 
     def delete_db_record(self) -> None:
-        backend.app_constants.active_db_con.delete_record(
-            table_name=self.db_table_name,
-            condition_string=f"{self.id_field_name()} = ?",
-            seq=(str(self.id),)
-        )
-
+        api_utils.delete_data(self.delete_endpoint, {self.id_field_name(): self.id})
 
 @attrs.define(kw_only=True)
 class _Owned_model(_BaseModel):
@@ -171,7 +155,7 @@ class _Owned_model(_BaseModel):
 
     @staticmethod
     def data_from_end_point(end_point_name, end_point_id):
-        yield from frontend.api_utils.get_data(
+        yield from api_utils.get_data(
             end_point_name,
             entity_id=end_point_id
         )["item"]

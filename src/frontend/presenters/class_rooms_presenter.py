@@ -9,23 +9,23 @@ import presenters.base_presenter
 import presentation_manager
 import views.class_rooms
 import gui_controls_spec
-import backend.models.class_room
-import backend.models.institution
-import backend.models.subject
+import models.class_room
+import models.institution
+import models.subject
 import presenters.schedule_presenter
 
 
 class ClassRoomsPresenter(presenters.base_presenter.BasePresenter):
 
     MODEL_CLASS: Type[
-        backend.models.class_room.ClassRoom
-    ] = backend.models.class_room.ClassRoom
+        models.class_room.ClassRoom
+    ] = models.class_room.ClassRoom
     view_collections = views.class_rooms
-    all_records: List[backend.models.class_room.ClassRoom]
+    all_records: List[models.class_room.ClassRoom]
     detail_presenters = (presenters.schedule_presenter.SchedForClassRoomPres,)
 
     @property
-    def owning_inst(self) -> backend.models.institution.Institution:
+    def owning_inst(self) -> models.institution.Institution:
         return presentation_manager.get_presentation_manager()._active_presenters[-2].focused_entity
 
     def on_new_term_selected(self, term_obj):
@@ -69,9 +69,9 @@ class ClassRoomsPresenter(presenters.base_presenter.BasePresenter):
 
     @property
     def initial_vals_for_add(self):
-        courses_list = [backend.models.class_room.NoMainCourse()]
+        courses_list = [models.class_room.NoMainCourse()]
         courses_list += list(
-            backend.models.subject.Subject.from_endpoint(
+            models.subject.Subject.from_endpoint(
                 self.owning_inst
             )
         )

@@ -7,7 +7,7 @@ from typing import (
 
 import presenters.base_presenter
 import views.teachers
-import backend.models.teacher
+import models.teacher
 import gui_controls_spec
 import presenters.schedule_presenter
 
@@ -15,10 +15,10 @@ import presenters.schedule_presenter
 class TeachersPresenter(presenters.base_presenter.BasePresenter):
 
     MODEL_CLASS: Type[
-        backend.models.teacher.Teacher
-    ] = backend.models.teacher.Teacher
+        models.teacher.Teacher
+    ] = models.teacher.Teacher
     view_collections = views.teachers
-    all_records: List[backend.models.teacher.Teacher]
+    all_records: List[models.teacher.Teacher]
     detail_presenters = (presenters.schedule_presenter.SchedForTeacherPres,)
 
     def __init__(

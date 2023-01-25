@@ -6,14 +6,14 @@ from typing import (
 
 import presenters.base_presenter
 import views.classes
-import backend.models.class_model
+import models.class_model
 import presenters.schedule_presenter
 import gui_controls_spec
 
 
 class ClassesPresenter(presenters.base_presenter.BasePresenter):
 
-    MODEL_CLASS = backend.models.class_model.Class
+    MODEL_CLASS = models.class_model.Class
     view_collections = views.classes
     all_records: List[MODEL_CLASS]
     detail_presenters = (presenters.schedule_presenter.SchedForClassPres,)

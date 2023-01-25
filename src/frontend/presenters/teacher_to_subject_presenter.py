@@ -8,17 +8,17 @@ from typing import (
 import presenters.base_presenter
 import views.teacher_to_subjects
 import gui_controls_spec
-import backend.models.teacher_to_subject
-import backend.models.subject
+import models.teacher_to_subject
+import models.subject
 
 
 class TeacherToSubjectsPresenter(presenters.base_presenter.BasePresenter):
 
     MODEL_CLASS: Type[
-        backend.models.teacher_to_subject.TeacherToSubject
-    ] = backend.models.teacher_to_subject.TeacherToSubject
+        models.teacher_to_subject.TeacherToSubject
+    ] = models.teacher_to_subject.TeacherToSubject
     view_collections = views.teacher_to_subjects
-    all_records: List[backend.models.teacher_to_subject.TeacherToSubject]
+    all_records: List[models.teacher_to_subject.TeacherToSubject]
 
     def __init__(
         self,
@@ -39,7 +39,7 @@ class TeacherToSubjectsPresenter(presenters.base_presenter.BasePresenter):
     @property
     def initial_vals_for_add(self):
         not_assigned_subjs = list(
-            backend.models.subject.Subject.get_not_assigned_to_teacher(
+            models.subject.Subject.get_not_assigned_to_teacher(
                 self.parent_presenter.focused_entity
             )
         )

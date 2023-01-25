@@ -15,8 +15,8 @@ import presenters.institutions_presenter
 import views.breaks
 import gui_controls_spec
 import presentation_manager
-import backend.models.break_model
-import backend.models.institution
+import models.break_model
+import models.institution
 import api_utils
 
 
@@ -51,10 +51,10 @@ class BreakRepresentation:
 class BreaksPresenter(presenters.base_presenter.BasePresenter):
 
     MODEL_CLASS: Type[
-        backend.models.break_model.Break
-    ] = backend.models.break_model.Break
+        models.break_model.Break
+    ] = models.break_model.Break
     view_collections = views.breaks
-    all_records: List[backend.models.break_model.Break]
+    all_records: List[models.break_model.Break]
 
     @property
     def initial_vals_for_add(self):
@@ -63,7 +63,7 @@ class BreaksPresenter(presenters.base_presenter.BasePresenter):
         return {"break_length": possible_lengths}
 
     @property
-    def break_for_inst(self) -> backend.models.institution.Institution:
+    def break_for_inst(self) -> models.institution.Institution:
         return presentation_manager.get_presentation_manager()._active_presenters[-2].focused_entity
 
     def possible_break_lengths(self) -> List[int]:

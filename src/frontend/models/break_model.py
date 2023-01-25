@@ -9,9 +9,9 @@ from typing import (
 
 import attrs
 
-import backend.models._base_model as bm
-import backend.models.institution
-import backend.models._converters as convs_registry
+import models._base_model as bm
+import models.institution
+import models._converters as convs_registry
 
 
 @convs_registry.create_unstructuring_converters
@@ -23,8 +23,10 @@ class Break(bm._Owned_model):
         return self.BreakId
 
     get_endpoint: ClassVar[str] = "/get_breaks"
+    add_endpoint: ClassVar[str] = "/add_break"
+    delete_endpoint: ClassVar[str] = "/delete_break"
     db_table_name: ClassVar[str] = "breaks"
     BreakId: Optional[int] = bm.ID_FIELD
-    InstitutionId: backend.models.institution.Institution = bm.main_fk_field
+    InstitutionId: models.institution.Institution = bm.main_fk_field
     BreakStartingHour: str
     BreakEndingHour: str

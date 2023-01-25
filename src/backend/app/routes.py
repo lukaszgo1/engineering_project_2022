@@ -8,6 +8,289 @@ from .models import *
 import flask
 import icalendar
 
+@app.route('/add_institution', methods=['POST'])
+def add_institution():
+    new_entry = flask.request.get_json()
+    institution = Institutions(
+        InstitutionName = new_entry['InstitutionName'], StartingHour = new_entry['StartingHour'], EndingHour = new_entry['EndingHour'],
+        HasBreaks = new_entry['HasBreaks'], NormalBreakLength = new_entry['NormalBreakLength'], NormalLessonLength = new_entry['NormalLessonLength']
+    )
+    db.session.add(institution)
+    db.session.commit()
+    return str(institution.InstitutionId)
+
+@app.route('/add_break', methods=['POST'])
+def add_break():
+    new_entry = flask.request.get_json()
+    new_break = Breaks(
+        InstitutionId = new_entry['InstitutionId'], BreakStartingHour = new_entry['BreakStartingHour'], BreakEndingHour = new_entry['BreakEndingHour']
+    )
+    db.session.add(new_break)
+    db.session.commit()
+    return str(new_break.BreakId)
+
+@app.route('/add_class', methods=['POST'])
+def add_class():
+    new_entry = flask.request.get_json()
+    new_class = Classes(
+        ClassIdentifier = new_entry['ClassIdentifier'], ClassInInstitution = new_entry['ClassInInstitution']
+    )
+    db.session.add(new_class)
+    db.session.commit()
+    return str(new_class.ClassId)
+
+@app.route('/add_classToTermPlan', methods=['POST'])
+def add_classToTermPlan():
+    new_entry = flask.request.get_json()
+    classToTermPlan = ClassToTermPlan(
+        ClassId = new_entry['ClassId'], TermPlanId = new_entry['TermPlanId']
+    )
+    db.session.add(classToTermPlan)
+    db.session.commit()
+    return str(classToTermPlan.ClassToTermPlanId)
+
+@app.route('/add_subject', methods=['POST'])
+def add_subject():
+    new_entry = flask.request.get_json()
+    subject = Subjects(
+        SubjectName = new_entry['SubjectName'], TaughtIn = new_entry['TaughtIn']
+    )
+    db.session.add(subject)
+    db.session.commit()
+    return str(subject.SubjectId)
+
+@app.route('/add_teacher', methods=['POST'])
+def add_teacher():
+    new_entry = flask.request.get_json()
+    teacher = Teachers(
+        FirstName = new_entry['FirstName'], LastName = new_entry['LastName'],
+        EmployedIn = new_entry['EmployedIn'], IsAvailable = new_entry['IsAvailable']
+    )
+    db.session.add(teacher)
+    db.session.commit()
+    return str(teacher.TeacherId)
+
+@app.route('/add_teacherToSubject', methods=['POST'])
+def add_teacherToSubject():
+    new_entry = flask.request.get_json()
+    teacherToSubject = TeachersToSubjects(
+        TeacherId = new_entry['TeacherId'], SubjectId = new_entry['SubjectId']
+    )
+    db.session.add(teacherToSubject)
+    db.session.commit()
+    return str(teacherToSubject.TeacherToSubjectId)
+
+@app.route('/add_classRoom', methods=['POST'])
+def add_classRoom():
+    new_entry = flask.request.get_json()
+    classRoom = ClassRooms(
+        ClassRoomIdentifier = new_entry['ClassRoomIdentifier'], IsIn = new_entry['IsIn'], PrimaryCourse = new_entry['PrimaryCourse']
+    )
+    db.session.add(classRoom)
+    db.session.commit()
+    return str(classRoom.ClassRoomId)
+
+@app.route('/add_term', methods=['POST'])
+def add_term():
+    new_entry = flask.request.get_json()
+    term = Terms(
+        TermInInst = new_entry['TermInInst'], TermName = new_entry['TermName'],
+        StartDate = datetime.datetime.strptime(new_entry['StartDate'], '%Y-%m-%d'),
+        EndDate = datetime.datetime.strptime(new_entry['EndDate'], '%Y-%m-%d')
+    )
+    db.session.add(term)
+    db.session.commit()
+    return str(term.TermId)
+
+@app.route('/add_termPlan', methods=['POST'])
+def add_termPlan():
+    new_entry = flask.request.get_json()
+    termPlan = TermPlan(
+        AppliesToTerm = new_entry['AppliesToTerm'], TermName = new_entry['TermName']
+    )
+    db.session.add(termPlan)
+    db.session.commit()
+    return str(termPlan.TermPlanId)
+
+@app.route('/add_termPlanDetail', methods=['POST'])
+def add_termPlanDetail():
+    new_entry = flask.request.get_json()
+    termPlanDetail = TermPlanDetails(
+        TermPlanId = new_entry['TermPlanId'], SubjectId = new_entry['SubjectId'],
+        LessonsAmount = new_entry['LessonsAmount'], LessonsWeekly = new_entry['LessonsWeekly'],
+        MinBlockSize = new_entry['MinBlockSize'], MaxBlockSize = new_entry['MaxBlockSize'],
+        PreferredDistanceInDays = new_entry['PreferredDistanceInDays'], PreferredDistanceInWeeks = new_entry['PreferredDistanceInWeeks']
+    )
+    db.session.add(termPlanDetail)
+    db.session.commit()
+    return str(termPlanDetail.TermPlanDetailId)
+
+@app.route('/add_schedule', methods=['POST'])
+def add_schedule():
+    new_entry = flask.request.get_json()
+    schedule = Schedule(
+        InstitutionId = new_entry['InstitutionId'], InTerm = new_entry['InTerm'], WeekDay = new_entry['WeekDay'],
+        LessonStartingHour = new_entry['LessonStartingHour'], LessonEndingHour = new_entry['LessonEndingHour'], TeacherId = new_entry['TeacherId'],
+        SubjectId = new_entry['SubjectId'], ClassId = new_entry['ClassId'], ClassRoomId = new_entry['ClassRoomId']
+    )
+    db.session.add(schedule)
+    db.session.commit()
+    return str(schedule.ScheduleId)
+
+@app.route('/delete_institution', methods=['DELETE'])
+def delete_institution():
+    institution = Institutions.query.filter_by(InstitutionId = flask.request.get_json()['InstitutionId']).first()
+    db.session.delete(institution)
+    db.session.commit()
+    return ''
+
+@app.route('/delete_class', methods=['DELETE'])
+def delete_class():
+    deleted_class = Classes.query.filter_by(ClassId = flask.request.get_json()['ClassId']).first()
+    db.session.delete(deleted_class)
+    db.session.commit()
+    return ''
+
+@app.route('/delete_classToTermPlan', methods=['DELETE'])
+def delete_classtoTermPlan():
+    classToTermPlan = ClassToTermPlan.query.filter_by(ClassToTermPlanId = flask.request.get_json()['ClassToTermPlanId']).first()
+    db.session.delete(classToTermPlan)
+    db.session.commit()
+    return ''
+
+@app.route('/delete_subject', methods=['DELETE'])
+def delete_subject():
+    subject = Subjects.query.filter_by(SubjectId = flask.request.get_json()['SubjectId']).first()
+    db.session.delete(subject)
+    db.session.commit()
+    return ''
+
+@app.route('/delete_teacher', methods=['DELETE'])
+def delete_teacher():
+    teacher = Teachers.query.filter_by(TeacherId = flask.request.get_json()['TeacherId']).first()
+    db.session.delete(teacher)
+    db.session.commit()
+    return ''
+
+@app.route('/delete_teacherToSubject', methods=['DELETE'])
+def delete_teacherToSubject():
+    teachertoSubject = TeachersToSubjects.query.filter_by(TeachertosubjectId = flask.request.get_json()['TeacherToSubjectId']).first()
+    db.session.delete(teachertoSubject)
+    db.session.commit()
+    return ''
+
+@app.route('/delete_classRoom', methods=['DELETE'])
+def delete_classRoom():
+    classRoom = ClassRooms.query.filter_by(ClassRoomId = flask.request.get_json()['ClassRoomId']).first()
+    db.session.delete(classRoom)
+    db.session.commit()
+    return ''
+
+@app.route('/delete_term', methods=['DELETE'])
+def delete_term():
+    term = Terms.query.filter_by(TermId = flask.request.get_json()['TermId']).first()
+    db.session.delete(term)
+    db.session.commit()
+    return ''
+
+@app.route('/delete_termPlan', methods=['DELETE'])
+def delete_termPlan():
+    termPlan = TermPlan.query.filter_by(TermPlanId = flask.request.get_json()['TermPlanId']).first()
+    db.session.delete(termPlan)
+    db.session.commit()
+    return ''
+
+@app.route('/delete_termPlanDetail', methods=['DELETE'])
+def delete_termPlanDetail():
+    termPlanDetail = TermPlanDetails.query.filter_by(TermPlanDetailId = flask.request.get_json()['TermPlanDetailId']).first()
+    db.session.delete(termPlanDetail)
+    db.session.commit()
+    return ''
+
+@app.route('/delete_schedule', methods=['DELETE'])
+def delete_schedule():
+    schedule = Schedule.query.filter_by(ScheduleId = flask.request.get_json()['ScheduleId']).first()
+    db.session.delete(schedule)
+    db.session.commit()
+    return ''
+
+@app.route('/edit_institution/<institution_id>', methods=['PUT'])
+def edit_institution(institution_id):
+    new_entry = flask.request.get_json()
+    Institutions.query.filter_by(InstitutionId = institution_id).update({
+        Institutions.InstitutionName: new_entry['InstitutionName'], Institutions.HasBreaks: new_entry['HasBreaks'],
+        Institutions.StartingHour: new_entry['StartingHour'], Institutions.EndingHour: new_entry['EndingHour'],
+        Institutions.NormalBreakLength: new_entry['NormalBreakLength'], Institutions.NormalLessonLength: new_entry['NormalLessonLength']
+    })
+    db.session.commit()
+    return ''
+
+@app.route('/edit_class/<class_id>', methods=['PUT'])
+def edit_class(class_id):
+    new_entry = flask.request.get_json()
+    Classes.query.filter_by(ClassId = class_id).update({
+        Classes.ClassIdentifier: new_entry['ClassIdentifier']
+    })
+    db.session.commit()
+    return ''
+
+@app.route('/edit_subject/<subject_id>', methods=['PUT'])
+def edit_subject(subject_id):
+    new_entry = flask.request.get_json()
+    Subjects.query.filter_by(SubjectId = subject_id).update({
+        Subjects.SubjectName: new_entry['SubjectName']
+    })
+    db.session.commit()
+    return ''
+
+@app.route('/edit_teacher/<teacher_id>', methods=['PUT'])
+def edit_teacher(teacher_id):
+    new_entry = flask.request.get_json()
+    Teachers.query.filter_by(TeacherId = teacher_id).update({
+        Teachers.FirstName: new_entry['FirstName'], Teachers.LastName: new_entry['LastName'], Teachers.IsAvailable: new_entry['IsAvailable']
+    })
+    db.session.commit()
+    return ''
+
+@app.route('/edit_classRoom/<class_room_id>', methods=['PUT'])
+def edit_classRoom(class_room_id):
+    new_entry = flask.request.get_json()
+    ClassRooms.query.filter_by(ClassRoomId = class_room_id).update({
+        ClassRooms.ClassRoomIdentifier: new_entry['ClassRoomIdentifier'], ClassRooms.PrimaryCourse: new_entry['PrimaryCourse']
+    })
+    db.session.commit()
+    return ''
+
+@app.route('/edit_term/<term_id>', methods=['PUT'])
+def edit_term(term_id):
+    new_entry = flask.request.get_json()
+    Terms.query.filter_by(TermId = term_id).update({
+        Terms.TermName: new_entry['TermName'], Terms.StartDate: datetime.datetime.strptime(new_entry['StartDate'], '%Y-%m-%d'),
+        Terms.EndDate: datetime.datetime.strptime(new_entry['EndDate'], '%Y-%m-%d')
+    })
+    db.session.commit()
+    return ''
+
+@app.route('/edit_termPlan/<term_plan_id>', methods=['PUT'])
+def edit_termPlan(term_plan_id):
+    new_entry = flask.request.get_json()
+    TermPlan.query.filter_by(TermPlanId = term_plan_id).update({
+        TermPlan.TermName: new_entry['TermName']
+    })
+    db.session.commit()
+    return ''
+
+@app.route('/edit_termPlanDetail/<term_plan_detail_id>', methods=['PUT'])
+def edit_termPlanDetail(term_plan_detail_id):
+    new_entry = flask.request.get_json()
+    TermPlanDetails.query.filter_by(TermPlanDetailId = term_plan_detail_id).update({
+        TermPlanDetails.SubjectId: new_entry['SubjectId'],
+        TermPlanDetails.LessonsAmount: new_entry['LessonsAmount'], TermPlanDetails.LessonsWeekly: new_entry['LessonsWeekly'],
+        TermPlanDetails.MinBlockSize: new_entry['MinBlockSize'], TermPlanDetails.MaxBlockSize: new_entry['MaxBlockSize'],
+        TermPlanDetails.PreferredDistanceInDays: new_entry['PreferredDistanceInDays'], TermPlanDetails.PreferredDistanceInWeeks: new_entry['PreferredDistanceInWeeks']
+    })
+    db.session.commit()
+    return ''
 
 def calculate_dates(start_date, end_date, week_day):
     lesson_dates = []

@@ -6,15 +6,15 @@ from typing import (
 
 import attrs
 
-import backend.models._base_model as bm
-import backend.models.teacher
-import backend.models.subject
-import backend.models.class_model
-import backend.models.class_room
-import backend.models.institution
-import backend.models.Term
-import frontend.api_utils
-import backend.models._converters as convs_registry
+import models._base_model as bm
+import models.teacher
+import models.subject
+import models.class_model
+import models.class_room
+import models.institution
+import models.Term
+import api_utils
+import models._converters as convs_registry
 
 
 @enum.unique
@@ -45,7 +45,8 @@ class WeekDay(enum.IntEnum):
 class Schedule(bm._Owned_model):
 
     get_endpoint: ClassVar[str] = "/get_class"
-    post_endpoint: ClassVar[str] = "/add_schedule"
+    add_endpoint: ClassVar[str] = "/add_schedule"
+    delete_endpoint: ClassVar[str] = "/delete_schedule"
     db_table_name: ClassVar[str] = "Schedule"
     LessonId: Optional[int] = bm.ID_FIELD
 
@@ -53,19 +54,19 @@ class Schedule(bm._Owned_model):
     def id(self) -> Optional[int]:
         return self.LessonId
 
-    InstitutionId: backend.models.institution.Institution = bm.main_fk_field
+    InstitutionId: models.institution.Institution = bm.main_fk_field
     WeekDay: WeekDay
     LessonStartingHour: str
     LessonEndingHour: str
-    TeacherId: backend.models.teacher.Teacher
-    SubjectId: backend.models.subject.Subject
-    ClassId: backend.models.class_model.Class
-    ClassRoomId: backend.models.class_room.ClassRoom
-    InTerm: backend.models.Term.Term
+    TeacherId: models.teacher.Teacher
+    SubjectId: models.subject.Subject
+    ClassId: models.class_model.Class
+    ClassRoomId: models.class_room.ClassRoom
+    InTerm: models.Term.Term
 
     @classmethod
     def entries_in_class_room(cls, class_room, term):
-        for record in frontend.api_utils.get_data(
+        for record in api_utils.get_data(
             end_point_name="get_class_room_lessons",
             params={"class_room_id": class_room.id, "term_id": term.id}
         )["item"]:
@@ -73,7 +74,7 @@ class Schedule(bm._Owned_model):
 
     @classmethod
     def entries_for_teacher(cls, teacher, term):
-        for record in frontend.api_utils.get_data(
+        for record in api_utils.get_data(
             end_point_name="get_teacher_lessons",
             params={"teacher_id": teacher.id, "term_id": term.id}
         )["item"]:
@@ -81,7 +82,7 @@ class Schedule(bm._Owned_model):
 
     @classmethod
     def entries_for_class(cls, class_model, term):
-        for record in frontend.api_utils.get_data(
+        for record in api_utils.get_data(
             end_point_name="get_class_lessons",
             params={"class_id": class_model.id, "term_id": term.id}
         )["item"]:

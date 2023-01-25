@@ -6,10 +6,10 @@ from typing import (
 
 import attrs
 
-import backend.models._base_model as bm
-import backend.models.TermPlan
-import backend.models.class_model
-import backend.models._converters as convs_registry
+import models._base_model as bm
+import models.TermPlan
+import models.class_model
+import models._converters as convs_registry
 
 
 @convs_registry.create_unstructuring_converters
@@ -18,9 +18,11 @@ class ClassToTermPlan(bm._Owned_model):
 
     db_table_name: ClassVar[str] = "ClassToTermPlan"
     get_single_end_point: ClassVar[str] = "get_class_to_term_plan"
+    add_endpoint: ClassVar[str] = "/add_classToTermPlan"
+    delete_endpoint: ClassVar[str] = "/delete_classToTermPlan"
     ClassToTermPlanId: Optional[int] = bm.ID_FIELD
-    ClassId: backend.models.class_model.Class = bm.main_fk_field
-    TermPlanId: backend.models.TermPlan.TermPlan
+    ClassId: models.class_model.Class = bm.main_fk_field
+    TermPlanId: models.TermPlan.TermPlan
 
     # This model is pretty specific,
     # since a single class can have only one term plan assigned,

@@ -12,3 +12,7 @@ def main() -> None:
     )
     pm.present_initial_view()
     app.MainLoop()
+
+
+if __name__ == "__main__":
+    main()

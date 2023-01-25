@@ -4,16 +4,16 @@ import presenters.base_presenter
 import presentation_manager
 import views.class_to_term_plan
 import gui_controls_spec
-import backend.models.class_to_term_plan
+import models.class_to_term_plan
 
 
 class ClassToTermPlanPresenter(presenters.base_presenter.BasePresenter):
 
     MODEL_CLASS: type[
-        backend.models.class_to_term_plan.ClassToTermPlan
-    ] = backend.models.class_to_term_plan.ClassToTermPlan
+        models.class_to_term_plan.ClassToTermPlan
+    ] = models.class_to_term_plan.ClassToTermPlan
     view_collections = views.class_to_term_plan
-    all_records: list[backend.models.class_to_term_plan.ClassToTermPlan]
+    all_records: list[models.class_to_term_plan.ClassToTermPlan]
 
     def __init__(
         self,

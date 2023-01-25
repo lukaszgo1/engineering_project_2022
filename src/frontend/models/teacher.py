@@ -5,9 +5,9 @@ from typing import (
 
 import attrs
 
-import backend.models._base_model as bm
-import backend.models.institution
-import backend.models._converters as convs_registry
+import models._base_model as bm
+import models.institution
+import models._converters as convs_registry
 
 
 @convs_registry.create_unstructuring_converters
@@ -16,9 +16,12 @@ class Teacher(bm._Owned_model):
 
     get_endpoint: ClassVar[str] = "/get_teachers"
     get_single_end_point: ClassVar[str] = "get_teacher"
+    add_endpoint: ClassVar[str] = "/add_teacher"
+    delete_endpoint: ClassVar[str] = "/delete_teacher"
+    edit_endpoint: ClassVar[str] = "/edit_teacher"
     db_table_name: ClassVar[str] = "Teachers"
     TeacherId: Optional[int] = bm.ID_FIELD
-    EmployedIn: backend.models.institution.Institution = bm.main_fk_field
+    EmployedIn: models.institution.Institution = bm.main_fk_field
     FirstName: str
     LastName: str
     IsAvailable: bool

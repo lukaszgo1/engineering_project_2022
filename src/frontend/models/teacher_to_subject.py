@@ -6,10 +6,10 @@ from typing import (
 
 import attrs
 
-import backend.models._base_model as bm
-import backend.models.subject
-import backend.models.teacher
-import backend.models._converters as convs_registry
+import models._base_model as bm
+import models.subject
+import models.teacher
+import models._converters as convs_registry
 
 
 @convs_registry.create_unstructuring_converters
@@ -18,9 +18,11 @@ class TeacherToSubject(bm._Owned_model):
 
     db_table_name: ClassVar[str] = "TeachersToSubjects"
     get_endpoint: ClassVar[str] = "get_teachersToSubjects"
+    add_endpoint: ClassVar[str] = "/add_teacherToSubject"
+    delete_endpoint: ClassVar[str] = "/delete_teacherToSubject"
     TeacherToSubjectId: Optional[int] = bm.ID_FIELD
-    TeacherId: backend.models.teacher.Teacher = bm.main_fk_field
-    SubjectId: backend.models.subject.Subject
+    TeacherId: models.teacher.Teacher = bm.main_fk_field
+    SubjectId: models.subject.Subject
 
     @property
     def id(self) -> Optional[int]:

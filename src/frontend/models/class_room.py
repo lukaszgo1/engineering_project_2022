@@ -7,10 +7,10 @@ from typing import (
 
 import attrs
 
-import backend.models._base_model as bm
-import backend.models.subject
-import backend.models.institution
-import backend.models._converters as convs_registry
+import models._base_model as bm
+import models.subject
+import models.institution
+import models._converters as convs_registry
 
 
 class NoMainCourse:
@@ -27,11 +27,14 @@ class ClassRoom(bm._Owned_model):
 
     get_endpoint: ClassVar[str] = "/get_classRooms"
     get_single_end_point: ClassVar[str] = "get_single_class_room"
+    add_endpoint: ClassVar[str] = "/add_classRoom"
+    delete_endpoint: ClassVar[str] = "/delete_classRoom"
+    edit_endpoint: ClassVar[str] = "/edit_classRoom"
     db_table_name: ClassVar[str] = "ClassRooms"
     ClassRoomId: Optional[int] = bm.ID_FIELD
-    IsIn: backend.models.institution.Institution = bm.main_fk_field
+    IsIn: models.institution.Institution = bm.main_fk_field
     ClassRoomIdentifier: str
-    PrimaryCourse: Union[backend.models.subject.Subject, NoMainCourse]
+    PrimaryCourse: Union[models.subject.Subject, NoMainCourse]
 
     @property
     def id(self) -> Optional[int]:
@@ -51,11 +54,11 @@ class ClassRoom(bm._Owned_model):
 def _get_main_subj_from_id(subj_id: Optional[int], typ):
     if subj_id is None:
         return NoMainCourse()
-    return backend.models.subject.Subject.from_end_point_by_id(subj_id)
+    return models.subject.Subject.from_end_point_by_id(subj_id)
 
 
 convs_registry.from_json_conv.register_structure_hook(
-    cl=Union[backend.models.subject.Subject, NoMainCourse],
+    cl=Union[models.subject.Subject, NoMainCourse],
     func=_get_main_subj_from_id
 )
 

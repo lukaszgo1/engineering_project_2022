@@ -4,7 +4,7 @@ from typing import (
     List,
 )
 
-import backend.models.institution
+import models.institution
 import views.institutions
 import gui_control_factories
 import presentation_manager
@@ -13,9 +13,9 @@ import presenters.base_presenter
 
 class InstitutionPresenter(presenters.base_presenter.BasePresenter):
 
-    MODEL_CLASS: type[backend.models.institution.Institution] = backend.models.institution.Institution
+    MODEL_CLASS: type[models.institution.Institution] = models.institution.Institution
     view_collections = views.institutions
-    all_records: list[backend.models.institution.Institution]
+    all_records: list[models.institution.Institution]
 
     def create_new_entity_from_user_input(self, entered_vals):
         return self.MODEL_CLASS.from_normalized_record(entered_vals)
