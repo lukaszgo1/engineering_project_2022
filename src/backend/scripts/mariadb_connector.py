@@ -6,12 +6,6 @@ from typing import Dict, Iterator, Optional, Sequence, Type
 import mariadb
 from typing_extensions import Self  # Python 3.11 adds native support
 
-if True:  # remove when backend becomes a standalone app
-    import sys
-    import os
-    sys.path.insert(0, os.path.dirname(__file__))
-import app_constants
-
 
 class MariadbConnector:
 
@@ -147,13 +141,3 @@ class MariadbConnector:
                 update_statement,
                 list(itertools.chain(col_values, condition_values))
             )
-
-    @classmethod
-    def from_config(cls: Type[Self]) -> Self:
-        return cls(
-            host=app_constants.DB_HOST,
-            user_name=app_constants.db_user,
-            password=app_constants.db_password,
-            port_number=app_constants.db_port,
-            db_name=app_constants.db_name
-        )

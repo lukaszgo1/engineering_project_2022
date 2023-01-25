@@ -1,6 +1,6 @@
 from typing import List
+import getpass
 
-import app_constants
 import mariadb_connector
 
 CREATE_DATABASE_STATEMENTS: List[str] = [
@@ -132,11 +132,19 @@ CREATE_DATABASE_STATEMENTS: List[str] = [
 
 
 def createDbBStruct():
+    host_name = input("Data base host: ")
+    port_number = input("Data base port, enter for default (3306): ")
+    if not port_number:
+        port_number = 3306
+    else:
+        port_number = int(port_number)
+    user_name = input("Data base user: ")
+    password = getpass.getpass("Data base password: ")
     o = mariadb_connector.MariadbConnector(
-        host=app_constants.DB_HOST,
-        port_number=app_constants.db_port,
-        user_name=app_constants.db_user,
-        password=app_constants.db_password
+        host=host_name,
+        port_number=port_number,
+        user_name=user_name,
+        password=password
     )
     o.execute_statements(CREATE_DATABASE_STATEMENTS)
 
