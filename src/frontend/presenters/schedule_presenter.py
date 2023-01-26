@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-import requests
-
 import presenters.base_presenter
 import views.schedule
 import gui_controls_spec
@@ -86,8 +84,8 @@ class SchedulePresenter(presenters.base_presenter.BasePresenter):
         subject_obj,
         start_time
     ):
-        query = requests.get(
-            "http://127.0.0.1:5000/get_lessons_end_hours",
+        query = api_utils.get_data(
+            end_point_name="get_lessons_end_hours",
             params={
                 "class_id": class_obj.id,
                 "term_id": self.for_term.id,
@@ -95,22 +93,22 @@ class SchedulePresenter(presenters.base_presenter.BasePresenter):
                 "chosen_lesson_start": start_time
             }
         )
-        return query.json()["lesson_ends"]
+        return query["lesson_ends"]
 
     def get_possible_week_days_for_lesson(
         self,
         class_obj,
         subject_obj
     ):
-        query = requests.get(
-            "http://127.0.0.1:5000/get_lesson_preferred_week_day",
+        query = api_utils.get_data(
+            end_point_name="get_lesson_preferred_week_day",
             params={
                 "class_id": class_obj.id,
                 "term_id": self.for_term.id,
                 "subject_id": subject_obj.id,
             }
         )
-        selection = query.json()["Preferred_day"]
+        selection = query["Preferred_day"]
         return gui_controls_spec.ComboBoxvaluesSpec(
             initial_selection=selection,
             values=list(models.schedule.WeekDay)
@@ -124,8 +122,8 @@ class SchedulePresenter(presenters.base_presenter.BasePresenter):
         teacher_obj,
         class_room_obj
     ):
-        query = requests.get(
-            "http://127.0.0.1:5000/get_institutions_lessons",
+        query = api_utils.get_data(
+            end_point_name="get_institutions_lessons",
             params={
                 "class_id": class_obj.id,
                 "term_id": self.for_term.id,
@@ -136,7 +134,7 @@ class SchedulePresenter(presenters.base_presenter.BasePresenter):
                 "class_room_id": class_room_obj.id
             }
         )
-        records = query.json()["lessons"]
+        records = query["lessons"]
         return gui_controls_spec.ComboBoxvaluesSpec(
             values=records,
             initial_selection=0
